@@ -62,9 +62,11 @@ export class Qbt {
         body: new URLSearchParams({ username: this.cfg.qbtUser, password: this.cfg.qbtPass }).toString(), signal: AbortSignal.timeout(10_000),
       });
     } catch { throw new HttpError(502, 'qbittorrent-unreachable', 'qBittorrent did not answer'); }
-    const sid = r.headers.getSetCookie?.().map(c => c.split(';')[0]).find(c => c?.startsWith('SID=')) ?? '';
-    if (!r.ok || (!sid && (await r.text().catch(() => '')).trim() !== 'Ok.')) throw new HttpError(502, 'qbittorrent-login', 'qBittorrent did not accept the helper\'s login');
-    this.cookie = sid;
+    // qBittorrent 4.x answers "Ok." with a cookie called SID, 5.x answers 204 with QBT_SID_<port>; wrong credentials give 200 "Fails."
+    const cookies = (r.headers.getSetCookie?.() ?? []).map(c => c.split(';')[0]).filter((c): c is string => !!c);
+    const text = (await r.text().catch(() => '')).trim();
+    if (!r.ok || /^fails/i.test(text) || (cookies.length === 0 && text !== 'Ok.')) throw new HttpError(502, 'qbittorrent-login', 'qBittorrent did not accept the helper\'s login');
+    this.cookie = cookies.join('; ');
   }
 
   private async call(path: string, form?: Record<string, string>, retry = true): Promise<Response> {

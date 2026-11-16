@@ -52,6 +52,12 @@ describe('the space sentence', () => {
     expect(freesTag(plan({ measured: false }), 'jellyfin-only')).toBe('');
     expect(freedSentence(plan({ modes: { ...plan().modes, 'arr-and-files-and-torrent': { freedBytes: 5 * GB, keptBytes: 2 * GB, steps: [] } } }), 'arr-and-files-and-torrent')).toMatch(/5 GB comes back.*2 GB stays/);
   });
+  it('leftover extras do not count as space: "frees almost nothing"', () => {
+    const real = plan({ modes: { ...plan().modes, 'jellyfin-only': { freedBytes: 11 * 1024 ** 2, keptBytes: 2.4 * GB, steps: [] } } });
+    expect(freedSentence(real, 'jellyfin-only')).toBe('Frees almost nothing because the torrent is still seeding and keeps the file.');
+    expect(freesTag(real, 'jellyfin-only')).toBe('frees almost nothing');
+    expect(showsNoSpace(real, 'jellyfin-only')).toBe(true);
+  });
   it('flags the no-space case', () => {
     expect(showsNoSpace(plan(), 'jellyfin-only')).toBe(true);
     expect(showsNoSpace(plan(), 'arr-and-files-and-torrent')).toBe(false);

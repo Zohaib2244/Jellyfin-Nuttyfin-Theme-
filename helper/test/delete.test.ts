@@ -178,6 +178,24 @@ describe('POST /delete/plan', () => {
   });
 });
 
+describe('qBittorrent login variants', () => {
+  it('accepts the 5.x cookie name (QBT_SID_8080) and sends it back', async () => {
+    const r = rig({ fs: makeFs(DISK) });
+    arrWorld(r);
+    r.net.on(c => (c.url.endsWith('/api/v2/auth/login') ? { status: 204, headers: { 'set-cookie': 'QBT_SID_8080=zzz; HttpOnly; SameSite=Strict' } } : undefined));
+    expect((await plan(r)).status).toBe(200);
+    expect(r.net.calls.find(c => c.url.endsWith('/torrents/info'))?.headers['cookie']).toBe('QBT_SID_8080=zzz');
+  });
+  it('wrong credentials ("Fails.") are a clear 502, not a crash', async () => {
+    const r = rig({ fs: makeFs(DISK) });
+    arrWorld(r);
+    r.net.on(c => (c.url.endsWith('/api/v2/auth/login') ? { text: 'Fails.' } : undefined));
+    const res = await plan(r);
+    expect(res.status).toBe(502);
+    expect(res.body).toMatchObject({ error: 'qbittorrent-login' });
+  });
+});
+
 describe('POST /delete/execute', () => {
   it('is a DRY RUN by default: every step says dry-run and nothing on a real service is written', async () => {
     const r = rig({ fs: makeFs(DISK), env: { NUTFIN_ALLOW_DELETE: '1' } });

@@ -17,23 +17,27 @@ export const modeOf = (c: Choice): DeleteMode => (!c.arr ? 'jellyfin-only' : c.t
 /** Can the person tick "also remove the torrent"? Only when one shares the files. */
 export const hasTorrent = (p: DeletePlan): boolean => p.torrents.length > 0;
 
+/** Next to nothing comes back: a few leftover extras (subtitles, notes) while the big file stays linked. */
+const nearZero = (m: { freedBytes: number; keptBytes: number }): boolean => m.freedBytes === 0 || (m.keptBytes > 0 && m.freedBytes < 0.02 * (m.freedBytes + m.keptBytes));
+
 /** Why a mode gives back what it gives back, in plain words. */
 export function freedSentence(p: DeletePlan, mode: DeleteMode): string {
   const m = p.modes[mode];
   if (!p.measured) return 'The helper could not measure the drive, so it cannot say how much space comes back.';
-  if (m.freedBytes > 0 && m.keptBytes === 0) return `About ${fmtBytes(m.freedBytes)} comes back on the drive.`;
-  if (m.freedBytes > 0) return `About ${fmtBytes(m.freedBytes)} comes back. ${fmtBytes(m.keptBytes)} stays because another copy of the file exists elsewhere.`;
+  if (!nearZero(m) && m.keptBytes === 0) return `About ${fmtBytes(m.freedBytes)} comes back on the drive.`;
+  if (!nearZero(m)) return `About ${fmtBytes(m.freedBytes)} comes back. ${fmtBytes(m.keptBytes)} stays because another copy of the file exists elsewhere.`;
   const seeding = p.torrents.some(t => t.seeding);
   const holds = mode !== 'arr-and-files-and-torrent' && p.torrents.length > 0;
-  if (holds) return seeding ? 'Frees 0 GB because the torrent is still seeding and keeps the file.' : 'Frees 0 GB because a finished torrent still keeps the file.';
-  return 'Frees 0 GB because another copy of the file exists elsewhere.';
+  const lead = m.freedBytes === 0 ? 'Frees 0 GB' : 'Frees almost nothing';
+  if (holds) return seeding ? `${lead} because the torrent is still seeding and keeps the file.` : `${lead} because a finished torrent still keeps the file.`;
+  return `${lead} because another copy of the file exists elsewhere.`;
 }
 
 /** One line for the option title: "(frees 6.4 GB)" / "(frees 0 GB)". */
-export const freesTag = (p: DeletePlan, mode: DeleteMode): string => (p.measured ? `frees ${fmtBytes(p.modes[mode].freedBytes)}` : '');
+export const freesTag = (p: DeletePlan, mode: DeleteMode): string => (p.measured ? (nearZero(p.modes[mode]) && p.modes[mode].freedBytes > 0 ? 'frees almost nothing' : `frees ${fmtBytes(p.modes[mode].freedBytes)}`) : '');
 
 /** Notes worth a warning colour: the plain "this will not free space" case. */
-export const showsNoSpace = (p: DeletePlan, mode: DeleteMode): boolean => p.measured && p.modes[mode].freedBytes === 0;
+export const showsNoSpace = (p: DeletePlan, mode: DeleteMode): boolean => p.measured && nearZero(p.modes[mode]);
 
 /** What a finished step list says, for the final screen. */
 export function outcomeText(r: { ok: boolean; steps: Array<{ label: string; status: string; detail?: string }> }): { title: string; detail: string } {
