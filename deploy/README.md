@@ -1,3 +1,9 @@
+# Deployment
+
+**Live since 16 November 2026:** Nuttyfin is deployed at the existing Jellyfin addresses by explicit owner request. See [LIVE.md](LIVE.md) for the installed paths, checks, update procedure and rollback. [Caddyfile.jellyfin](Caddyfile.jellyfin) is the applied routing pattern.
+
+The instructions below describe the original alternative: a separate Nuttyfin hostname. Do not apply those steps over the live deployment.
+
 # Deploying Nuttyfin (by hand, in this order)
 
 Everything in this folder is a **draft**. Nothing here has been applied, and the agent that wrote it never touched

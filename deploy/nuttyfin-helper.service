@@ -1,4 +1,4 @@
-# Nuttyfin helper service: systemd unit. DRAFT, NOT APPLIED. Copy to /etc/systemd/system/nuttyfin-helper.service (deploy/README.md).
+# Nuttyfin helper service: installed on 16 November 2026. See deploy/LIVE.md.
 #
 # Why a host service and not Docker: NutBot shells out to the claude CLI, which lives in the owner's home and is logged in
 # as nutmag2469 (same reason AVN Hub runs on the host). It also needs to READ the media drive to count hardlinks.
@@ -33,6 +33,7 @@ ProtectHome=read-only
 # The claude CLI keeps its login and small caches here. If NutBot says "could not answer" and the journal shows a
 # permission error, this is the list to extend (or set NUTFIN_CLI_CONFIG_DIR to a folder you made for it).
 ReadWritePaths=/home/nutmag2469/.claude /home/nutmag2469/.cache /home/nutmag2469/.config
+ReadWritePaths=-/home/nutmag2469/.claude.json
 ReadOnlyPaths=/mnt/nuttyfin
 InaccessiblePaths=/mnt/nuttyd /opt/docker
 ProtectKernelTunables=yes

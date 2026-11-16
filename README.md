@@ -25,7 +25,7 @@ npm run typecheck && npm test && npm run build     # the helper's typecheck and 
 Real-server checks use `NUTFIN_TEST_USER` / `NUTFIN_TEST_PASS` from the environment and only ever read.
 
 ## Deploy
-Drafts only, applied by hand: [`deploy/README.md`](deploy/README.md) (Caddy block, systemd unit, DNS line, ordered steps, rollback).
+Live on the existing Jellyfin addresses. See [`deploy/LIVE.md`](deploy/LIVE.md) for installed paths, verification, updates and rollback. The original separate-hostname draft remains in [`deploy/README.md`](deploy/README.md).
 
 ## Architecture in 20 lines
 1. The browser loads one static bundle (`dist/`). Everything is same-origin through the reverse proxy:
