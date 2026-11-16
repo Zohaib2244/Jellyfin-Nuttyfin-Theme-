@@ -1,0 +1,13 @@
+{
+  "name": "nuttyfin-helper",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Small helper service for Nuttyfin: NutBot brain, smart delete, On TV calendar. Zero runtime dependencies.",
+  "engines": { "node": ">=22.6" },
+  "scripts": {
+    "start": "node src/server.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --config vitest.config.ts"
+  }
+}
