@@ -329,6 +329,11 @@ export class DemoBackend implements Backend {
       .filter(c => c.items.length > 1).sort((a, b) => b.items.length - a.items.length);
   }
 
+  async episodeDetails(seriesId: string, seasonId: string): Promise<Episode[]> {
+    const meta = ITEMS.find(i => i.id === seriesId) as CatItem;
+    return allEpisodes(seriesId).filter(e => e.seasonId === seasonId).map(e => ({ ...e, people: guestsOf(e.id), versions: versionsOf(meta, true) }));
+  }
+
   /** The demo only pretends: the item disappears from this session's lists. Nothing real is touched. */
   async deleteFromJellyfin(id: string): Promise<void> {
     await new Promise(r => setTimeout(r, 400));

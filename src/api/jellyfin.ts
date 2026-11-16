@@ -378,6 +378,13 @@ export class JellyfinBackend implements Backend {
     return out.sort((a, b) => b.items.length - a.items.length || a.name.localeCompare(b.name));
   }
 
+  async episodeDetails(seriesId: string, seasonId: string, signal?: AbortSignal): Promise<Episode[]> {
+    const r = await this.http<ItemsResult>(`/Shows/${encodeURIComponent(seriesId)}/Episodes`, {
+      signal, query: { userId: this.uid, seasonId, fields: [...EPISODE_FIELDS, 'People', 'MediaSources'], enableImageTypes: ['Primary'], imageTypeLimit: 1 },
+    });
+    return (r.Items ?? []).map(normaliseItem).filter((i): i is Episode => i.kind === 'episode');
+  }
+
   /** Only called from the owner-only Remove dialog, behind a two-step confirm. */
   async deleteFromJellyfin(id: string): Promise<void> {
     await this.http(`/Items/${encodeURIComponent(id)}`, { method: 'DELETE' });

@@ -86,6 +86,8 @@ export interface Backend {
   allSeasons(signal?: AbortSignal): Promise<Season[]>;
   /** Box sets with their films in order (Shelves by collection). */
   collections(signal?: AbortSignal): Promise<Collection[]>;
+  /** One season's episodes with cast (incl. guest stars) and files: for the episode "Details" panels and guest-star row. */
+  episodeDetails(seriesId: string, seasonId: string, signal?: AbortSignal): Promise<Episode[]>;
   /** Owner only. Removes the item from Jellyfin (the library entry and its file). Radarr/Sonarr/torrents are NOT touched. */
   deleteFromJellyfin(id: string): Promise<void>;
   // ── library/details: end ──

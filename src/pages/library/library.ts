@@ -409,8 +409,8 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
     const fc = q('#fcount');
     fc.textContent = String(act.length);
     fc.hidden = !act.length;
-    q('#order').innerHTML = ORDERS[kind].map(([k, t]) => `<button type="button" data-order="${k}" aria-pressed="${st.order === k}">${t}</button>`).join('');
-    q('#views').innerHTML = VIEWS[kind].map(([k, t, i]) => `<button type="button" data-view="${k}" aria-pressed="${st.view === k}" aria-label="${t}" title="${t}">${ic(i).value}</button>`).join('');
+    q('#order').innerHTML = ORDERS[kind].map(([k, t]) => `<button type="button" data-order="${k}" aria-pressed="${String(st.order === k)}">${t}</button>`).join('');
+    q('#views').innerHTML = VIEWS[kind].map(([k, t, i]) => `<button type="button" data-view="${k}" aria-pressed="${String(st.view === k)}" aria-label="${t}" title="${t}">${ic(i).value}</button>`).join('');
     paintDesk(desk);
     for (const r of sheetRoots()) { paintDesk(r.querySelector<HTMLElement>('.desk') as HTMLElement); syncSheet(r); }
 
