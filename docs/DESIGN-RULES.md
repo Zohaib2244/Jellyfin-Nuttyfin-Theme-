@@ -12,3 +12,5 @@
 - Home = NutBot + Next episode beside the Keep watching hero, which holds the recommendations (a rail that swaps the hero); then New this week beside a compact Continue watching list (all in-progress items, "See all" opens the tab); No separate Picked for you or full Continue watching strip on Home.
 - Every tile belongs to exactly one tab; never show the same tile in two tabs.
 - Tiles must never look empty: give them enough real content (or richer rows) to fill their space at every width.
+
+- Home and Continue Watching use static artwork and loading placeholders: no continuously moving backdrops, poster collages, or blinking mascots on these two tabs. Preserve their layout while prioritising smooth scrolling and clicks.

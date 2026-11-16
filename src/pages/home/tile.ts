@@ -77,6 +77,8 @@ export interface LoadOpts<T> {
   padCls?: string;
   /** render() already returns a complete tile body (own wrapper), do not wrap in .pad */
   bare?: boolean;
+  /** Optional lower-page tiles wait until they approach the viewport. */
+  defer?: boolean;
 }
 
 /** Run the loading -> content | empty | error cycle in `host`. */
@@ -107,8 +109,18 @@ export function loadInto<T>(host: HTMLElement, ctx: HomeCtx, o: LoadOpts<T>): vo
       host.querySelector('[data-retry]')?.addEventListener('click', go, { once: true });
     });
   };
-  go();
-  ctx.onDispose(() => { run++; if (typeof cleanup === 'function') cleanup(); });
+  let observer: IntersectionObserver | undefined;
+  if (o.defer && typeof IntersectionObserver !== 'undefined') {
+    host.setAttribute('aria-busy', 'true');
+    host.innerHTML = pad(html`${o.head}${o.skeleton}`, o.padCls);
+    observer = new IntersectionObserver(entries => {
+      if (!entries.some(entry => entry.isIntersecting) || ctx.signal.aborted) return;
+      observer?.disconnect();
+      go();
+    }, { rootMargin: '120px' });
+    observer.observe(host);
+  } else go();
+  ctx.onDispose(() => { run++; observer?.disconnect(); if (typeof cleanup === 'function') cleanup(); });
 }
 
 /** A friendly "nothing here" line with a small NutBot. */

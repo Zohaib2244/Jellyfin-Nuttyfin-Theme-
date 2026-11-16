@@ -5,10 +5,12 @@
 import type { Backend } from '../../api';
 import type { CollectionProgress, Episode, MediaItem, SeerrRequest, Title } from '../../api/types';
 import { calendarToEpisodes } from './calendar'; // phase5-7
+import { limitConcurrency } from '../../lib/concurrency';
 import { byClosestToDone, seasonProgress, startedCollections, type SeasonProgress } from './model';
 
 export class HomeData {
   private readonly memo = new Map<string, Promise<unknown>>();
+  private readonly episodeQueue = limitConcurrency(2);
 
   constructor(readonly backend: Backend) {}
 
@@ -52,6 +54,9 @@ export class HomeData {
     return this.get(`genre:${genre}`, async () => (await this.backend.items({ genres: [genre], sort: 'rating', descending: true, limit: 16 })).items);
   }
   boxsets(): Promise<CollectionProgress[]> { return this.get('boxsets', () => this.backend.boxsets(8)); }
+  episodes(seriesId: string, seasonId?: string): Promise<Episode[]> {
+    return this.get(`episodes:${seriesId}:${seasonId ?? ''}`, () => this.episodeQueue(() => this.backend.episodes(seriesId, seasonId)));
+  }
   collectionsInProgress(): Promise<CollectionProgress[]> { return this.boxsets().then(startedCollections); }
 
   /** Seasons you have started but not finished, closest to done first (one episodes call per show, at most `limit`). */
@@ -59,7 +64,7 @@ export class HomeData {
     return this.get('seasons', async () => {
       const next = (await this.nextUp()).slice(0, 8);
       const out = await Promise.all(next.map(async e => {
-        try { return seasonProgress(e, await this.backend.episodes(e.seriesId, e.seasonId)); } catch { return null; }
+        try { return seasonProgress(e, await this.episodes(e.seriesId, e.seasonId)); } catch { return null; }
       }));
       return out.filter((s): s is SeasonProgress => !!s).sort(byClosestToDone).slice(0, limit);
     });

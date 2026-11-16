@@ -1,3 +1,4 @@
+import { limitConcurrency } from '../lib/concurrency';
 /**
  * Real Jellyfin client (same-origin /jf proxy). Auth: `Authorization: MediaBrowser Client=.., Token=..`.
  * A 401 on any call (except the sign-in calls themselves) signs out and sends the browser to #/login.
@@ -342,12 +343,13 @@ export class JellyfinBackend implements Backend {
     // Sets we know are partly watched first (UnplayedItemCount < ChildCount); the rest only if there is room.
     const list = (sets.Items ?? []).map(d => ({ d, started: d.ChildCount != null && d.UserData?.UnplayedItemCount != null && d.UserData.UnplayedItemCount < d.ChildCount && d.UserData.UnplayedItemCount > 0 }));
     const picked = [...list.filter(x => x.started), ...list.filter(x => !x.started)].slice(0, limit * 2).map(x => x.d);
-    const out = await Promise.all(picked.map(async set => {
+    const children = limitConcurrency(3);
+    const out = await Promise.all(picked.map(set => children(async () => {
       const kids = await this.http<ItemsResult>('/Items', {
         query: { userId: this.uid, parentId: set.Id, includeItemTypes: 'Movie', sortBy: ['PremiereDate', 'ProductionYear', 'SortName'], fields: ['PrimaryImageAspectRatio'], enableImageTypes: ['Primary'], imageTypeLimit: 1, enableTotalRecordCount: false },
       }).catch(() => ({ Items: [] as BaseItemDto[] }));
       return normaliseCollection(set, kids.Items ?? []);
-    }));
+    })));
     return out.filter(c => c.total >= 2).slice(0, limit);
   }
 

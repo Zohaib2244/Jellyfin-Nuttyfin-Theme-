@@ -571,3 +571,21 @@ a.cwr:hover { background: var(--raise); }
   .art img { transform: none !important; }
   .coll .strip { animation: none; }
 }
+
+/* Keep frequently used pages still: no continuous image repainting while browsing. */
+body:is([data-home-tab="home"], [data-home-tab="continue"]) .pagebg::before,
+body:is([data-home-tab="home"], [data-home-tab="continue"]) .pagebg::after,
+body:is([data-home-tab="home"], [data-home-tab="continue"]) .pagebg *,
+body:is([data-home-tab="home"], [data-home-tab="continue"]) .nb .eyes,
+.board:is([data-tab="home"], [data-tab="continue"]) .kb,
+.board:is([data-tab="home"], [data-tab="continue"]) .strip,
+.board:is([data-tab="home"], [data-tab="continue"]) .epdots i.n,
+.board:is([data-tab="home"], [data-tab="continue"]) .zz,
+.board:is([data-tab="home"], [data-tab="continue"]) .sk,
+.board:is([data-tab="home"], [data-tab="continue"]) > .tile.tab-in {
+  animation: none !important;
+  will-change: auto;
+}
+.board:is([data-tab="home"], [data-tab="continue"]) .tile > .tin { contain: paint; }
+.board:is([data-tab="home"], [data-tab="continue"]) .sk { background: var(--raise); }
+.board[data-tab="home"] .coll .strip { transform: translateY(-8%); }

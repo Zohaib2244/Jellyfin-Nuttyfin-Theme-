@@ -32,7 +32,7 @@ export const nextTile: TileDef = {
           const sugg = await ctx.data.suggestions().catch(() => [] as Title[]);
           return { ep: null, season: [], fallback: sugg.find(t => !busy.has(t.id)) ?? null };
         }
-        const season = await ctx.backend.episodes(ep.seriesId, ep.seasonId).catch(() => [] as Episode[]);
+        const season = await ctx.data.episodes(ep.seriesId, ep.seasonId).catch(() => [] as Episode[]);
         return { ep, season, fallback: null };
       },
       render(d) {

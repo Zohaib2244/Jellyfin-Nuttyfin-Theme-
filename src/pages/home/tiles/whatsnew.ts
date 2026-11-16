@@ -44,7 +44,7 @@ function view(list: Title[], week: boolean, now: Date): SafeHtml {
         <button class="btn sm" type="button" data-tab-link="new">See what's new ${icon('next')}</button>
       </div>
       <div class="coll" role="group" aria-label="${week ? 'New this week' : 'New lately'}">
-        ${[0, 1, 2, 3, 4, 5, 6].map(c => html`<div class="col"><div class="strip" style="--dur:${30 + c * 6}s">${col(c).map(t => poster(t, c >= 3))}${col(c).map(t => poster(t, true))}</div></div>`)}
+        ${[0, 1, 2, 3, 4, 5, 6].map(c => html`<div class="col"><div class="strip" style="--dur:${30 + c * 6}s">${col(c).map(t => poster(t, c >= 3))}</div></div>`)}
       </div>
     </div>`;
 }

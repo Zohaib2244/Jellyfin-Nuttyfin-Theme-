@@ -15,7 +15,10 @@ export const onTheGoTile: TileDef = {
       head: tileHead('onthego', 'clock', 'Continue watching'),
       skeleton: skStrip(5),
       padCls: 'sx',
-      async fetch() { return watchRows(await ctx.data.resume(), await ctx.data.nextUp().catch(() => [])); },
+      async fetch() {
+        const [resume, next] = await Promise.all([ctx.data.resume(), ctx.data.nextUp().catch(() => [])]);
+        return watchRows(resume, next);
+      },
       render(rows) {
         if (!rows.length) return null;
         const going = rows.filter(r => r.kind === 'resume').length;
@@ -35,6 +38,7 @@ export const finishTile: TileDef = {
     loadInto<SeasonProgress[]>(host, ctx, {
       head: tileHead('finish', 'flag', 'Finish the season'),
       skeleton: skRows(3),
+      defer: true,
       fetch: () => ctx.data.seasonsInProgress(3),
       render(list) {
         if (!list.length) return null;
@@ -61,6 +65,7 @@ export const setsTile: TileDef = {
     loadInto<CollectionProgress[]>(host, ctx, {
       head: tileHead('sets', 'layers', 'Finish a collection'),
       skeleton: skRows(3),
+      defer: true,
       fetch: () => ctx.data.collectionsInProgress(),
       render(list) {
         if (!list.length) return null;

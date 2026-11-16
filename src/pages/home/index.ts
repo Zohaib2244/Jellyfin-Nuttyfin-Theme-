@@ -23,6 +23,8 @@ const page: Page = {
   render(pc) {
     assertUniqueTiles();
     let tab: HomeTab = isTab(pc.params.tab) ? pc.params.tab : 'home';
+    document.body.dataset.homeTab = tab;
+    pc.onDispose(() => { delete document.body.dataset.homeTab; });
 
     const root = document.createElement('div');
     root.className = 'page home';
@@ -99,6 +101,7 @@ const page: Page = {
       if (next === tab) { if (o.focus) document.getElementById(`tab-${next}`)?.focus(); return; }
       if (arrange?.active) arrange.stop();
       tab = next;
+      document.body.dataset.homeTab = next;
       const my = ++token;
       // keep the URL in step without going through the router (which would rebuild the whole page)
       const hash = urlOf(next);
