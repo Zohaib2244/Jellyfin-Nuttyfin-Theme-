@@ -8,6 +8,7 @@ import type {
 } from './types';
 
 import type { CollectionProgress, LeavingSoon } from './types'; // home
+import type { HelperApi, SeerrDeskApi } from './desk-types'; // phase5-7
 
 export type BackendMode = 'jellyfin' | 'demo';
 
@@ -25,7 +26,7 @@ export interface QuickConnectApi {
 
 /** Seerr requests. Every method fails soft: if Seerr is down or the session is missing, `available()` is false
  *  and the lists are empty, so the rest of the app is unaffected. Hide request UI when `available()` is false. */
-export interface SeerrApi {
+export interface SeerrApi extends SeerrDeskApi { // phase5-7: SeerrDeskApi = the full Requests page
   /** Cheap check (cached after the first call). Never rejects. */
   available(): Promise<boolean>;
   search(query: string, signal?: AbortSignal): Promise<SeerrResult[]>;
@@ -95,6 +96,10 @@ export interface Backend {
   setFavourite(id: string, favourite: boolean): Promise<void>;
 
   readonly seerr: SeerrApi;
+  // ── phase5-7: begin ──
+  /** The optional helper service (NutBot brain, smart delete, calendar). Feature-detect with helper.available(); it never throws. */
+  readonly helper: HelperApi;
+  // ── phase5-7: end ──
 
   // ── library/details: begin ──
   /** Genres in use with how many titles of `kind` have each (for the Genre switches). */

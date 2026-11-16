@@ -294,6 +294,12 @@ export interface SeerrResult {
   posterPath?: string;
   /** Already requested / available, if Seerr knows */
   state?: RequestState;
+  // ── phase5-7: begin ──
+  /** Only some seasons are in the library */
+  partial?: boolean;
+  /** Item id in Jellyfin when it is in the library */
+  jellyfinId?: string;
+  // ── phase5-7: end ──
 }
 
 export interface SeerrRequest {
@@ -310,6 +316,17 @@ export interface SeerrRequest {
   seasons?: number[];
   /** home: download progress 0-100 while state is 'downloading' (when Seerr/Radarr/Sonarr report it) */
   progress?: number;
+  // ── phase5-7: begin ──
+  /** Item id in Jellyfin once it is in the library (Play / Details link) */
+  jellyfinId?: string;
+  /** Seerr's id of the person who asked */
+  requestedById?: number;
+  /** Seerr tried to hand it to Radarr/Sonarr and that failed */
+  failed?: boolean;
+  /** Only some seasons are in the library yet */
+  partial?: boolean;
+  is4k?: boolean;
+  // ── phase5-7: end ──
 }
 
 export interface SeerrQuota {

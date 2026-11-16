@@ -1,0 +1,127 @@
+{
+  "id": 213375,
+  "name": "VisionQuest",
+  "firstAirDate": "2026-10-13",
+  "numberOfSeasons": 1,
+  "posterPath": "/WGyAyBPncfuu8MZhLY9RtfZPM0.jpg",
+  "seasons": [
+    {
+      "airDate": "2026-10-13",
+      "episodeCount": 8,
+      "id": 314452,
+      "name": "Miniseries",
+      "seasonNumber": 1,
+      "posterPath": "/xK27l5uwaVyZSlENWnmLlWwDQNS.jpg"
+    }
+  ],
+  "mediaInfo": {
+    "downloadStatus": [],
+    "downloadStatus4k": [],
+    "id": 290,
+    "mediaType": "tv",
+    "tmdbId": 213375,
+    "tvdbId": 426606,
+    "imdbId": null,
+    "status": 5,
+    "status4k": 1,
+    "createdAt": "2026-11-11T09:29:57.000Z",
+    "updatedAt": "2026-11-16T00:00:05.000Z",
+    "lastSeasonChange": "2026-11-16T00:00:05.150Z",
+    "mediaAddedAt": "2026-11-11T09:47:29.261Z",
+    "serviceId": 0,
+    "serviceId4k": null,
+    "externalServiceId": 35,
+    "externalServiceId4k": null,
+    "jellyfinMediaId": "jf-item-id",
+    "jellyfinMediaId4k": null,
+    "requests": [
+      {
+        "id": 161,
+        "status": 5,
+        "createdAt": "2026-11-11T09:29:57.000Z",
+        "updatedAt": "2026-11-11T09:50:05.000Z",
+        "type": "tv",
+        "is4k": false,
+        "serverId": null,
+        "profileId": null,
+        "rootFolder": null,
+        "languageProfileId": null,
+        "tags": null,
+        "isAutoRequest": false,
+        "ignoreQuota": false,
+        "media": {
+          "downloadStatus": [],
+          "downloadStatus4k": [],
+          "id": 290,
+          "mediaType": "tv",
+          "tmdbId": 213375,
+          "tvdbId": 426606,
+          "imdbId": null,
+          "status": 5,
+          "status4k": 1,
+          "createdAt": "2026-11-11T09:29:57.000Z",
+          "updatedAt": "2026-11-16T00:00:05.000Z",
+          "lastSeasonChange": "2026-11-16T00:00:05.150Z",
+          "mediaAddedAt": "2026-11-11T09:47:29.261Z",
+          "serviceId": 0,
+          "serviceId4k": null,
+          "externalServiceId": 35,
+          "externalServiceId4k": null,
+          "jellyfinMediaId": "jf-item-id",
+          "jellyfinMediaId4k": null
+        },
+        "requestedBy": {
+          "permissions": 160,
+          "id": 4,
+          "jellyfinUsername": "Member 1",
+          "username": null,
+          "userType": 3,
+          "movieQuotaLimit": null,
+          "movieQuotaDays": null,
+          "tvQuotaLimit": null,
+          "tvQuotaDays": null,
+          "createdAt": "2026-10-25T21:31:34.000Z",
+          "updatedAt": "2026-11-11T09:28:46.000Z",
+          "requestCount": 1,
+          "displayName": "Member 1"
+        },
+        "modifiedBy": {
+          "permissions": 160,
+          "id": 4,
+          "jellyfinUsername": "Member 1",
+          "username": null,
+          "userType": 3,
+          "movieQuotaLimit": null,
+          "movieQuotaDays": null,
+          "tvQuotaLimit": null,
+          "tvQuotaDays": null,
+          "createdAt": "2026-10-25T21:31:34.000Z",
+          "updatedAt": "2026-11-11T09:28:46.000Z",
+          "requestCount": 1,
+          "displayName": "Member 1"
+        },
+        "seasons": [
+          {
+            "id": 57,
+            "seasonNumber": 1,
+            "status": 5,
+            "createdAt": "2026-11-11T09:29:57.000Z",
+            "updatedAt": "2026-11-11T09:50:05.000Z"
+          }
+        ],
+        "seasonCount": 1
+      }
+    ],
+    "issues": [],
+    "seasons": [
+      {
+        "id": 56,
+        "seasonNumber": 1,
+        "status": 5,
+        "status4k": 1,
+        "createdAt": "2026-11-11T09:50:05.000Z",
+        "updatedAt": "2026-11-11T09:50:05.000Z"
+      }
+    ]
+  }
+}

@@ -8,6 +8,7 @@ export type { SignInFailure, BackendMode } from './backend';
 export { ApiError } from './http';
 export { imageUrl, userImageUrl, personImageUrl, tmdbImage } from './images';
 export * from './types';
+export * from './desk-types'; // phase5-7
 
 /** ?demo=1 turns demo on (and remembers it); ?demo=0 turns it off. Otherwise the remembered value decides. */
 export function isDemo(search: string = typeof location === 'undefined' ? '' : location.search): boolean {
