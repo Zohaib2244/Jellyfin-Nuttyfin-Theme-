@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 
 // Dev: the app talks to /jf (Jellyfin) and /seerr (Seerr) on its own origin, exactly like production behind Caddy.
 const JELLYFIN = process.env.NUTFIN_JELLYFIN ?? 'http://192.168.1.24:8096';
