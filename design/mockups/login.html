@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NutFin · Sign in</title>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#13100c;--text:#f6f0e4;--muted:#bdb6aa;--accent:#ff6b2b;--line:#534337}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:'Atkinson Hyperlegible',sans-serif}
+button,input{font:inherit}button,a,input{outline-offset:6px}button{cursor:pointer}button:focus-visible,a:focus-visible{outline:2px solid var(--accent)}
+.login{position:relative;min-height:100svh;isolation:isolate;overflow:hidden;display:grid;place-items:center;padding:100px 24px 70px}
+.brand{position:absolute;top:30px;left:36px;font-family:DotGothic16,sans-serif;font-size:27px;text-decoration:none;color:var(--text)}.brand em{color:var(--accent);font-style:normal}
+.art{position:absolute;inset:-25%;z-index:-3;display:grid;grid-template-columns:repeat(7,1fr);gap:18px;transform:rotate(-10deg);pointer-events:none}
+.column{display:flex;flex-direction:column;gap:18px;animation:drift 100s linear infinite}.column:nth-child(even){animation-direction:reverse;animation-duration:120s}
+.column img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:10px}
+@keyframes drift{to{transform:translateY(-50%)}}
+.shade{position:absolute;inset:0;z-index:-2;background:radial-gradient(ellipse at center,rgba(10,9,8,.91) 0%,rgba(10,9,8,.82) 38%,rgba(10,9,8,.45) 100%)}
+.content{text-align:center;width:min(700px,100%)}h1{font-size:clamp(30px,4.5vw,50px);letter-spacing:-.035em;line-height:1.1;margin:0 0 14px}p{color:var(--muted);font-size:17px;margin:0 0 38px}
+.profiles{display:flex;justify-content:center;gap:30px;flex-wrap:wrap}
+.profile{position:relative;display:flex;align-items:center;flex-direction:column;gap:14px;color:var(--text);border:0;background:none;padding:0;width:132px;transition:transform .2s}
+.face{display:grid;place-items:center;width:132px;height:132px;border-radius:18px;background:#873d22;color:#ffad72;border:2px solid transparent;transition:border-color .2s}.face.blue{background:#174c5b;color:#84d6de}.face img{width:84%;height:84%}
+.profile:hover{transform:translateY(-5px)}.profile:hover .face{border-color:var(--text)}.profile b{font-size:19px}.add .face{background:rgba(19,16,12,.65);border:1px solid #695b4e;color:var(--muted)}.add svg{width:35px;fill:none;stroke:currentColor;stroke-width:1.5}
+.manage{margin-top:40px;padding:10px 20px;border:1px solid #695b4e;border-radius:6px;background:rgba(19,16,12,.65);color:var(--muted)}
+.motion{position:absolute;bottom:22px;right:28px;border:1px solid #695b4e;background:#13100c;color:var(--text);padding:8px 14px;border-radius:6px}
+.paused .column{animation-play-state:paused}.pin{margin-top:28px}.pin label{display:block;color:var(--muted);margin-bottom:12px}.pin input{width:150px;text-align:center;padding:12px;letter-spacing:.5em;border:1px solid #695b4e;border-radius:6px;background:#13100c;color:var(--text);font-size:24px}.pin button{padding:12px 20px;border:0;border-radius:6px;background:var(--accent);color:#13100c;font-weight:700;margin-left:8px}.pin .cancel{background:transparent;color:var(--muted);margin-top:12px}
+.notice{margin:20px 0 0;min-height:24px;color:var(--muted);font-size:14px}[hidden]{display:none!important}
+@media(max-width:600px){.profiles{gap:20px}.profile{width:96px}.face{width:96px;height:96px}.brand{left:24px;top:24px}.art{grid-template-columns:repeat(4,1fr);inset:-15% -55%;gap:12px}.column{gap:12px}.column:nth-child(n+5){display:none}.shade{background:rgba(10,9,8,.82)}.profile b{font-size:17px}.content>p{font-size:15px}.motion{font-size:12px;right:20px}}
+@media(prefers-reduced-motion:reduce){.column{animation:none}.profile{transition:none}}
+
+.login{padding:110px 7% 80px}
+.content{width:100%;max-width:1200px;display:grid;grid-template-columns:1fr 410px;gap:70px;text-align:left;align-items:center}
+.login-copy h1{font-size:clamp(42px,5vw,72px);max-width:540px;line-height:1.04;letter-spacing:-.045em}
+.login-copy p{font-size:20px;line-height:1.5;max-width:390px;margin-bottom:0}
+.signin-card{background:rgba(19,16,12,.97);border:1px solid var(--line);border-radius:12px;padding:32px}
+.signin-card h2{font-size:24px;letter-spacing:-.025em;margin:0 0 8px}.signin-card>p{font-size:14px;line-height:1.5;margin:0 0 28px}
+#signIn>label:not(.remember){display:block;font-size:14px;margin:18px 0 8px}
+#signIn input:not([type=checkbox]){width:100%;height:46px;padding:10px 12px;background:#201b15;border:1px solid var(--line);border-radius:6px;color:var(--text)}
+.password-row{position:relative}.password-row input{padding-right:60px!important}.password-row button{position:absolute;right:5px;top:4px;height:38px;padding:0 9px;color:var(--muted);background:transparent;border:0;font-size:13px}
+.remember{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted);margin:18px 0 22px}.remember input{accent-color:var(--accent)}
+.sign-in{width:100%;min-height:46px;color:#13100c;background:var(--accent);border:0;border-radius:6px;font-weight:700}.sign-in:disabled{opacity:.65;cursor:wait}
+.notice:empty{display:none}.notice{font-size:13px;line-height:1.5;color:#f1b09b;margin:14px 0 0}
+.login-help{border-top:1px solid var(--line);margin-top:24px;color:var(--muted);font-size:13px;line-height:1.5}.login-help summary{padding:16px 0 0;cursor:pointer}.login-help div{padding-top:12px}.login-help span{display:block;margin-top:12px}
+.art{opacity:0;transition:opacity 1s ease}.art.ready{opacity:1}.column img{opacity:0;transition:opacity .6s ease}.column img.ready{opacity:1}.shade{background:linear-gradient(90deg,rgba(10,9,8,.7),rgba(10,9,8,.48))}
+.art-status{position:absolute;bottom:28px;left:36px;display:flex;gap:10px;align-items:center;font-size:12px;color:var(--muted)}.art-status span{width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--muted);border-radius:50%;animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:800px){.content{grid-template-columns:1fr;max-width:410px;gap:28px}.login-copy h1{font-size:36px}.login-copy p{font-size:16px;max-width:340px}.signin-card{padding:24px}.login{padding:100px 20px 90px}.art-status{left:20px}.shade{background:rgba(10,9,8,.75)}}
+@media(prefers-reduced-motion:reduce){.art,.column img{transition:none}.art-status span{animation:none}}
+</style></head><body>
+<main class="login">
+<a class="brand" href="login.html" aria-label="NutFin">Nut<em>Fin</em></a>
+<div class="art" aria-hidden="true" id="art"></div><div class="shade"></div>
+<section class="content" aria-labelledby="heading">
+<div class="login-copy"><h1 id="heading">Your next good watch.</h1><p>Pick up where you left off. Find something worth staying in for.</p></div>
+<div class="signin-card">
+<h2>Sign in to NutFin</h2><p>Use the account your server owner created for you.</p>
+<form id="signIn">
+<label for="username">Username</label><input id="username" name="username" autocomplete="username" required placeholder="Your username" autocapitalize="none" spellcheck="false">
+<label for="password">Password</label><div class="password-row"><input id="password" name="password" type="password" autocomplete="current-password" required placeholder="Your password"><button type="button" id="showPassword" aria-label="Show password">Show</button></div>
+<label class="remember"><input type="checkbox" id="remember">Remember this username</label>
+<button class="sign-in" type="submit">Sign in</button>
+<p class="notice" id="notice" role="status" aria-live="polite"></p>
+</form>
+<details class="login-help"><summary>Need help signing in?</summary><div>Your server owner manages accounts and passwords.<br><span>Design preview: Sam / 1234 or Riz / 2580. Use these demo credentials here.</span></div></details>
+</div>
+</section>
+<div class="art-status" id="artStatus" role="status"><span></span>Loading artwork</div>
+<button class="motion" id="motion" aria-pressed="false">Pause background</button>
+</main>
+<script>
+const ARTWORK = ["ed0f2597c9484bf002558af2b22de5d5", "149fd637e389d59e2a3920c8d4720afc", "4403b036b31331c22be760eea89ec7b6", "38f92fdc6d95b243a1a56002d646f094", "6eae28aa785a0a0dbbff6289e0d6ae55", "8d8390ad4bdb3aae026cf0f3297ea6fd", "a727c5b32bcdc6494b70bdc31511716b", "107b805355aeeb382ee7d08805a4df23", "38f25f9fb07c5e81455006c4e906bf9c", "7973931eee041f9409871f747d088e0c", "4a40fdf7ea4b6b11578ed4820384818c", "bf767b1f6d0fb5d23341314976d146bf", "25c1a665accc70a0b637e1dc753fe553", "4eb426dfa5126f0e5af3e797c8107a61", "beff1cb2a80b2460e90530a1046f5ac5", "5b52830ffdaf5a62312cd8553efa5d4b", "8f2f9962e8b071a70cd8d11abf81b84e", "662e4a991af7e14617aa2f66eedf179d", "caa12efe6d363b5ffa94cfc6e82757fb", "48c8e667848ffbd062695380cfe573c4", "657ba84e0ebe52960fc36d130d0a9789", "ee820eb7eece9441fbd43a9aec9cb2af", "701b7b74bb6f69aa51666f8af36b05b4", "395cd9a4ed48c249982efec3893a22f4", "8fa94a4bb553aa6c2b844dbe2cfd3f2c", "b12eb521bfe6879025c749c9d35f8177", "cd1306042d19aa3e5a4ef1fb219b0074", "32e0d8dff8f3382bf50ed48e480f0b18", "c7d801d08eabb93ce5d66689dff0664f", "854b75de8a978c420726c128ffc5ac63", "f873184423711d83cd14195ec98ca01b", "dae4e53b5238b6be0d1bfb1c23b8db7a", "aa5cd4b73406905b8c0d3b4f53b47120", "96c38a066ce0a0e76ceed4891df123bc", "08f0ac458cb3c3fa01376bb300088ef4", "a173256201474968281992491a893a28", "17510ccc15c0beb6ce21d0013e2c4e4e", "73996bf14fe7ebce1a8714f549156853", "b3b78137d58506ea735bb0f777936b30", "3c70619d5432f04b7aa62a5cdf6a1ec3", "53c6112a24ea975de029c69f09501540", "962661a9b49b1da9eda33c60c8a062e2", "f62c6017bd8c19e31e39d14ef2db1e58", "b0cd3ab105a5dce6caa8775128839801", "e6ab3d54da68753b91aeb866d925d1d2", "43ea4c015dd951794113a0bbe4830fd6", "2bc880efcb54f6fbe3821ae5fada5578", "168dbff168d0a41846644e0c5b0a5bb7", "4c0645667ebc9759347c0cee3761f3e2", "258a10d3179eb06bc5e2d4ed32b2f41c", "ea8a2539eaad608f925439e2cf832aeb", "984b588764bd6abbcae510f282fdeaa0", "8d40503e31b9e534030122aff9735022", "1c4740f207c7bbfc295e7bd3448039e0", "ce588d5582a7e972bc24f7751c437c50", "30acdf159eba39340c8af8ef98ca5c81", "8862bf67b25bf941aff34a8e4ad06e82", "3f0325ea71492ab78bd573423acca278", "4028b4ed1e8164ca2f693e718f9dd295", "e951134a2161e5501d11413e209b3277", "a8f0cdbbb84cb34d971432d5f3a59591", "56b3b78b20f9e48aba0c591185d8b93f", "dc9a30888f4e7e329329688d1ae03530", "729f7ee630f385595c6440f636cf0dbd", "af9b59ba52e101e7d8dd92759962735c", "a0db32e377610cfc6a7bf06341e161a3", "c5acac43754f33545f9cd12d7f18fe62", "56bdbd83492f74cfa5cb41efbf91fb92", "8a3f804bf8306812edb5285721090237", "d19bc5a0ec2561b41a0212e55aa155f7", "be6e8478f1a945b85bac5e59bc8750f2", "a7a2d40cbb95b2490e833c0b468103da", "15d2b728de808eead39aa738c0e97381", "4a9675b44bbe6eccd7a36d16d1d01e7c", "df7a6dd474e28a5aedf831bfe4804129", "2395867e769b018c6c6fb7dfed76b61a", "f15a9468993cb2ae8fbe96a78f335382", "018efaa39c8ef6117e3426380a9d773d", "2825e37bbcc06d17ca07805a86b2884d", "1d050bf4825072f6bc0afb5f80bac458", "dd685728e370d901b792fb13b623d09d", "bf2f2a0324b939028876513c1eeb40b6", "b134eea40db3c7f4f7bcd43a1fd4e194", "0a9a03c8b8620c6ccc0a38314d5e1591", "eed641482bc3cdbff2765df615a9dc16", "382670f5bfc4922d1e4e726bdeede2fb", "14010e1422a8397c3f2e37299c4d581c", "9c2c308d0c63e182dc92eb5732b22980", "1f7844b1d4ba9bbc2757c7955f3295f5", "65300b215a197f49c9b3b1e4d38ea60e", "98b10a26be230f046ad9358918a12d9d", "7fdc2abe37364aceb11e44b813e0e908", "2f819b10831f69c177d3eacec23ae02c", "869b769b701cd94825152c13a8d0a926", "35766ebefbd4692126a8ea2e6faa40b1", "ad9a85e72b6944e33a0ea0485e0dd9bf", "edc4e442ba432db49a7634eb6b947491", "3203b6802ac4815dae018937df7ad3b9", "3f17a24c65d2a751aa7ce5adfd2d84c1", "a548f196ed0947f4ded0d64d94a194a8", "24b65e7bcd6e78953474d4afc0b53eba", "33d326c346c01e101a2c898c75681e5a", "98d63309ca6af6c368f55f2093f051b5", "be2c3cb6144b3f68145ab932a796446b", "0e2ae41a9883993c4cef144845b9ec0f", "3819b0beb251406b164c62af5e9d2320", "3138500c3b635e39b347ee18cf102304", "68f8f3ab0aa4d81440124c99ee1d2659", "bc622e846ea38be4d885a17c36e0fd2e", "4b3d28a747a26506fbadd7be61869889", "c6c9fde74b289cc88ea7defd2d2bda9d", "cd6899b3b58c58fb87d2d0117a2dcf2c", "bfb716f9573c431a412efdf6eeacf2fc", "7549b994032f6e414d7af3f043c1bab8", "ee9e345a9f96ba5a6cbffeed9c1e3e3d", "0967ba5d93ea2bef2e2af5930f471f30", "6bb5a849e4451e0aa2dfdfe021a2ff35", "1ac0e07b533c1f0026ce5065782c244e", "365c5343e40a1da50622099ffada5819", "e6ab1ba269305e056367ae4947699282", "ae3a44bf4b35014a023eb67e0e70d9d8", "063ce36ba262562c0d4d5c8beacf7ab8", "f904ce29f691dcb8f6cb65ad60aaf541", "2c20462d5a52ae4e0493d271300ab14e", "9d32e6078f3bdb56bd0363b1ffd14818", "1ebb3973c8993adc0a1feb724d6a3ff8", "13663d0a9c2b7d12309253964e339892", "0725188bb017b0f7b52bb3ca1d0c9af8", "2b72060ea6adabb4025591a1f9497609", "84a3f703e5927a4f5dcdaedfdea4088f", "ada48da55a15bf5d67af67b4d6aa1f62", "7d85a836f0a1dd347bc35c6abe3751ec", "a482cd1f42351235e4faadc225bd6061", "86f503508647db138dacc6f8f6fcf036", "21a09be5069e1c9c370c660b26df7d17", "65769c78572e0c42cefb357b0ca408e5", "204c6c6e76455b5238fc315efb6ae328", "9362ed21462bf9a1c8826f1a08806c3e", "39e312614b4ede08b42f51b4a63e5fdf", "c70a8c981ee855dea3119d7d4888bd88", "c1182eaaaadd2609926cf97e7857fcb3", "4ffe075d0468fe28170a4cdd9ff7ff1b", "7864768dd98b5d04dd73f72629ee09fb", "7e105db20129acd981c03d3e3340a51c", "7b4fb58bb25a08e0b9661e6875e065d1", "fd23471a3696f2741d776c629d45fb01", "1cffd7698e4968b6414a0c127d292bb1", "f0d54520e6d31fa0f00e81db0c0ffa6a", "c64c5a00acc048a5a43953f981f837e9", "82b8e30fc29c7eb745d6b4544f594507", "d15d8cbe0b2c4a735200821b62e239e2", "dd401f434c52b45539ad40508c14ef96", "cec6411c1985fda0f8b015e1a8f444c8", "a6130e923faa3fe14925a7f78d55ff74", "5eed5fce6144071be354d71a3e1b155a", "e2d2e99cdc215fcc08ea460971e5eed4", "481707e843ab7941a610c4f580898c23", "e1e6c612aaa0fd4bd8d05d8c324e03cf", "e62cc1606557dc7d5707c9d8b29f2f81", "40dc21d2a58f1e75da793a8109b8976e", "fd761deaca77e340e9c46b60e32de4c8", "255d17700495af53cbb6def3e51db2e1", "abb18b9e2fe78cd236edaa96033c58d3", "ce1215b745058ee29f25f55a339f2f32", "764f65f9213e9305dc64c1c186678e6a", "12c9d591067af9de756c1e5579dd7054", "f6882fa571e13fcf00843c9f809bb736", "71966498ed674de9f326ddf559d40ce9", "3a74070d0c54bc516f5ef4c4683cdcdb", "b0f5065fcbf8a1d821039b2225360203", "d7a13481c63bb52dbc3e17afa057c81a", "5913e2530d365cd002c54e67899666b6", "4f542bdf6366e0ec6d419c99ed53e838", "740481dc922cd782cddfd1102838a039", "d12fd86787685163640744e2a459e4ef"];
+const art=document.querySelector('#art');
+for(let c=0;c<7;c++){const col=document.createElement('div');col.className='column';const ids=Array.from({length:8},(_,i)=>ARTWORK[(c*8+i)%ARTWORK.length]);col.innerHTML=[...ids,...ids].map((id,i)=>'<img alt="" src="assets/'+id+'-Primary.jpg" '+(i>7?'loading="lazy"':'')+'>').join('');art.append(col)}
+
+const notice=document.querySelector('#notice'),form=document.querySelector('#signIn'),user=document.querySelector('#username'),pass=document.querySelector('#password'),submit=form.querySelector('[type=submit]');
+user.value=localStorage.getItem('nutfin-remembered-user')||'';
+document.querySelector('#remember').checked=!!user.value;
+document.querySelector('#showPassword').onclick=e=>{const show=pass.type==='password';pass.type=show?'text':'password';e.target.textContent=show?'Hide':'Show';e.target.setAttribute('aria-label',show?'Hide password':'Show password')};
+form.onsubmit=async e=>{
+ e.preventDefault();const name=user.value.trim().toLowerCase();submit.disabled=true;submit.textContent='Signing in…';form.setAttribute('aria-busy','true');notice.textContent='';
+ // Preview only: no credentials are transmitted or saved.
+ await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+ if(!((name==='sam'&&pass.value==='1234')||(name==='riz'&&pass.value==='2580'))){
+  notice.textContent='Those details do not match the preview accounts. Open “Need help signing in?” for demo credentials.';submit.disabled=false;submit.textContent='Sign in';form.removeAttribute('aria-busy');pass.select();return;
+ }
+ localStorage.setItem('nutfin5-profile',JSON.stringify(name));
+ if(document.querySelector('#remember').checked)localStorage.setItem('nutfin-remembered-user',user.value.trim());else localStorage.removeItem('nutfin-remembered-user');
+ pass.value='';location.href='home.html';
+};
+document.querySelector('#motion').onclick=e=>{const paused=document.body.classList.toggle('paused');e.target.textContent=paused?'Play background':'Pause background';e.target.setAttribute('aria-pressed',paused)};
+const artImages=[...art.querySelectorAll('img')],status=document.querySelector('#artStatus');
+let settled=0,loaded=0;
+artImages.forEach(img=>{
+ const done=()=>{settled++;if(img.naturalWidth){loaded++;img.classList.add('ready')}if(loaded>=10||settled===artImages.length){art.classList.add('ready');status.hidden=true}if(settled===artImages.length&&!loaded){status.hidden=false;status.textContent='Artwork unavailable. You can still sign in.'}};
+ if(img.complete)done();else{img.addEventListener('load',done,{once:true});img.addEventListener('error',done,{once:true})}
+});
+</script></body></html>
