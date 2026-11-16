@@ -37,7 +37,7 @@ export const nextTile: TileDef = {
         if (d.fallback) return start(d.fallback);
         return null;
       },
-      empty: html`<div class="pad"><p class="quiet">Nothing queued. When you start a show, its next episode waits here.</p></div>`,
+      empty: html`<p class="quiet">Nothing queued. When you start a show, its next episode waits here.</p>`,
     });
   },
 };

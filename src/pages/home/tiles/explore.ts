@@ -64,7 +64,7 @@ export const recsTile: TileDef = {
             <div class="rcacts"><a class="btn primary sm" href="#${playPath(t)}" aria-label="Play ${t.name}">${icon('play')}Play</a><a class="btn sm" href="#${detailsPath(t)}" aria-label="Details for ${t.name}">Details</a></div>
           </div>`)}</div>`;
       },
-      empty: html`${tileHead('recs', 'bot', 'Picked for you')}${quiet('No picks yet. Watch a few things and I will start guessing.')}`,
+      empty: html`${quiet('No picks yet. Watch a few things and I will start guessing.')}`,
     });
   },
 };
@@ -86,7 +86,7 @@ export const moodTile: TileDef = {
         if (!lib.length) return null;
         return paint(lib);
       },
-      empty: html`${tileHead('mood', 'smile', 'What are you in the mood for?')}${quiet('The library looks empty right now, so there is nothing to browse yet.')}`,
+      empty: html`${quiet('The library looks empty right now, so there is nothing to browse yet.')}`,
       after(el, lib) {
         const ac = new AbortController();
         el.addEventListener('click', e => {
@@ -292,7 +292,7 @@ export const becauseTile: TileDef = {
     });
     function paint(d: D): SafeHtml {
       if (!d.seeds.length) {
-        return html`${tileHead('because', 'eye', 'Top rated here', { count: 'Watch something and this turns personal' })}${posterStrip(d.list)}`;
+        return html`${tileHead('because', 'eye', 'Top rated here', { count: 'Watch something and this turns personal' })}${d.list.length ? posterStrip(d.list) : quiet('Nothing to suggest yet. Watch something and I will line up more like it.')}`;
       }
       const seed = d.seeds.find(s => s.id === d.sel) ?? (d.seeds[0] as Title);
       return html`${tileHead('because', 'eye', `Because you watched ${seed.name}`)}

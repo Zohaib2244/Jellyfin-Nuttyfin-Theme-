@@ -44,7 +44,7 @@ export const newHeroTile: TileDef = {
         const name = ctx.user?.name ?? '';
         return paint(d, name);
       },
-      empty: html`${tileHead('newhero', 'spark', "What's new")}${quiet('Nothing has been added lately. When films and shows land, this page tells you.')}`,
+      empty: html`${quiet('Nothing has been added lately. When films and shows land, this page tells you.')}`,
       after(el, d) {
         const ac = new AbortController();
         el.addEventListener('click', e => {
@@ -143,7 +143,7 @@ export const newShowsTile: TileDef = {
             <span class="nst"><b>${t.name}</b><small>${[t.year, t.genres[0], t.seasonCount ? `${t.seasonCount} season${t.seasonCount > 1 ? 's' : ''}` : ''].filter(Boolean).join(' · ')}</small></span></a>`)}</div>
           <div class="nlfoot"><span>Newest first</span><a class="linkbtn" href="#/shows">Browse all shows${icon('next')}</a></div>`;
       },
-      empty: html`${tileHead('newshows', 'tv', 'New shows')}${quiet('No new shows lately. A new series will appear here when it lands.')}`,
+      empty: html`${quiet('No new shows lately. A new series will appear here when it lands.')}`,
     });
   },
 };

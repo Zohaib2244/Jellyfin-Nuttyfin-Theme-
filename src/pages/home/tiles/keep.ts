@@ -31,7 +31,7 @@ export const keepTile: TileDef = {
         if (!d.base) rec = 0;
         return paint(d, rec, ctx.now());
       },
-      empty: html`<div class="pad"><p class="quiet">Nothing to pick up yet. Start something from Explore and it will wait for you here.</p></div>`,
+      empty: html`<p class="quiet">Nothing to pick up yet. Start something from Explore and it will wait for you here.</p>`,
       after(el, d) {
         const ac = new AbortController();
         const sig = { signal: ac.signal };

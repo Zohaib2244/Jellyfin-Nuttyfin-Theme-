@@ -24,7 +24,7 @@ export const cwMiniTile: TileDef = {
         return html`${tileHead('cwmini', 'clock', inProgress ? 'Continue watching' : 'Up next', { count: `${rows.length} ${inProgress ? 'on the go' : 'waiting'}`, more: { label: 'See all', tab: 'continue' } })}
           <ol class="cwl">${rows.map((r, i) => row(r, i))}</ol>`;
       },
-      empty: html`${tileHead('cwmini', 'clock', 'Continue watching')}<p class="quiet">Nothing half-watched. Start something and it will wait for you here.</p>`,
+      empty: html`<p class="quiet">Nothing half-watched. Start something and it will wait for you here.</p>`,
     });
   },
 };

@@ -201,9 +201,15 @@ export class Router implements RouterApi {
       view.replaceChildren(el);
       window.scrollTo(0, restoreY ?? 0);
     };
-    const st = (document as Document & { startViewTransition?: (cb: () => void) => { updateCallbackDone: Promise<void> } }).startViewTransition;
+    const st = (document as Document & { startViewTransition?: (cb: () => void) => { updateCallbackDone: Promise<void>; ready: Promise<void>; finished: Promise<void> } }).startViewTransition;
     if (this.hasContent && st && !reducedMotion()) {
-      try { await st.call(document, apply).updateCallbackDone; } catch { /* aborted by a newer transition */ }
+      try {
+        const vt = st.call(document, apply);
+        // a transition cut short by a newer navigation rejects these: that is fine, but must not surface as an unhandled rejection
+        vt.ready.catch(() => {});
+        vt.finished.catch(() => {});
+        await vt.updateCallbackDone;
+      } catch { /* aborted by a newer transition */ }
     } else {
       apply();
       if (this.hasContent && !reducedMotion()) {

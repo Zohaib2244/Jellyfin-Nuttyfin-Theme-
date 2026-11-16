@@ -185,7 +185,8 @@ export function createChat(ctx: HomeCtx, brain: NutBrain, onChange: () => void =
   dlg.querySelector('form')?.addEventListener('submit', e => { e.preventDefault(); const v = input.value; input.value = ''; void say(v); });
   dlg.addEventListener('close', () => {
     document.documentElement.classList.remove('nbc-open');
-    const back = trigger && trigger.isConnected ? trigger : null;
+    // the tile may have repainted (its chips are replaced), so fall back to the main "Tell NutBot" button
+    const back = trigger && trigger.isConnected ? trigger : document.querySelector<HTMLElement>('.t-nutbot [data-open]');
     back?.focus();
     onChange();
   });

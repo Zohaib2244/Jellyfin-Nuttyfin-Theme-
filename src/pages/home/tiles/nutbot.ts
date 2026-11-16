@@ -115,7 +115,14 @@ export const nutbotTile: TileDef = {
     const ro = new ResizeObserver(() => syncArrows());
     ro.observe(host);
     // The chat can start/reset while the tile is on screen: reword the chip, but do not steal focus.
-    onChange(() => { const keep = (document.activeElement as HTMLElement | null)?.dataset?.open; paint(); if (keep !== undefined) host.querySelector<HTMLElement>('[data-open]')?.focus({ preventScroll: true }); });
+    onChange(() => {
+      // repainting replaces the chips: put keyboard focus back on the same one
+      const a = document.activeElement as HTMLElement | null;
+      const inside = !!a && host.contains(a);
+      const sel = !inside ? '' : a?.dataset.mood ? `[data-mood="${a.dataset.mood}"]` : a?.hasAttribute('data-open') ? '[data-open]' : '';
+      paint();
+      if (sel) host.querySelector<HTMLElement>(sel)?.focus({ preventScroll: true });
+    });
 
     paint();
     void gatherFacts(ctx).then(f => {

@@ -57,7 +57,7 @@ export const reqMineTile: TileDef = {
         return { on, list: [...list].sort(byRequestState), quota };
       },
       render: paint,
-      empty: html`${tileHead('reqmine', 'inbox', 'Your requests')}${quiet('Nothing asked for yet. Search above, and ask if it is not in the library.')}`,
+      empty: html`${quiet('Nothing asked for yet. Search above, and ask if it is not in the library.')}`,
     });
     load();
     // Refresh after a request made in the search tile.

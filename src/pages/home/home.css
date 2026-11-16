@@ -30,6 +30,7 @@
 .board > .tile.tab-in { animation: tabIn 260ms var(--ease-out) calc(var(--k, 0) * 45ms) backwards; }
 
 /* ── Shared tile furniture ── */
+.onimg .pad .tl { color: var(--muted); text-shadow: none; } /* loading / error / empty states sit on the panel, not on artwork */
 .tl { display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--font-px); font-weight: 400; font-size: 14px; letter-spacing: .06em; color: var(--muted); min-height: 24px; }
 .tl svg { width: 17px; height: 17px; color: var(--accent); }
 .tl .cnt { margin-left: 6px; font-family: var(--font-read); font-weight: 700; font-size: 12.5px; letter-spacing: 0; color: var(--muted); }
@@ -363,7 +364,7 @@ a.cwr:hover { background: var(--raise); }
 .setnx b { font-size: 14px; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .setnx small { color: var(--muted); font-size: 12px; }
 .setnx .minibtn { min-height: 44px; }
-@media (max-width: 1099px) { .fin2 { max-height: none; } .set .sp { height: 84px; } .fnote { margin-top: 4px; } }
+@media (max-width: 1099px) { .fin2 { flex: none; max-height: none; } .fins, .sets { flex: none; } .set { flex: none; grid-template-rows: auto auto; } .strip5 { min-height: 84px; } .set .sp { height: 84px; } .fnote { margin-top: 4px; } }
 @media (max-width: 520px) { .set { grid-template-columns: minmax(0, 1fr); } .setnx { grid-column: 1; grid-row: 3; width: auto; max-width: none; flex-direction: row; align-items: center; flex-wrap: wrap; gap: 8px; } .fin2 { grid-template-columns: auto minmax(0, 1fr); } .fin2 .fr { grid-column: 2; flex-direction: row; align-items: center; } }
 
 /* Leaving soon */

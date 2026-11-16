@@ -24,7 +24,7 @@ export const onTheGoTile: TileDef = {
             <span class="ogart ph" ${ph(r.item.id, r.title)}>${img(thumbUrl(r.item, 480))}${i === 0 ? html`<span class="first">Up first</span>` : r.kind === 'next' ? html`<span class="first next">Next</span>` : ''}<span class="pl">${icon('play')}</span>${r.percent != null ? html`<span class="bar"><i style="width:${r.percent}%"></i></span>` : ''}</span>
             <span><b>${r.title}</b><small>${r.sub}${leftText(r) ? ` · ${leftText(r)}` : ''}</small></span></a>`)}</div>`;
       },
-      empty: html`${tileHead('onthego', 'clock', 'Continue watching')}<p class="quiet">Nothing half-watched and no shows waiting. Pick something in Explore and it will land here.</p>`,
+      empty: html`<p class="quiet">Nothing half-watched and no shows waiting. Pick something in Explore and it will land here.</p>`,
     });
   },
 };
@@ -50,7 +50,7 @@ export const finishTile: TileDef = {
   })}</div>
           <p class="note fnote">${top.of - top.seen <= 2 ? html`<b>${top.seriesName}</b> is almost done. One sitting would finish it.` : 'Shows you have started, closest to done first.'}</p>`;
       },
-      empty: html`${tileHead('finish', 'flag', 'Finish the season')}<p class="quiet">No season is half-watched. Start a show and it will show up here with how far you are.</p>`,
+      empty: html`<p class="quiet">No season is half-watched. Start a show and it will show up here with how far you are.</p>`,
     });
   },
 };
@@ -74,7 +74,7 @@ export const setsTile: TileDef = {
           </div>`;
   })}</div>`;
       },
-      empty: html`${tileHead('sets', 'layers', 'Finish a collection')}<p class="quiet">No box set started. Watch one film from a series and the rest lines up here.</p>`,
+      empty: html`<p class="quiet">No box set started. Watch one film from a series and the rest lines up here.</p>`,
     });
   },
 };

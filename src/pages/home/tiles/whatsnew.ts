@@ -21,7 +21,7 @@ export const whatsNewTile: TileDef = {
         return { list: await ctx.data.recent(60), week: false };
       },
       render: ({ list, week }) => (list.length ? view(list, week, ctx.now()) : null),
-      empty: html`<div class="pad"><p class="quiet">Nothing new has arrived lately. Newly Added will fill up as films and shows land.</p></div>`,
+      empty: html`<p class="quiet">Nothing new has arrived lately. Newly Added will fill up as films and shows land.</p>`,
     });
   },
 };
