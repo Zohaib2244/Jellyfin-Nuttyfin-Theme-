@@ -1,0 +1,18 @@
+/* Variants shared by the library and details pages. They only ADD modifier classes to the global .btn / .chip
+   (base.css is not edited). Lifted from design/mockups/details.html "Buttons & chips". */
+:root { --bad-soft: color-mix(in srgb, var(--bad) 13%, var(--panel)); }
+.chip.ok { color: var(--ok); background: var(--ok-soft); }
+.chip.info { color: var(--info); background: var(--info-soft); }
+.chip.warn { color: var(--warn); background: var(--warn-soft); }
+.chip.num { color: var(--num); background: var(--num-soft); }
+.chip.hot { color: var(--accent); background: var(--accent-soft); }
+.chip.bad { color: var(--bad); background: var(--bad-soft); }
+.chip.mute, .chip.plain { color: var(--muted); background: var(--nested); border-color: var(--line); }
+.btn.big { min-height: 58px; padding: 0 30px; font-size: 20px; }
+.btn.big svg { width: 24px; height: 24px; }
+.btn.danger { background: var(--bad); border-color: var(--bad); color: var(--accent-ink); }
+.btn.danger.out { background: var(--bad-soft); color: var(--bad); }
+.btn.danger:hover { border-color: var(--text); }
+.btn[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.btn[aria-pressed="true"] svg { color: var(--accent); }
+.btn[disabled] { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }

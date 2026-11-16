@@ -38,3 +38,10 @@ export function personImageUrl(personId: string, tag?: string, maxWidth = 160): 
 export function tmdbImage(path: string | undefined, size: 'w185' | 'w342' | 'w500' = 'w342'): string | undefined {
   return path ? `https://image.tmdb.org/t/p/${size}${path}` : undefined;
 }
+
+// ── library/details: begin ──
+/** Scene thumbnail of a chapter (only when the chapter has an ImageTag). */
+export function chapterImageUrl(itemId: string, index: number, tag?: string, maxWidth = 400): string {
+  return `${JF_BASE}/Items/${encodeURIComponent(itemId)}/Images/Chapter/${index}?maxWidth=${Math.round(maxWidth)}&quality=85${tag ? `&tag=${encodeURIComponent(tag)}` : ''}`;
+}
+// ── library/details: end ──
