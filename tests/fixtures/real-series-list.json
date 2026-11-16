@@ -1,0 +1,322 @@
+{
+ "Items": [
+  {
+   "Name": "Johnny Bravo",
+   "Id": "33d326c346c01e101a2c898c75681e5a",
+   "DateCreated": "2026-10-10T21:27:01.9968473Z",
+   "DateLastMediaAdded": "2026-10-10T21:25:05.5295352Z",
+   "PremiereDate": "1997-07-06T19:00:00.0000000Z",
+   "OfficialRating": "TV-Y7",
+   "Overview": "Johnny Bravo tells the story of a biceps-bulging, karate-chopping free spirit who believes he is a gift from God to the women of the earth. Unfortunately for Johnny, everyone else sees him as a narcissistic Mama's boy with big muscles and even bigger hair. In short, he is the quintessential guy who 'just doesn't get it.' No matter what he does, or where he finds himself, he always winds up being his own worst enemy.",
+   "Genres": [
+    "Animation",
+    "Comedy",
+    "Family"
+   ],
+   "CommunityRating": 7.3,
+   "RunTimeTicks": 0,
+   "ProductionYear": 1997,
+   "IsFolder": true,
+   "Type": "Series",
+   "Studios": [
+    {
+     "Name": "Cartoon Network",
+     "Id": "05d703671f62d4d6ee1a3636b89add52"
+    },
+    {
+     "Name": "Hanna-Barbera Cartoons",
+     "Id": "75146138b97455e8b53577e210d4b0cb"
+    },
+    {
+     "Name": "Cartoon Network Studios",
+     "Id": "3afab049993bc80150b7c5a16783293a"
+    }
+   ],
+   "GenreItems": [
+    {
+     "Name": "Animation",
+     "Id": "074229225b7254292f131f9f49f8dcd6"
+    },
+    {
+     "Name": "Comedy",
+     "Id": "08d31605d366d63a7a924f944b4417f1"
+    },
+    {
+     "Name": "Family",
+     "Id": "ccbd8d9008aab2b5e749e1cc4bc458a4"
+    }
+   ],
+   "UserData": {
+    "PlayedPercentage": 0,
+    "UnplayedItemCount": 13,
+    "PlaybackPositionTicks": 0,
+    "PlayCount": 0,
+    "IsFavorite": false,
+    "Played": false,
+    "Key": "33d326c3-46c0-1e10-1a2c-898c75681e5a",
+    "ItemId": "33d326c346c01e101a2c898c75681e5a"
+   },
+   "RecursiveItemCount": 13,
+   "ChildCount": 1,
+   "Status": "Ended",
+   "AirDays": [],
+   "ImageTags": {
+    "Thumb": "d152b32c16429083cd4b2d3c6ef8c8ab",
+    "Logo": "fb65b13f8fab4b55d4f546139b0fd56c",
+    "Primary": "346c9f0591b4311ce50d1e204ed172bf"
+   },
+   "BackdropImageTags": [
+    "51a69a39264d120bd184e328a6a438a3"
+   ],
+   "ImageBlurHashes": {
+    "Backdrop": {
+     "51a69a39264d120bd184e328a6a438a3": "WcKAGjfzNGIt0gR-s$?DxaR-s;IqIpxYob%0s;NJs:WWt3s+R*s:"
+    },
+    "Thumb": {
+     "d152b32c16429083cd4b2d3c6ef8c8ab": "WnIPVQx@k=S*KPt+_MyCWCRQXnWESeWAayt7t7jGtlnNX9NdRPoz"
+    },
+    "Logo": {
+     "fb65b13f8fab4b55d4f546139b0fd56c": "VGMrt3?A0k^d5Bo]RmNJNbsn9fNJs-IsWDNbxXxXNJoK"
+    },
+    "Primary": {
+     "346c9f0591b4311ce50d1e204ed172bf": "dZK^g5xb%F-oq[jF9}NH0XoyE,NMz.kR%LxDXOR-iwj="
+    }
+   },
+   "LocationType": "FileSystem",
+   "MediaType": "Unknown",
+   "EndDate": "2004-08-26T19:00:00.0000000Z",
+   "OriginalLanguage": "en"
+  },
+  {
+   "Name": "Lanterns",
+   "Id": "56b3b78b20f9e48aba0c591185d8b93f",
+   "DateCreated": "2026-08-17T01:52:18.1039892Z",
+   "DateLastMediaAdded": "2026-10-05T01:51:15.8445995Z",
+   "PremiereDate": "2026-08-15T19:00:00.0000000Z",
+   "OfficialRating": "TV-MA",
+   "Overview": "Two intergalactic cops, new recruit John Stewart and Lantern legend Hal Jordan, are drawn into a dark, earth-based mystery as they investigate a murder in the American heartland.",
+   "Genres": [
+    "Sci-Fi & Fantasy",
+    "Mystery",
+    "Action & Adventure"
+   ],
+   "CommunityRating": 6.824,
+   "RunTimeTicks": 0,
+   "ProductionYear": 2026,
+   "IsFolder": true,
+   "Type": "Series",
+   "Studios": [
+    {
+     "Name": "HBO",
+     "Id": "e54a9a384f9494b12c8b0db6d0e0d508"
+    }
+   ],
+   "GenreItems": [
+    {
+     "Name": "Sci-Fi & Fantasy",
+     "Id": "3d621c0b6dc1921bc93fa859f7512270"
+    },
+    {
+     "Name": "Mystery",
+     "Id": "d3a0ead52489743e5a68704142092c71"
+    },
+    {
+     "Name": "Action & Adventure",
+     "Id": "d3d3728a0f119813db4c7733da59771a"
+    }
+   ],
+   "UserData": {
+    "PlayedPercentage": 71.42857142857143,
+    "UnplayedItemCount": 2,
+    "PlaybackPositionTicks": 0,
+    "PlayCount": 0,
+    "IsFavorite": false,
+    "Played": false,
+    "Key": "56b3b78b-20f9-e48a-ba0c-591185d8b93f",
+    "ItemId": "56b3b78b20f9e48aba0c591185d8b93f"
+   },
+   "RecursiveItemCount": 7,
+   "ChildCount": 1,
+   "Status": "Continuing",
+   "AirDays": [],
+   "ImageTags": {
+    "Logo": "55a8bf275a13df154d3432437a49cb7d",
+    "Thumb": "1623a6ecc3cba1ae6d770d9423a2f663",
+    "Primary": "745f27e2e5683440da3fa320aca4e3e1"
+   },
+   "BackdropImageTags": [
+    "799d29b6d9cc8aa7f33c17ec76ff16be"
+   ],
+   "ImageBlurHashes": {
+    "Backdrop": {
+     "799d29b6d9cc8aa7f33c17ec76ff16be": "WEAT_st7oe?uICM{?aR*WBxuRjjb4VIBM|RQxttQoLafWCtQozWB"
+    },
+    "Logo": {
+     "55a8bf275a13df154d3432437a49cb7d": "PjM*ETRkM_xaxuR*M|of_4WWt6t6xaNGM|ofM}WXxts.xaRjR*kC"
+    },
+    "Thumb": {
+     "1623a6ecc3cba1ae6d770d9423a2f663": "W67d~{-V-U?ZM{xt~n?G%2t7RkfjM{%LayIVtQNGIoNHM|IVWERj"
+    },
+    "Primary": {
+     "745f27e2e5683440da3fa320aca4e3e1": "dfGIZ1bbM|j?~UWVWCjZ$*ofR+af-.t7RjWBV@j[ofay"
+    }
+   },
+   "LocationType": "FileSystem",
+   "MediaType": "Unknown"
+  },
+  {
+   "Name": "Prehistoric Planet",
+   "Id": "204c6c6e76455b5238fc315efb6ae328",
+   "DateCreated": "2026-09-06T12:49:19.3322336Z",
+   "DateLastMediaAdded": "2026-09-06T12:27:05.2087677Z",
+   "PremiereDate": "2022-05-22T19:00:00.0000000Z",
+   "OfficialRating": "TV-PG",
+   "Overview": "Experience the wonders of our world like never before in this epic series from Jon Favreau and the producers of Planet Earth. Travel back 66 million years to when majestic dinosaurs and extraordinary creatures roamed the lands, seas, and skies.",
+   "Genres": [
+    "Documentary"
+   ],
+   "CommunityRating": 8.292,
+   "RunTimeTicks": 0,
+   "ProductionYear": 2022,
+   "IsFolder": true,
+   "Type": "Series",
+   "Studios": [
+    {
+     "Name": "Apple TV",
+     "Id": "865e87e3544b4bcd5f1fcd3f7b8358e8"
+    }
+   ],
+   "GenreItems": [
+    {
+     "Name": "Documentary",
+     "Id": "818912eba0fc399e496b109d438effe9"
+    }
+   ],
+   "UserData": {
+    "PlayedPercentage": 26.666666666666668,
+    "UnplayedItemCount": 11,
+    "PlaybackPositionTicks": 0,
+    "PlayCount": 0,
+    "IsFavorite": false,
+    "Played": false,
+    "Key": "204c6c6e-7645-5b52-38fc-315efb6ae328",
+    "ItemId": "204c6c6e76455b5238fc315efb6ae328"
+   },
+   "RecursiveItemCount": 15,
+   "ChildCount": 3,
+   "Status": "Continuing",
+   "AirDays": [],
+   "ImageTags": {
+    "Primary": "98b151905f502c23dadbe2e94ba8ed4b",
+    "Logo": "7d09075f41f58baec0180a830fde7819",
+    "Thumb": "dd0c49fadcac7a9b3c5a5003e55a6c30"
+   },
+   "BackdropImageTags": [
+    "1a15bc74910d79e82d3960e6be4e75a2"
+   ],
+   "ImageBlurHashes": {
+    "Backdrop": {
+     "1a15bc74910d79e82d3960e6be4e75a2": "WUJuTF?bE1kEM{t8_4E0IUWCV@xutSM{M{someone@example.com%Mayt7ofRP"
+    },
+    "Primary": {
+     "98b151905f502c23dadbe2e94ba8ed4b": "dQKLH-~qbcx]g4aeRjofD*WCIUWB~qx]kCax0KIU%Mxu"
+    },
+    "Thumb": {
+     "dd0c49fadcac7a9b3c5a5003e55a6c30": "WfD^$C.SjZx]oztS~p?GofkCxtoz-U?Gn$M_xaf6?u%MV@VsjZof"
+    }
+   },
+   "LocationType": "FileSystem",
+   "MediaType": "Unknown",
+   "EndDate": "2025-11-25T19:00:00.0000000Z"
+  },
+  {
+   "Name": "Silo",
+   "Id": "71966498ed674de9f326ddf559d40ce9",
+   "DateCreated": "2026-11-14T18:33:07.4360484Z",
+   "DateLastMediaAdded": "2026-11-15T01:31:20.4409877Z",
+   "PremiereDate": "2023-05-03T19:00:00.0000000Z",
+   "OfficialRating": "TV-MA",
+   "Overview": "In a ruined and toxic future, thousands live in a giant silo deep underground. After its sheriff breaks a cardinal rule and residents die mysteriously, engineer Juliette starts to uncover shocking secrets and the truth about the silo.",
+   "Genres": [
+    "Sci-Fi & Fantasy",
+    "Drama"
+   ],
+   "CommunityRating": 8.229,
+   "RunTimeTicks": 0,
+   "ProductionYear": 2023,
+   "IsFolder": true,
+   "Type": "Series",
+   "Studios": [
+    {
+     "Name": "Apple TV",
+     "Id": "865e87e3544b4bcd5f1fcd3f7b8358e8"
+    },
+    {
+     "Name": "AMC Studios",
+     "Id": "9e1e29309db4445acfdc1ff469c86e47"
+    },
+    {
+     "Name": "Nemofilms",
+     "Id": "92018ae9dfd34e55f89f9301f6bcb7c8"
+    },
+    {
+     "Name": "Mimir Films",
+     "Id": "9313dcf6be2edcdd9243364a40814af0"
+    },
+    {
+     "Name": "Apple Studios",
+     "Id": "15806488310742cdc6a68512e6897429"
+    }
+   ],
+   "GenreItems": [
+    {
+     "Name": "Sci-Fi & Fantasy",
+     "Id": "3d621c0b6dc1921bc93fa859f7512270"
+    },
+    {
+     "Name": "Drama",
+     "Id": "090eac6e9de4fe1fbc194e5b96691277"
+    }
+   ],
+   "UserData": {
+    "PlayedPercentage": 0,
+    "UnplayedItemCount": 10,
+    "PlaybackPositionTicks": 0,
+    "PlayCount": 0,
+    "IsFavorite": false,
+    "Played": false,
+    "Key": "71966498-ed67-4de9-f326-ddf559d40ce9",
+    "ItemId": "71966498ed674de9f326ddf559d40ce9"
+   },
+   "RecursiveItemCount": 10,
+   "ChildCount": 1,
+   "Status": "Continuing",
+   "AirDays": [],
+   "ImageTags": {
+    "Primary": "48a6bb2a05772f66819c210b9d0aa837",
+    "Thumb": "f264c03455b2d3ac8dff6e3946bd939c",
+    "Logo": "3fb920470e07d3dd2e7ffa8ce13ea903"
+   },
+   "BackdropImageTags": [
+    "bd9e515f7d782e9fd0bccd240ce77c1b"
+   ],
+   "ImageBlurHashes": {
+    "Backdrop": {
+     "bd9e515f7d782e9fd0bccd240ce77c1b": "WrEel3JBIqt6jFWB~8NeM}kBWDjF=]SgaLWWR.oJ=^kBRkWCbHjb"
+    },
+    "Primary": {
+     "48a6bb2a05772f66819c210b9d0aa837": "d58X5xozWV~o-QE3E2s8Dj9aoz%L%LNHkC-:E2j[IVRP"
+    },
+    "Thumb": {
+     "f264c03455b2d3ac8dff6e3946bd939c": "WKA-LdD7IWXlNKt6^$MzWXShR,xYIVt5xtNHV]xFEOsotPRkjGoy"
+    }
+   },
+   "LocationType": "FileSystem",
+   "MediaType": "Unknown",
+   "EndDate": "2026-09-02T19:00:00.0000000Z",
+   "OriginalLanguage": "en"
+  }
+ ],
+ "TotalRecordCount": 4,
+ "StartIndex": 0
+}

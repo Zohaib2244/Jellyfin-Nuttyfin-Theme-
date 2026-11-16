@@ -120,14 +120,14 @@ export function showCardHTML(t: Title, cx: CardCtx): SafeHtml {
       : html`${total ? plural(total, 'episode') : 'Episodes'} on the server, none watched yet.`;
   const act = lane === 'done' || lane === 'not' || !next
     ? html`<a class="btn sm${lane === 'not' ? ' primary' : ''}" href="${cx.href(`/title/${t.id}`)}">${ic('play')}${lane === 'done' ? 'Watch again' : 'Start'}</a>`
-    : html`<a class="btn sm primary" href="${cx.href(watchPath(next.id))}">${ic('play')}Play S${next.season} E${next.episode}</a>`;
+    : html`<a class="btn sm primary" href="${cx.href(watchPath(next.id, { seconds: next.progress ? ticksToSeconds(next.progress.positionTicks) : undefined }))}">${ic('play')}${next.progress ? 'Resume' : 'Play'} S${next.season} E${next.episode}</a>`;
   const still = next?.imageTags.primary ? imageUrl(next.id, 'Primary', { maxWidth: 480, tag: next.imageTags.primary }) : pic(t, 'Backdrop', 480);
   const logo = t.imageTags.logo ? imageUrl(t.id, 'Logo', { maxWidth: 360, tag: t.imageTags.logo }) : null;
   return html`<a class="th ph${logo ? ' haslogo' : ''}" href="${cx.href(`/title/${t.id}`)}" aria-label="${t.name} details" ${raw(phAttrs(t.id))}>
-      <img src="${still}" alt="" loading="lazy">${logo ? html`<img class="lg" src="${logo}" alt="" loading="lazy">` : ''}<span class="ph-t">${t.name}</span></a>
+      <img src="${still}" alt="" loading="lazy">${logo ? html`<img class="slg" src="${logo}" alt="" loading="lazy">` : ''}<span class="ph-t">${t.name}</span></a>
     <div class="bd">
       <div class="tt"><h3><a href="${cx.href(`/title/${t.id}`)}">${t.name}</a></h3>${chip}</div>
-      <p class="nx">${line}</p>
+      <p class="snx">${line}</p>
       ${seasonStrip(t, cx, true)}
       <div class="acts">${act}<a class="btn sm ghost" href="${cx.href(`/title/${t.id}`)}">Episodes</a></div>
     </div>`;

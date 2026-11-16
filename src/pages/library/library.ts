@@ -19,7 +19,7 @@ import './library.css';
 import { slotAt, type BotCtx, type Slot } from './bot';
 import { cardHTML, LANES, shelfHTML, showCardHTML, type CardCtx } from './cards';
 import {
-  activeKeys, groupsFor, laneOf, letterOf, ORDERS, parseState, passes, stateToQuery, toQuery, VIEWS,
+  activeKeys, groupsFor, laneOf, letterOf, ORDERS, parseState, passes, pickResuming, stateToQuery, toQuery, VIEWS,
   type Group, type LibKind, type LibState, type OrderId, type ViewId,
 } from './filters';
 import { openSurprise } from './surprise';
@@ -162,6 +162,7 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
         }
         if (kind === 'shows') {
           if (!seasons.size) await loadShowExtras(ac.signal);
+          markStarted(nextItems); // phase4
           // "Where you are" needs the watching lane, which only the browser can work out
           if (st.sel.where?.size) {
             nextItems = nextItems.filter(t => passes(t, st, groups, { lane: x => laneOf(x) }));
@@ -187,15 +188,31 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
   }
 
   async function loadShowExtras(signal: AbortSignal): Promise<void> {
-    const [s, n] = await Promise.all([
+    const [s, n, r] = await Promise.all([
       backend.allSeasons(signal).catch(() => [] as Season[]),
       backend.nextUp(200).catch(() => [] as Episode[]),
+      backend.resume(60).catch(() => []), // phase4
     ]);
     seasons = new Map();
     for (const x of s) seasons.set(x.seriesId, [...(seasons.get(x.seriesId) ?? []), x]);
     for (const list of seasons.values()) list.sort((a, b) => a.number - b.number);
     nextUp = new Map(n.map(e => [e.seriesId, e]));
+    // ── phase4: begin ── Jellyfin's Next Up leaves out an episode that is half watched, so such shows had no Play button
+    resuming = pickResuming(r);
+    for (const [id, e] of resuming) nextUp.set(id, e);
+    // ── phase4: end ──
   }
+
+  // ── phase4: begin ──
+  let resuming = new Map<string, Episode>();
+  /** A show with a half-watched episode counts as "watching" even when no episode is finished yet. */
+  function markStarted(list: Title[]): void {
+    for (const t of list) {
+      const e = t.kind === 'series' ? resuming.get(t.id) : undefined;
+      if (e?.progress && !t.progress) t.progress = e.progress;
+    }
+  }
+  // ── phase4: end ──
 
   function sortLeft(list: Title[]): Title[] {
     return [...list].sort((a, b) => ((a.unplayedCount || 9999) - (b.unplayedCount || 9999)) || a.name.localeCompare(b.name));
@@ -220,6 +237,7 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
       const limit = until != null ? Math.max(pageSize, until - items.length) : pageSize;
       const r = await fetchRange(items.length, Math.min(limit, 1000), ac.signal);
       if (mine !== generation) return;
+      markStarted(r.items); // phase4
       items = items.concat(r.items);
       total = r.total;
     } catch (e) {

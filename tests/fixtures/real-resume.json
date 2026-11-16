@@ -1,0 +1,322 @@
+{
+ "Items": [
+  {
+   "Name": "The Jordan Boys Legacy",
+   "Id": "8a5ff9ff8973e538cac53e612e69ced9",
+   "HasSubtitles": true,
+   "Container": "mkv",
+   "PremiereDate": "2026-09-26T19:00:00.0000000Z",
+   "Genres": [
+    "Action",
+    "Adventure",
+    "Crime"
+   ],
+   "CommunityRating": 6.9,
+   "RunTimeTicks": 28332480000,
+   "ProductionYear": 2026,
+   "IndexNumber": 7,
+   "ParentIndexNumber": 1,
+   "IsFolder": false,
+   "ParentId": "bb89d5bc73007bad5d0568d74a9f3c4f",
+   "Type": "Episode",
+   "GenreItems": [
+    {
+     "Name": "Action",
+     "Id": "ce06903d834d2c3417e0889dd4049f3b"
+    },
+    {
+     "Name": "Adventure",
+     "Id": "51cec9645b896084d12b259acd05ccb1"
+    },
+    {
+     "Name": "Crime",
+     "Id": "83a9dab21914792744c8fb23b9925dc6"
+    }
+   ],
+   "ParentLogoItemId": "56b3b78b20f9e48aba0c591185d8b93f",
+   "ParentBackdropItemId": "56b3b78b20f9e48aba0c591185d8b93f",
+   "ParentBackdropImageTags": [
+    "799d29b6d9cc8aa7f33c17ec76ff16be"
+   ],
+   "UserData": {
+    "PlayedPercentage": 38.79329924524786,
+    "PlaybackPositionTicks": 10991103750,
+    "PlayCount": 1,
+    "IsFavorite": false,
+    "LastPlayedDate": "2026-11-16T15:09:25.2142627Z",
+    "Played": false,
+    "Key": "8a5ff9ff-8973-e538-cac5-3e612e69ced9",
+    "ItemId": "8a5ff9ff8973e538cac53e612e69ced9"
+   },
+   "SeriesName": "Lanterns",
+   "SeriesId": "56b3b78b20f9e48aba0c591185d8b93f",
+   "SeasonId": "bb89d5bc73007bad5d0568d74a9f3c4f",
+   "SeriesPrimaryImageTag": "745f27e2e5683440da3fa320aca4e3e1",
+   "SeasonName": "Season 1",
+   "VideoType": "VideoFile",
+   "ImageTags": {
+    "Primary": "a7eb88721f1edf5eee5a23ceaa456871"
+   },
+   "BackdropImageTags": [],
+   "ParentLogoImageTag": "55a8bf275a13df154d3432437a49cb7d",
+   "ImageBlurHashes": {
+    "Primary": {
+     "a7eb88721f1edf5eee5a23ceaa456871": "W27-KC4:Ez-=Nd0g^J%$obtQItE2EjM{%2WBoa-p?aNLs8n$E2aJ",
+     "745f27e2e5683440da3fa320aca4e3e1": "dfGIZ1bbM|j?~UWVWCjZ$*ofR+af-.t7RjWBV@j[ofay",
+     "e2eb8723e1b9de1a8b182a0822f4192f": "dQC$+EEOIVRk~AI;M|M|v~S4oeRlVtW=t6ofIUR,xaoe"
+    },
+    "Logo": {
+     "55a8bf275a13df154d3432437a49cb7d": "PjM*ETRkM_xaxuR*M|of_4WWt6t6xaNGM|ofM}WXxts.xaRjR*kC"
+    },
+    "Thumb": {
+     "1623a6ecc3cba1ae6d770d9423a2f663": "W67d~{-V-U?ZM{xt~n?G%2t7RkfjM{%LayIVtQNGIoNHM|IVWERj"
+    },
+    "Backdrop": {
+     "799d29b6d9cc8aa7f33c17ec76ff16be": "WEAT_st7oe?uICM{?aR*WBxuRjjb4VIBM|RQxttQoLafWCtQozWB"
+    }
+   },
+   "ParentThumbItemId": "56b3b78b20f9e48aba0c591185d8b93f",
+   "ParentThumbImageTag": "1623a6ecc3cba1ae6d770d9423a2f663",
+   "ParentPrimaryImageItemId": "bb89d5bc73007bad5d0568d74a9f3c4f",
+   "ParentPrimaryImageTag": "e2eb8723e1b9de1a8b182a0822f4192f",
+   "LocationType": "FileSystem",
+   "MediaType": "Video",
+   "OriginalLanguage": "en"
+  },
+  {
+   "Name": "The Engineer",
+   "Id": "0b2d969dc7039e6e9ff1dd62426700c7",
+   "HasSubtitles": true,
+   "Container": "mkv",
+   "PremiereDate": "2024-11-13T19:00:00.0000000Z",
+   "Overview": "Juliette finds sanctuary in a silo long ago destroyed by war, thinking she's alone.",
+   "Genres": [
+    "Drama",
+    "Mystery",
+    "Sci-Fi"
+   ],
+   "CommunityRating": 6.846,
+   "RunTimeTicks": 27198720000,
+   "ProductionYear": 2024,
+   "IndexNumber": 1,
+   "ParentIndexNumber": 2,
+   "IsFolder": false,
+   "ParentId": "0de2320704aa4f649975e55bcd5cec07",
+   "Type": "Episode",
+   "GenreItems": [
+    {
+     "Name": "Drama",
+     "Id": "090eac6e9de4fe1fbc194e5b96691277"
+    },
+    {
+     "Name": "Mystery",
+     "Id": "d3a0ead52489743e5a68704142092c71"
+    },
+    {
+     "Name": "Sci-Fi",
+     "Id": "d3bf560475125eed829c435f3d8329e3"
+    }
+   ],
+   "ParentLogoItemId": "71966498ed674de9f326ddf559d40ce9",
+   "ParentBackdropItemId": "71966498ed674de9f326ddf559d40ce9",
+   "ParentBackdropImageTags": [
+    "bd9e515f7d782e9fd0bccd240ce77c1b"
+   ],
+   "UserData": {
+    "PlayedPercentage": 74.65132778307215,
+    "PlaybackPositionTicks": 20304205620,
+    "PlayCount": 2,
+    "IsFavorite": false,
+    "LastPlayedDate": "2026-11-15T10:38:58.5916294Z",
+    "Played": false,
+    "Key": "0b2d969d-c703-9e6e-9ff1-dd62426700c7",
+    "ItemId": "0b2d969dc7039e6e9ff1dd62426700c7"
+   },
+   "SeriesName": "Silo",
+   "SeriesId": "71966498ed674de9f326ddf559d40ce9",
+   "SeasonId": "0de2320704aa4f649975e55bcd5cec07",
+   "SeriesPrimaryImageTag": "48a6bb2a05772f66819c210b9d0aa837",
+   "SeasonName": "Season 2",
+   "VideoType": "VideoFile",
+   "ImageTags": {
+    "Primary": "68fd59b2b36e66a99e52756206517910"
+   },
+   "BackdropImageTags": [],
+   "ParentLogoImageTag": "3fb920470e07d3dd2e7ffa8ce13ea903",
+   "ImageBlurHashes": {
+    "Primary": {
+     "68fd59b2b36e66a99e52756206517910": "W13b%H4;E2~94Vt,ysi^RPt7Mxb^Iwskr=SPWAtQ%eM}kVxaNHtQ",
+     "48a6bb2a05772f66819c210b9d0aa837": "d58X5xozWV~o-QE3E2s8Dj9aoz%L%LNHkC-:E2j[IVRP",
+     "114d2798007da335387a746694ccaa5b": "dfGt$XRlOExs~8RktQxZ?FocWUax~8ocNvoe?9oes:ox"
+    },
+    "Thumb": {
+     "f264c03455b2d3ac8dff6e3946bd939c": "WKA-LdD7IWXlNKt6^$MzWXShR,xYIVt5xtNHV]xFEOsotPRkjGoy"
+    },
+    "Backdrop": {
+     "bd9e515f7d782e9fd0bccd240ce77c1b": "WrEel3JBIqt6jFWB~8NeM}kBWDjF=]SgaLWWR.oJ=^kBRkWCbHjb"
+    }
+   },
+   "ParentThumbItemId": "71966498ed674de9f326ddf559d40ce9",
+   "ParentThumbImageTag": "f264c03455b2d3ac8dff6e3946bd939c",
+   "ParentPrimaryImageItemId": "0de2320704aa4f649975e55bcd5cec07",
+   "ParentPrimaryImageTag": "114d2798007da335387a746694ccaa5b",
+   "LocationType": "FileSystem",
+   "MediaType": "Video"
+  },
+  {
+   "Name": "The Odyssey",
+   "Id": "c64c5a00acc048a5a43953f981f837e9",
+   "HasSubtitles": true,
+   "Container": "mov,mp4,m4a,3gp,3g2,mj2",
+   "PremiereDate": "2026-07-14T19:00:00.0000000Z",
+   "OfficialRating": "R",
+   "Overview": "Odysseus, the legendary King of Ithaca, embarks on a long and perilous journey home following the Trojan War. Throughout his voyage, he is forced to confront the whims of gods, mythological monsters, and trials that stretch both his cunning and his humanity to the breaking point.",
+   "Genres": [
+    "Adventure",
+    "Action",
+    "Fantasy"
+   ],
+   "CommunityRating": 8,
+   "RunTimeTicks": 103556801670,
+   "ProductionYear": 2026,
+   "IsFolder": false,
+   "ParentId": "e675012a1892a87530d2c0b0d14a9026",
+   "Type": "Movie",
+   "GenreItems": [
+    {
+     "Name": "Adventure",
+     "Id": "51cec9645b896084d12b259acd05ccb1"
+    },
+    {
+     "Name": "Action",
+     "Id": "ce06903d834d2c3417e0889dd4049f3b"
+    },
+    {
+     "Name": "Fantasy",
+     "Id": "a30dcc65be22eb3c21c03f7c1c7a57d1"
+    }
+   ],
+   "UserData": {
+    "PlayedPercentage": 27.273313374433805,
+    "PlaybackPositionTicks": 28243371040,
+    "PlayCount": 2,
+    "IsFavorite": false,
+    "LastPlayedDate": "2026-11-09T13:23:53.7990206Z",
+    "Played": false,
+    "Key": "c64c5a00-acc0-48a5-a439-53f981f837e9",
+    "ItemId": "c64c5a00acc048a5a43953f981f837e9"
+   },
+   "VideoType": "VideoFile",
+   "ImageTags": {
+    "Thumb": "48045e688689e2529f43e744f9daa360",
+    "Primary": "75bef68e09763bc4f4595bc77bc4ce4b",
+    "Logo": "60fa9ecb17d8a27f9ce8c616f9ecf96c"
+   },
+   "BackdropImageTags": [
+    "978e2f04a81ae96e8bf01a48384824e8"
+   ],
+   "ImageBlurHashes": {
+    "Backdrop": {
+     "978e2f04a81ae96e8bf01a48384824e8": "W839MybIRiofWAfk%%bHRij]WBfkyFfRV@bIaej[tmj[V@bHayfk"
+    },
+    "Thumb": {
+     "48045e688689e2529f43e744f9daa360": "WP5j2Zo~kXo~Vrflu6kDaykWe.aye.f6adaxbHayj^kCaeaeayfk"
+    },
+    "Primary": {
+     "75bef68e09763bc4f4595bc77bc4ce4b": "dkEVD~I[s:xa~UIroLs:xsRQWBoeR*aeayj[WXkCazWB"
+    },
+    "Logo": {
+     "60fa9ecb17d8a27f9ce8c616f9ecf96c": "P65h+Hj[I8xwt9WAo#ogI7WAI8V?t9WAogfkx_j]RhogfQaykCj]"
+    }
+   },
+   "LocationType": "FileSystem",
+   "MediaType": "Video",
+   "OriginalLanguage": "en"
+  },
+  {
+   "Name": "Dirt and Stars",
+   "Id": "2673afcb1d826265bed2a18e57082749",
+   "HasSubtitles": true,
+   "Container": "mkv",
+   "PremiereDate": "2026-10-03T19:00:00.0000000Z",
+   "Genres": [
+    "Action",
+    "Adventure",
+    "Crime"
+   ],
+   "CommunityRating": 6.8,
+   "RunTimeTicks": 34106239999,
+   "ProductionYear": 2026,
+   "IndexNumber": 8,
+   "ParentIndexNumber": 1,
+   "IsFolder": false,
+   "ParentId": "bb89d5bc73007bad5d0568d74a9f3c4f",
+   "Type": "Episode",
+   "GenreItems": [
+    {
+     "Name": "Action",
+     "Id": "ce06903d834d2c3417e0889dd4049f3b"
+    },
+    {
+     "Name": "Adventure",
+     "Id": "51cec9645b896084d12b259acd05ccb1"
+    },
+    {
+     "Name": "Crime",
+     "Id": "83a9dab21914792744c8fb23b9925dc6"
+    }
+   ],
+   "ParentLogoItemId": "56b3b78b20f9e48aba0c591185d8b93f",
+   "ParentBackdropItemId": "56b3b78b20f9e48aba0c591185d8b93f",
+   "ParentBackdropImageTags": [
+    "799d29b6d9cc8aa7f33c17ec76ff16be"
+   ],
+   "UserData": {
+    "PlayedPercentage": 22.531304477495357,
+    "PlaybackPositionTicks": 7684580780,
+    "PlayCount": 1,
+    "IsFavorite": false,
+    "LastPlayedDate": "2026-10-10T14:20:16.3038887Z",
+    "Played": false,
+    "Key": "376098001008",
+    "ItemId": "2673afcb1d826265bed2a18e57082749"
+   },
+   "SeriesName": "Lanterns",
+   "SeriesId": "56b3b78b20f9e48aba0c591185d8b93f",
+   "SeasonId": "bb89d5bc73007bad5d0568d74a9f3c4f",
+   "SeriesPrimaryImageTag": "745f27e2e5683440da3fa320aca4e3e1",
+   "SeasonName": "Season 1",
+   "VideoType": "VideoFile",
+   "ImageTags": {
+    "Primary": "0f7eb1720f1e7792d6a1716f4c2b547b"
+   },
+   "BackdropImageTags": [],
+   "ParentLogoImageTag": "55a8bf275a13df154d3432437a49cb7d",
+   "ImageBlurHashes": {
+    "Primary": {
+     "0f7eb1720f1e7792d6a1716f4c2b547b": "W37K^x^k_ItRyC.i^n?ZDlN1M~Dm-;--MyofM}M|?=i~%en,ae%d",
+     "745f27e2e5683440da3fa320aca4e3e1": "dfGIZ1bbM|j?~UWVWCjZ$*ofR+af-.t7RjWBV@j[ofay",
+     "e2eb8723e1b9de1a8b182a0822f4192f": "dQC$+EEOIVRk~AI;M|M|v~S4oeRlVtW=t6ofIUR,xaoe"
+    },
+    "Logo": {
+     "55a8bf275a13df154d3432437a49cb7d": "PjM*ETRkM_xaxuR*M|of_4WWt6t6xaNGM|ofM}WXxts.xaRjR*kC"
+    },
+    "Thumb": {
+     "1623a6ecc3cba1ae6d770d9423a2f663": "W67d~{-V-U?ZM{xt~n?G%2t7RkfjM{%LayIVtQNGIoNHM|IVWERj"
+    },
+    "Backdrop": {
+     "799d29b6d9cc8aa7f33c17ec76ff16be": "WEAT_st7oe?uICM{?aR*WBxuRjjb4VIBM|RQxttQoLafWCtQozWB"
+    }
+   },
+   "ParentThumbItemId": "56b3b78b20f9e48aba0c591185d8b93f",
+   "ParentThumbImageTag": "1623a6ecc3cba1ae6d770d9423a2f663",
+   "ParentPrimaryImageItemId": "bb89d5bc73007bad5d0568d74a9f3c4f",
+   "ParentPrimaryImageTag": "e2eb8723e1b9de1a8b182a0822f4192f",
+   "LocationType": "FileSystem",
+   "MediaType": "Video",
+   "OriginalLanguage": "en"
+  }
+ ],
+ "TotalRecordCount": 4,
+ "StartIndex": 0
+}

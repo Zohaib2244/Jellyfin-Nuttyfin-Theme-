@@ -1,0 +1,184 @@
+{
+ "Items": [
+  {
+   "Name": "Forests",
+   "Id": "0428d9544aa49ef051ffff02106407d3",
+   "HasSubtitles": true,
+   "Container": "mov,mp4,m4a,3gp,3g2,mj2",
+   "PremiereDate": "2022-05-26T19:00:00.0000000Z",
+   "CommunityRating": 7.6,
+   "RunTimeTicks": 24668470000,
+   "ProductionYear": 2022,
+   "IndexNumber": 5,
+   "ParentIndexNumber": 1,
+   "IsFolder": false,
+   "Type": "Episode",
+   "ParentLogoItemId": "204c6c6e76455b5238fc315efb6ae328",
+   "ParentBackdropItemId": "204c6c6e76455b5238fc315efb6ae328",
+   "ParentBackdropImageTags": [
+    "1a15bc74910d79e82d3960e6be4e75a2"
+   ],
+   "UserData": {
+    "PlaybackPositionTicks": 0,
+    "PlayCount": 0,
+    "IsFavorite": false,
+    "Played": false,
+    "Key": "418505001005",
+    "ItemId": "0428d9544aa49ef051ffff02106407d3"
+   },
+   "SeriesName": "Prehistoric Planet",
+   "SeriesId": "204c6c6e76455b5238fc315efb6ae328",
+   "SeasonId": "81dcc4eae1d01640bfbd1094debfdd08",
+   "SeriesPrimaryImageTag": "98b151905f502c23dadbe2e94ba8ed4b",
+   "SeasonName": "Season 1",
+   "VideoType": "VideoFile",
+   "ImageTags": {
+    "Primary": "c032ed0cb6d1b47ed1dce4304577dc11"
+   },
+   "BackdropImageTags": [],
+   "ParentLogoImageTag": "7d09075f41f58baec0180a830fde7819",
+   "ImageBlurHashes": {
+    "Primary": {
+     "c032ed0cb6d1b47ed1dce4304577dc11": "WfB|d0t7WBt7fPof_NogRkofWBj]?cogWBt7ayj]%gkCWVofjtkC",
+     "98b151905f502c23dadbe2e94ba8ed4b": "dQKLH-~qbcx]g4aeRjofD*WCIUWB~qx]kCax0KIU%Mxu",
+     "50797e464c92e5f2b6bda1807cb9a898": "djGA5#-;t7x[-ojFoKof0fIpRjRjT0bcW=bb-;s:jYtR"
+    },
+    "Thumb": {
+     "dd0c49fadcac7a9b3c5a5003e55a6c30": "WfD^$C.SjZx]oztS~p?GofkCxtoz-U?Gn$M_xaf6?u%MV@VsjZof"
+    },
+    "Backdrop": {
+     "1a15bc74910d79e82d3960e6be4e75a2": "WUJuTF?bE1kEM{t8_4E0IUWCV@xutSM{M{someone@example.com%Mayt7ofRP"
+    }
+   },
+   "ParentThumbItemId": "204c6c6e76455b5238fc315efb6ae328",
+   "ParentThumbImageTag": "dd0c49fadcac7a9b3c5a5003e55a6c30",
+   "ParentPrimaryImageItemId": "81dcc4eae1d01640bfbd1094debfdd08",
+   "ParentPrimaryImageTag": "50797e464c92e5f2b6bda1807cb9a898",
+   "LocationType": "FileSystem",
+   "MediaType": "Video"
+  },
+  {
+   "Name": "Monkey Brains",
+   "Id": "5de894429187de4185848463b7e6324d",
+   "HasSubtitles": true,
+   "Container": "mkv",
+   "PremiereDate": "2012-11-02T19:00:00.0000000Z",
+   "CommunityRating": 5.5,
+   "RunTimeTicks": 14240210000,
+   "ProductionYear": 2012,
+   "IndexNumber": 7,
+   "ParentIndexNumber": 1,
+   "IsFolder": false,
+   "Type": "Episode",
+   "ParentLogoItemId": "73996bf14fe7ebce1a8714f549156853",
+   "ParentBackdropItemId": "73996bf14fe7ebce1a8714f549156853",
+   "ParentBackdropImageTags": [
+    "50fd8945a840acff711c07106d4ffa39"
+   ],
+   "UserData": {
+    "PlaybackPositionTicks": 0,
+    "PlayCount": 1,
+    "IsFavorite": false,
+    "LastPlayedDate": "2026-10-12T04:52:40.1466036Z",
+    "Played": false,
+    "Key": "261451001007",
+    "ItemId": "5de894429187de4185848463b7e6324d"
+   },
+   "SeriesName": "Teenage Mutant Ninja Turtles",
+   "SeriesId": "73996bf14fe7ebce1a8714f549156853",
+   "SeasonId": "e1619cbaa5af52ba30561703ce23dbb6",
+   "SeriesPrimaryImageTag": "5ab164930ff9ab85031186b6a8fbbc8d",
+   "SeasonName": "Season 1",
+   "VideoType": "VideoFile",
+   "ImageTags": {
+    "Primary": "11eecadfaeb553b7929ed151b6e178e9"
+   },
+   "BackdropImageTags": [],
+   "ParentLogoImageTag": "894b38972e9633bb22b8e7977229e457",
+   "ImageBlurHashes": {
+    "Primary": {
+     "11eecadfaeb553b7929ed151b6e178e9": "WB7nUU-o014:xu-nkqRjRPxux]RPI;M|wb-po}IV%goeMxR+o}ax",
+     "5ab164930ff9ab85031186b6a8fbbc8d": "d88;fA.8N?oiv=o5xu%M%NWTbrx[V0W8WERS4XIpoNRU",
+     "9259b1caf3da3bcfb0de07c332ded411": "dEDlo|RpNXV{4YN2oIsAEoxuxGnioijJo#Nb0MadoztR"
+    },
+    "Logo": {
+     "894b38972e9633bb22b8e7977229e457": "PcGJZPkB9Ja$nPj?RQt6~EkBWmkCX4bHRjoLs0agxUt6R*WCR%WE"
+    },
+    "Thumb": {
+     "9de4015fda1dbd4cf2e3fd52c051f9cc": "WhG7Pi^O,0rsrsxC[@w0sAt6X8j?[-wcskWZX6bI}r-UobV[Rkjv"
+    },
+    "Backdrop": {
+     "50fd8945a840acff711c07106d4ffa39": "W88NeNx[M{V]R:Rn4+N2xnxts?ocxzofNFWCt7t7?KxWacWBM~M}"
+    }
+   },
+   "ParentThumbItemId": "73996bf14fe7ebce1a8714f549156853",
+   "ParentThumbImageTag": "9de4015fda1dbd4cf2e3fd52c051f9cc",
+   "ParentPrimaryImageItemId": "e1619cbaa5af52ba30561703ce23dbb6",
+   "ParentPrimaryImageTag": "9259b1caf3da3bcfb0de07c332ded411",
+   "LocationType": "FileSystem",
+   "MediaType": "Video"
+  },
+  {
+   "Name": "Fall",
+   "Id": "0129d0945604cba8be97de42d51c1d35",
+   "HasSubtitles": true,
+   "Container": "mkv",
+   "PremiereDate": "2026-03-06T00:00:00.0000000Z",
+   "CommunityRating": 10,
+   "RunTimeTicks": 26726720000,
+   "ProductionYear": 2026,
+   "IndexNumber": 4,
+   "ParentIndexNumber": 1,
+   "IsFolder": false,
+   "Type": "Episode",
+   "ParentLogoItemId": "a727c5b32bcdc6494b70bdc31511716b",
+   "ParentBackdropItemId": "a727c5b32bcdc6494b70bdc31511716b",
+   "ParentBackdropImageTags": [
+    "b53fc7998851c9befaac0874cd251551"
+   ],
+   "UserData": {
+    "PlaybackPositionTicks": 0,
+    "PlayCount": 0,
+    "IsFavorite": false,
+    "Played": false,
+    "Key": "473613001004",
+    "ItemId": "0129d0945604cba8be97de42d51c1d35"
+   },
+   "SeriesName": "The Dinosaurs",
+   "SeriesId": "a727c5b32bcdc6494b70bdc31511716b",
+   "SeasonId": "88818d8223aef2ebcb63e55b1bd325e4",
+   "SeriesPrimaryImageTag": "672da5114664d153dc42e6a7342e69fe",
+   "SeasonName": "Season 1",
+   "VideoType": "VideoFile",
+   "ImageTags": {
+    "Primary": "2171f54abf5a72885675d6d061a94f39"
+   },
+   "BackdropImageTags": [],
+   "ParentLogoImageTag": "5c9229c4f1b44e4b23336f772289f0ed",
+   "ImageBlurHashes": {
+    "Primary": {
+     "2171f54abf5a72885675d6d061a94f39": "WvIp#MoyEMs.NIWD~BkCNHxZWDWDbwR-j[xZoejtWYWXWVoeoLj@",
+     "672da5114664d153dc42e6a7342e69fe": "d97C8I%gHqIBM|Mx?v%#_1ofkDW=_MxuRkM{DNMx?v%g",
+     "78894ee2bde015183ae2a4e8be3e73b8": "d97C8I%gDNIBM}Mx?v%#?Zoeo#X8_MxuRkM{HrM_?v%g"
+    },
+    "Logo": {
+     "5c9229c4f1b44e4b23336f772289f0ed": "OAKChTtSMc9Z0KtlInMyw{^PSgx^f+nN|HIoob-:XSRixF"
+    },
+    "Thumb": {
+     "4f0638a07274cfd7eb67bf000ad3dbdc": "WZDvApRk0Lxtt7WC-;WBD*t6xtR*IoWBt7t7t6RkofWCfRofWBWB"
+    },
+    "Backdrop": {
+     "b53fc7998851c9befaac0874cd251551": "NfGbn:E1xaWBRj%M~pWBRPWVt7og?bs:Rjj?t7a#"
+    }
+   },
+   "ParentThumbItemId": "a727c5b32bcdc6494b70bdc31511716b",
+   "ParentThumbImageTag": "4f0638a07274cfd7eb67bf000ad3dbdc",
+   "ParentPrimaryImageItemId": "88818d8223aef2ebcb63e55b1bd325e4",
+   "ParentPrimaryImageTag": "78894ee2bde015183ae2a4e8be3e73b8",
+   "LocationType": "FileSystem",
+   "MediaType": "Video"
+  }
+ ],
+ "TotalRecordCount": 3,
+ "StartIndex": 0
+}

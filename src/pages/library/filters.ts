@@ -4,7 +4,7 @@
  * Pure module, unit-tested. Rules: within one group the switches add up (OR), groups narrow each other (AND).
  * Mood and Genre are two ways to pick genres and share one bucket, so they add together.
  */
-import type { ItemsQuery, SortKey, Title } from '../../api/types';
+import type { Episode, ItemsQuery, SortKey, Title } from '../../api/types';
 import type { XIconName } from '../common/icons';
 
 export type LibKind = 'movies' | 'shows';
@@ -252,7 +252,7 @@ export function laneOf(t: Title, now = Date.now()): Lane {
   const unplayed = t.unplayedCount ?? total;
   const watched = Math.max(0, total - unplayed);
   if (total > 0 && unplayed === 0) return 'done';
-  if (watched === 0) return 'not';
+  if (watched === 0 && !t.progress) return 'not'; // phase4: a half-watched episode means the show is under way
   const added = t.lastEpisodeAdded ? Date.parse(t.lastEpisodeAdded.replace(/(\.\d{3})\d+/, '$1')) : NaN;
   if (t.status === 'Continuing' && Number.isFinite(added) && now - added < 14 * 864e5) return 'new';
   return 'watching';
@@ -264,3 +264,16 @@ export function letterOf(name: string): string {
   const c = (n[0] ?? '#').toUpperCase();
   return /[A-Z]/.test(c) ? c : '#';
 }
+
+// ── phase4: begin ──
+/** The half-watched episode to press play on, per series: the most recently watched one (Resume comes newest first). */
+export function pickResuming(list: ReadonlyArray<{ kind: string; progress?: unknown }>): Map<string, Episode> {
+  const out = new Map<string, Episode>();
+  for (const e of list) {
+    if (e.kind !== 'episode') continue;
+    const ep = e as Episode;
+    if (ep.seriesId && !out.has(ep.seriesId)) out.set(ep.seriesId, ep);
+  }
+  return out;
+}
+// ── phase4: end ──
