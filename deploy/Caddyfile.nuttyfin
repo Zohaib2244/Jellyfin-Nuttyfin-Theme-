@@ -1,0 +1,108 @@
+# ──────────────────────────────────────────────────────────────────────────────────────────────
+# Nuttyfin: Caddy blocks. DRAFT, NOT APPLIED. Paste into /opt/docker/infra/caddy/Caddyfile by hand (see deploy/README.md).
+#
+# Needs one extra volume line in /opt/docker/infra/caddy/docker-compose.yml (Caddy runs in Docker):
+#       - /opt/docker/infra/nuttyfin:/srv/nuttyfin:ro
+# so the built app (a "current" symlink into releases/) is visible as /srv/nuttyfin/current inside the container.
+#
+# Same-origin layout: one hostname, three upstreams, so the browser needs no CORS and no keys.
+#   /              the static app (dist/), SPA fallback to index.html
+#   /jf/*          Jellyfin  192.168.1.24:8096   (prefix stripped; websocket at /jf/socket works untouched)
+#   /seerr/*       Seerr     192.168.1.24:5055   (prefix stripped; Set-Cookie Path rewritten to /seerr)
+#   /nutfin-api/*  helper    192.168.1.24:8120   (host systemd service, see deploy/nuttyfin-helper.service)
+# Caddy is in Docker, so host services are reached through the LAN address, exactly like every other block here.
+# (Tighter alternative used by T3 and mc-manager: bind the helper to docker0 and use 172.17.0.1:8120 instead.)
+# ──────────────────────────────────────────────────────────────────────────────────────────────
+
+(nuttyfin_site) {
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Frame-Options SAMEORIGIN
+		-Server
+	}
+
+	# ── helper service (NutBot, On TV calendar, smart delete) ──
+	# Slow on purpose: a NutBot turn can take 30 s and a real delete can take a couple of minutes.
+	handle /nutfin-api/* {
+		reverse_proxy 192.168.1.24:8120 {
+			flush_interval -1
+			transport http {
+				dial_timeout 5s
+				response_header_timeout 150s
+				read_timeout 150s
+				write_timeout 150s
+			}
+		}
+	}
+
+	# ── Jellyfin (video, images, API, websocket) ──
+	# handle_path strips /jf, so Jellyfin sees its normal paths and needs no "base URL" setting.
+	# Caddy upgrades websockets by itself (the SPA's /jf/socket). flush_interval -1 = never buffer video or events.
+	# No overall timeout: a movie is a long response. Only the connect and first-byte waits are bounded.
+	handle_path /jf/* {
+		reverse_proxy 192.168.1.24:8096 {
+			flush_interval -1
+			transport http {
+				dial_timeout 5s
+				response_header_timeout 120s
+			}
+		}
+	}
+
+	# ── Seerr (requests) ──
+	# Seerr sets its session cookie as "connect.sid; Path=/". Under a prefix that would send the Seerr cookie to
+	# /jf/* and /nutfin-api/* as well, so the path is narrowed to /seerr (see deploy/README.md, "Seerr behind /seerr").
+	handle_path /seerr/* {
+		reverse_proxy 192.168.1.24:5055 {
+			header_down Set-Cookie "(?i)Path=/(;|$)" "Path=/seerr$1"
+			transport http {
+				dial_timeout 5s
+				response_header_timeout 60s
+			}
+		}
+	}
+
+	# ── the app itself ──
+	# Hashed build files never change under the same name: cache them for a year. A missing one must be a real 404
+	# (never index.html with a year-long cache).
+	handle /assets/* {
+		root * /srv/nuttyfin/current
+		header Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	# Everything else (index.html, favicon, #/routes) is revalidated every time, so a new deploy shows up on the next load.
+	handle {
+		root * /srv/nuttyfin/current
+		header Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+# LAN (and Tailscale through the same DNS name). Plain HTTP like most blocks in this file.
+http://nuttyfin.avns.nut {
+	import nuttyfin_site
+}
+
+# ──────────────────────────────────────────────────────────────────────────────────────────────
+# OPTIONAL, PUBLIC: nuttyfin.avns.site.   LEAVE COMMENTED OUT unless you decided on it.
+#
+# CAUTION (your own rule): the app has no login of its own beyond Jellyfin's, same as jellyfin.avns.site today.
+# Reaching it still shows only the sign-in page, but the Seerr proxy path also exposes Seerr's unauthenticated
+# endpoints, exactly like jellyseerr.avns.site does today. If you want it public, either
+#   (a) put a Cloudflare Access app (owner email only) in front of nuttyfin.avns.site FIRST, or
+#   (b) accept the same posture as jellyfin.avns.site and say so on purpose.
+# Do NOT use `add-service nuttyfin ... --public`: it would write a plain reverse_proxy block that conflicts with this one.
+# Add the tunnel hostname (nuttyfin.avns.site -> http://localhost:80 or the same target as the other .site blocks) and DNS by hand.
+# Streaming video through a Cloudflare tunnel is against Cloudflare's terms on free plans; jellyfin.avns.site already does it.
+#
+# http://nuttyfin.avns.site {
+#	import nuttyfin_site
+# }
+# (Cloudflare terminates TLS, so Seerr's cookie is not marked Secure here. That is fine for a session cookie on a
+#  same-origin app, and adding `; Secure` would be optional hardening: see deploy/README.md.)
+# ──────────────────────────────────────────────────────────────────────────────────────────────
