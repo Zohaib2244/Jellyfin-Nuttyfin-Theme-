@@ -4,6 +4,7 @@
  * tells it and reports what the person did through `UIHost`.
  */
 import { esc, html, raw, setHtml } from '../../lib/html';
+import { store } from '../../lib/storage';
 import { ic, spriteMarkup, type PlIcon } from './icons';
 import { clamp, fmt, spoken } from './timefmt';
 
@@ -489,7 +490,8 @@ export class PlayerUI {
   hideResume(): void { this.$('.pl-toast.resume').classList.remove('on'); }
 
   showHintOnce(delay = 1400): void {
-    if (TOUCHY()) return;
+    if (TOUCHY() || store.get('player.hintSeen', false)) return;
+    store.set('player.hintSeen', true);
     const h = this.$('.pl-toast.hint');
     setHtml(h, html`<span><kbd>Space</kbd>Pause</span><span class="dot" aria-hidden="true"></span><span><kbd>←</kbd><kbd>→</kbd>10 seconds</span><span class="dot" aria-hidden="true"></span><span><kbd>F</kbd>Full screen</span><span class="dot" aria-hidden="true"></span><span><kbd>C</kbd>Subtitles</span>`);
     window.clearTimeout(this.hintTimer);
