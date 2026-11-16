@@ -1,6 +1,6 @@
 /**
  * BaseItemDto (Jellyfin) -> Title / Episode / Season / Person / MediaVersion.
- * Only the fields NutFin uses are typed here. Everything is optional because Jellyfin omits empty values.
+ * Only the fields Nuttyfin uses are typed here. Everything is optional because Jellyfin omits empty values.
  */
 import { ticksToMinutes } from '../lib/format';
 import type { CollectionProgress } from './types'; // home

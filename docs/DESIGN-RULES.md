@@ -1,4 +1,4 @@
-# NutFin design preferences
+# Nuttyfin design preferences
 - Web client only. Each person signs in with their own administrator-created Jellyfin account. No profile chooser, quick switching, shared Home profile, or TV/kids controls.
 - Retain the conversational NutBot tile; do not add a second NutBot pick tile.
 - Home contains essentials; organise additional widgets under Continue Watching, Recommendations, Requests, and Stats.

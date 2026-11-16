@@ -51,11 +51,11 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
     <div class="pagebg" id="pagebg" aria-hidden="true"></div>
     <button class="skip" type="button" id="skip">Skip to content</button>
     <aside class="rail" id="rail">
-      <a class="rbrand" href="#/" aria-label="NutFin home">${nutbot(40, 'idle')}</a>
+      <a class="rbrand" href="#/" aria-label="Nuttyfin home">${nutbot(40, 'idle')}</a>
       <nav class="nav" aria-label="Main">${navItems}</nav>
     </aside>
     <header class="top" id="top">
-      <a class="brand" href="#/" aria-label="NutFin home">${nutbot(38, 'idle')}<span class="wm">Nut<em>Fin</em></span></a>
+      <a class="brand" href="#/" aria-label="Nuttyfin home">${nutbot(38, 'idle')}<span class="wm">Nutty<em>fin</em></span></a>
       <div class="toptabs" id="toptabs"></div>
       ${searchMarkup()}
       <button class="themesw" type="button" role="switch" id="themeSw" aria-checked="true" aria-label="Dark theme">${pixelIcon('moon', 'moon')}${pixelIcon('sun', 'sun')}</button>
@@ -119,7 +119,7 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
     setTabs,
     selectTab: id => tabs?.select(id),
     tabsSlot,
-    setTitle(title) { document.title = title ? `${title} · NutFin` : 'NutFin'; },
+    setTitle(title) { document.title = title ? `${title} · Nuttyfin` : 'Nuttyfin'; },
     setRequestsBadge(n) {
       const b = body.querySelector<HTMLElement>('#reqBadge');
       if (b) { b.textContent = n > 0 ? String(n) : ''; b.setAttribute('aria-label', n > 0 ? `${n} open` : ''); }

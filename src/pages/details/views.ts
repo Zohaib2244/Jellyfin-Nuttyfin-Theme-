@@ -65,7 +65,7 @@ export function howPanel(p: PlayState, a: Assessment, o: { owner: boolean; headi
     </div>
     ${o.owner ? html`<details class="why"><summary>${ic('info')}Details for the owner</summary><div>${a.tech || 'No technical details'}</div></details>` : ''}
     ${o.hasChapters ? html`<button class="linkbtn" type="button" data-howchap>${ic('list')}Start from a chapter</button>` : ''}
-    <p class="saved">${ic('check')}<span>${p.remembered ? 'Remembered for this title on this device.' : 'Change anything and NutFin remembers it for this title on this device.'}</span>${p.remembered ? html`<button class="linkbtn" type="button" data-howreset>Back to the usual</button>` : ''}</p>
+    <p class="saved">${ic('check')}<span>${p.remembered ? 'Remembered for this title on this device.' : 'Change anything and Nuttyfin remembers it for this title on this device.'}</span>${p.remembered ? html`<button class="linkbtn" type="button" data-howreset>Back to the usual</button>` : ''}</p>
   </div>`;
 }
 
@@ -277,7 +277,7 @@ export function aboutSection(m: AboutModel): SafeHtml {
 export function footnote(): SafeHtml {
   return html`<aside class="foot" aria-labelledby="h-how"><div>${ic('server')}</div><div>
     <h3 id="h-how">How Remove works (only you see this)</h3>
-    <p>For now, Remove asks Jellyfin to delete the title and its file. Removing it from Radarr or Sonarr, and deleting the release in qBittorrent, needs a small NutFin helper service on the server that holds those keys. Until that exists those choices are shown but switched off.</p>
+    <p>For now, Remove asks Jellyfin to delete the title and its file. Removing it from Radarr or Sonarr, and deleting the release in qBittorrent, needs a small Nuttyfin helper service on the server that holds those keys. Until that exists those choices are shown but switched off.</p>
   </div></aside>`;
 }
 

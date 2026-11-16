@@ -34,13 +34,13 @@ const page: Page = {
     const root = document.createElement('div');
     root.className = 'lg';
     setHtml(root, html`
-      <a class="lg-brand" href="#/login" aria-label="NutFin">Nut<em>Fin</em></a>
+      <a class="lg-brand" href="#/login" aria-label="Nuttyfin">Nutty<em>fin</em></a>
       <div class="lg-art" id="lgArt" aria-hidden="true">${raw(artMarkup())}</div>
       <div class="lg-shade"></div>
       <section class="lg-content" aria-labelledby="lgH">
         <div class="lg-copy"><h1 id="lgH" data-autofocus tabindex="-1">Your next good watch.</h1><p>Pick up where you left off. Find something worth staying in for.</p></div>
         <div class="lg-card">
-          <h2>Sign in to NutFin</h2>
+          <h2>Sign in to Nuttyfin</h2>
           <p class="lg-lede">Use the account your server owner created for you.</p>
           <form id="lgForm" novalidate>
             <label for="lgUser">Username</label>

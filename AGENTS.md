@@ -1,6 +1,6 @@
-# NutFin: working rules
+# Nuttyfin: working rules
 
-NutFin is a family-friendly web client for the owner's Jellyfin 12.3 server (http://192.168.1.24:8096) with Seerr (http://192.168.1.24:5055) requests built in. Static single-page app: Vite + TypeScript, no UI framework.
+Nuttyfin is a family-friendly web client for the owner's Jellyfin 12.3 server (http://192.168.1.24:8096) with Seerr (http://192.168.1.24:5055) requests built in. Static single-page app: Vite + TypeScript, no UI framework.
 
 Read first: `PLAN.md` (architecture, phases), `docs/DESIGN-RULES.md` (owner's standing design rules, binding), `design/mockups/*.html` (the approved look; copy CSS and markup from here, do not redesign).
 

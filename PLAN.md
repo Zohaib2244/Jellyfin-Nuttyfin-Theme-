@@ -1,8 +1,8 @@
-# NutFin plan
+# Nuttyfin plan
 
 ## Architecture
 - **Static SPA** (Vite + TS) served by Caddy. Same-origin proxying: `/jf/*` → Jellyfin :8096, `/seerr/*` → Seerr :5055, later `/nutfin-api/*` → helper service. No CORS, no keys in the browser.
-- **Auth:** `POST /jf/Users/AuthenticateByName` with header `Authorization: MediaBrowser Client="NutFin", Device="<browser>", DeviceId="<uuid in localStorage>", Version="0.1.0"` (+ `Token="..."` once signed in). Keep AccessToken + UserId in localStorage. 401 on any call → sign out. Quick Connect as a second login method. After a Jellyfin sign-in, also `POST /seerr/api/v1/auth/jellyfin {username,password}` (sets Seerr's session cookie); if Seerr fails, request features degrade to hidden/disabled, nothing else breaks.
+- **Auth:** `POST /jf/Users/AuthenticateByName` with header `Authorization: MediaBrowser Client="Nuttyfin", Device="<browser>", DeviceId="<uuid in localStorage>", Version="0.1.0"` (+ `Token="..."` once signed in). Keep AccessToken + UserId in localStorage. 401 on any call → sign out. Quick Connect as a second login method. After a Jellyfin sign-in, also `POST /seerr/api/v1/auth/jellyfin {username,password}` (sets Seerr's session cookie); if Seerr fails, request features degrade to hidden/disabled, nothing else breaks.
 - **Backend interface** (`src/api/backend.ts`): resume, nextUp, latest, items(query), item(id), similar, seasons/episodes, people, search, playbackInfo, report progress, set played/favourite, images; Seerr: search, request, requests list, quota, issues. `jellyfin.ts` real, `demo.ts` fixtures.
 - **Models** (`src/api/types.ts`): normalise `BaseItemDto` into small `Title`/`Episode`/`Person` shapes once, at the edge. UI only sees these.
 - **Routing:** hash router (`#/`, `#/home/<tab>`, `#/movies`, `#/shows`, `#/title/<id>`, `#/watch/<id>`, `#/requests`, `#/login`). Page = module exporting `render(ctx): HTMLElement | Promise<HTMLElement>` plus optional `dispose`.

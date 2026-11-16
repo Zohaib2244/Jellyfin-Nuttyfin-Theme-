@@ -40,7 +40,7 @@ export interface ShellHooks {
   selectTab(id: string): void;
   /** The element behind the tabs slot, for pages that need something other than plain tabs. Router empties it per navigation. */
   readonly tabsSlot: HTMLElement;
-  /** document.title becomes "<title> · NutFin". */
+  /** document.title becomes "<title> · Nuttyfin". */
   setTitle(title: string): void;
   /** Number shown on the Requests item in the rail (0 hides it). */
   setRequestsBadge(count: number): void;

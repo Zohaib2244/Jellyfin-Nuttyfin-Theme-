@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { buildAuthHeader, detectDeviceName } from '../src/api/auth';
 
 describe('buildAuthHeader', () => {
-  const base = { client: 'NutFin', device: 'Chrome', deviceId: 'abc-123', version: '0.1.0' };
+  const base = { client: 'Nuttyfin', device: 'Chrome', deviceId: 'abc-123', version: '0.1.0' };
 
   it('builds the MediaBrowser header without a token (sign-in calls)', () => {
-    expect(buildAuthHeader(base)).toBe('MediaBrowser Client="NutFin", Device="Chrome", DeviceId="abc-123", Version="0.1.0"');
+    expect(buildAuthHeader(base)).toBe('MediaBrowser Client="Nuttyfin", Device="Chrome", DeviceId="abc-123", Version="0.1.0"');
   });
 
   it('appends the token once signed in', () => {
-    expect(buildAuthHeader({ ...base, token: 'tok' })).toBe('MediaBrowser Client="NutFin", Device="Chrome", DeviceId="abc-123", Version="0.1.0", Token="tok"');
+    expect(buildAuthHeader({ ...base, token: 'tok' })).toBe('MediaBrowser Client="Nuttyfin", Device="Chrome", DeviceId="abc-123", Version="0.1.0", Token="tok"');
   });
 
   it('cannot be broken out of by quotes or newlines in values', () => {

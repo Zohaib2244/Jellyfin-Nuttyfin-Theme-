@@ -1,7 +1,7 @@
 /** Jellyfin auth header, device identity and the stored session. Pure builders are unit-tested. */
 import { store } from '../lib/storage';
 
-export const CLIENT_NAME = 'NutFin';
+export const CLIENT_NAME = 'Nuttyfin';
 export const CLIENT_VERSION = '0.1.0';
 
 export interface AuthHeaderParts {
@@ -17,7 +17,7 @@ function q(v: string): string {
   return v.replace(/["\\\r\n]/g, '');
 }
 
-/** MediaBrowser Client="NutFin", Device="Chrome", DeviceId="...", Version="0.1.0"[, Token="..."] */
+/** MediaBrowser Client="Nuttyfin", Device="Chrome", DeviceId="...", Version="0.1.0"[, Token="..."] */
 export function buildAuthHeader(p: AuthHeaderParts): string {
   const base = `MediaBrowser Client="${q(p.client)}", Device="${q(p.device)}", DeviceId="${q(p.deviceId)}", Version="${q(p.version)}"`;
   return p.token ? `${base}, Token="${q(p.token)}"` : base;

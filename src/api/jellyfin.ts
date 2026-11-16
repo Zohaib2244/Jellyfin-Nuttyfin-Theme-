@@ -57,7 +57,7 @@ interface PlaybackInfoResult {
 /** Browser-side playback capabilities sent to PlaybackInfo. The server is Haswell (H.264 hardware only):
  *  prefer direct play of H.264/AAC MP4/MKV, otherwise ask for an H.264 <=1080p HLS transcode. */
 const DEVICE_PROFILE = {
-  Name: 'NutFin web',
+  Name: 'Nuttyfin web',
   MaxStreamingBitrate: 20_000_000,
   DirectPlayProfiles: [
     { Container: 'mp4,m4v', Type: 'Video', VideoCodec: 'h264,vp9,av1', AudioCodec: 'aac,mp3,opus,flac' },

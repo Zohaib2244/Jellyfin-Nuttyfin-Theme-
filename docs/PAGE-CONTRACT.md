@@ -5,7 +5,7 @@ To replace a placeholder, rewrite the module the route points to and keep `expor
 
 ```ts
 const page: Page = {
-  title: 'Movies',                       // fallback document title ("Movies · NutFin")
+  title: 'Movies',                       // fallback document title ("Movies · Nuttyfin")
   async render(ctx) {                    // once per visit; return the page element
     ctx.shell.setTabs(...);              // optional: fill the section-tabs slot in the top bar
     const data = await ctx.backend.items({ kind: 'movie' }, ctx.signal);
@@ -29,7 +29,7 @@ export default page;
 
 ## ShellHooks (what a page may ask of the shell)
 - `setTabs({ label, tabs, selected, onSelect, panelId? })` / `setTabs(null)`: section tabs in the top bar (keyboard-accessible tablist). The router empties the slot on every navigation, so set tabs at the start of `render`. `selectTab(id)` moves the selection without `onSelect`. `tabsSlot` is the raw element for anything fancier.
-- `setTitle(text)`: `document.title` = "text · NutFin".
+- `setTitle(text)`: `document.title` = "text · Nuttyfin".
 - `setRequestsBadge(n)`: number on the Requests rail item.
 - `setAmbient(url)` / `setWallImages(urls)`: feed the "Ambient colour" and "Poster wall" page backgrounds (picker entries appear once `wired: true` in `src/ui/shell/pagebg.ts`).
 - `toast(msg, icon?)`, `focusSearch()`.

@@ -16,7 +16,7 @@ const poster = (t: { id: string; name: string; imageTags: { primary?: string } }
 export function openTrailer(name: string, trailer: { id: string | null; url: string }): DialogHandle {
   const body = trailer.id
     ? html`<div class="vid"><iframe src="${embedUrl(trailer.id)}" title="${name} trailer" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`
-    : html`<div class="vid out"><div><p>This trailer is hosted somewhere we cannot show inside NutFin.</p><a class="btn primary" href="${trailer.url}" target="_blank" rel="noopener noreferrer" data-autofocus>${ic('ext')}Open the trailer<span class="sr"> (opens in a new tab)</span></a></div></div>`;
+    : html`<div class="vid out"><div><p>This trailer is hosted somewhere we cannot show inside Nuttyfin.</p><a class="btn primary" href="${trailer.url}" target="_blank" rel="noopener noreferrer" data-autofocus>${ic('ext')}Open the trailer<span class="sr"> (opens in a new tab)</span></a></div></div>`;
   return openDialog(body, { label: `${name} trailer`, className: 'video' });
 }
 
@@ -84,7 +84,7 @@ export interface RemoveInput {
   onRemoved(): void;
 }
 
-const NEEDS_HELPER = 'Needs the NutFin helper service (coming)';
+const NEEDS_HELPER = 'Needs the Nuttyfin helper service (coming)';
 
 export function openRemove(r: RemoveInput): DialogHandle {
   const { item } = r;
@@ -95,7 +95,7 @@ export function openRemove(r: RemoveInput): DialogHandle {
     <div class="blk" role="radiogroup" aria-labelledby="hl-how"><span class="lbl" id="hl-how">How far should it go?</span>
       <div class="rmopts">
         <label class="rmopt"><input type="radio" name="rmmode" value="jf" checked data-autofocus><span class="dot" aria-hidden="true"></span><span class="tt">Remove from Jellyfin only</span>
-          <span class="dd">Deletes ${r.isSeries ? 'the show and its episode files' : 'the film and its file'} from the media drive and from NutFin. ${apps} and the download are not told, so ${apps} may still list it.</span></label>
+          <span class="dd">Deletes ${r.isSeries ? 'the show and its episode files' : 'the film and its file'} from the media drive and from Nuttyfin. ${apps} and the download are not told, so ${apps} may still list it.</span></label>
         <label class="rmopt"><input type="radio" name="rmmode" value="arr" disabled><span class="dot" aria-hidden="true"></span><span class="tt">Also remove it from ${apps}</span>
           <span class="dd">${apps} stops watching for it and will not fetch it again.</span><span class="why3">${NEEDS_HELPER}</span></label>
       </div></div>
@@ -141,7 +141,7 @@ export function openRemove(r: RemoveInput): DialogHandle {
     void r.backend.deleteFromJellyfin(item.id).then(() => {
       busy = false;
       dlg.body.innerHTML = html`<div class="head">${poster(item)}<div><h2 id="rmh" tabindex="-1" data-autofocus>${item.name} is gone from Jellyfin</h2><p class="lead">${apps} and the download were not touched.</p></div></div>
-        <div class="result" role="status">${nutbot(40, 'happy')}<div><b>Removed</b><span>It no longer shows up in NutFin.</span></div></div>
+        <div class="result" role="status">${nutbot(40, 'happy')}<div><b>Removed</b><span>It no longer shows up in Nuttyfin.</span></div></div>
         <div class="acts"><button class="btn primary" type="button" data-done>Back to the library</button></div>`.value;
       dlg.body.querySelector<HTMLElement>('[data-autofocus]')?.focus();
       dlg.body.querySelector('[data-done]')?.addEventListener('click', () => { dlg.close(); r.onRemoved(); });
