@@ -5,6 +5,23 @@ import ext from './fixtures/real-mediasource-external-sub.json';
 import { dropUndefined, normaliseVersion, type MediaSourceDto } from '../src/api/normalise';
 import { subtitleSummary } from '../src/pages/details/views';
 
+import listJson from './fixtures/real-series-list.json';
+import { normaliseItem, rankSearch, type BaseItemDto } from '../src/api/normalise';
+
+describe('search ranking (real show names)', () => {
+  const names = (listJson as { Items: BaseItemDto[] }).Items.map(normaliseItem);
+  it('a name that starts with the text beats one that merely contains it', () => {
+    const sorted = [...names].sort((a, b) => a.name.localeCompare(b.name));
+    expect(rankSearch(sorted, 'pla')[0]?.name).toBe('Prehistoric Planet'); // a word starts with "pla"
+    expect(rankSearch(sorted, 'sil')[0]?.name).toBe('Silo');
+    expect(rankSearch(sorted, 'ter').length).toBe(names.length); // nothing is dropped
+  });
+  it('ignores a leading "The" and keeps server order inside a group', () => {
+    const r = rankSearch([{ name: 'Ghost' }, { name: 'The Last Viking' }, { name: 'Lantern' }], 'la').map(t => t.name);
+    expect(r).toEqual(['The Last Viking', 'Lantern', 'Ghost']);
+  });
+});
+
 describe('untagged tracks (real data)', () => {
   const v = normaliseVersion(undef as MediaSourceDto);
 

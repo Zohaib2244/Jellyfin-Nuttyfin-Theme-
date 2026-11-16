@@ -8,7 +8,7 @@ import type { Backend, QuickConnectApi } from './backend';
 import { SignInError } from './backend';
 import { ApiError, createHttp, type Http } from './http';
 import { JF_BASE } from './images';
-import { normaliseCollection, normaliseItem, normaliseSeason, normaliseVersion, withinDays, type BaseItemDto } from './normalise';
+import { normaliseCollection, normaliseItem, rankSearch, normaliseSeason, normaliseVersion, withinDays, type BaseItemDto } from './normalise';
 import { SeerrClient } from './seerr';
 import type { CollectionProgress, LeavingSoon } from './types'; // home
 import type {
@@ -295,8 +295,10 @@ export class JellyfinBackend implements Backend {
   }
 
   async search(query: string, limit = 8, signal?: AbortSignal): Promise<Title[]> {
-    const r = await this.items({ search: query, limit }, signal);
-    return r.items;
+    // ── phase4: begin ── Jellyfin returns matches in A to Z order: ask for more and put the best matches first
+    const r = await this.items({ search: query, limit: Math.max(limit * 3, 24) }, signal);
+    return rankSearch(r.items, query).slice(0, limit);
+    // ── phase4: end ──
   }
 
   // ── home: begin ──

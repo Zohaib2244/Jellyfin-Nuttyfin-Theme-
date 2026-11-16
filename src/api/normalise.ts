@@ -333,3 +333,18 @@ export function withinDays<T extends { added?: string }>(list: readonly T[], day
   });
 }
 // ── home: end ──
+
+// ── phase4: begin ──
+/** Best matches first: name starts with the text, then a word starts with it, then it appears anywhere. Server order within a group. */
+export function rankSearch<T extends { name: string }>(list: readonly T[], query: string): T[] {
+  const q = query.trim().toLowerCase();
+  const score = (name: string): number => {
+    const full = name.toLowerCase();
+    const n = full.replace(/^(the|a|an) /, '');
+    if (n.startsWith(q) || full.startsWith(q)) return 0;
+    if (n.split(/[^\p{L}\p{N}]+/u).some(w => w.startsWith(q))) return 1;
+    return 2;
+  };
+  return list.map((t, i) => ({ t, i, s: score(t.name) })).sort((a, b) => a.s - b.s || a.i - b.i).map(x => x.t);
+}
+// ── phase4: end ──
