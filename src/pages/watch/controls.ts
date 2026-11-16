@@ -194,7 +194,12 @@ export class PlayerUI {
     });
 
     /* chrome visibility */
-    root.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' && Math.abs(e.movementX) + Math.abs(e.movementY) >= 2) this.wake(); });
+    // our own distance check: the first move into the page has movementX 0, and sub-pixel jitter should not keep the controls up
+    let lx = -1; let ly = -1;
+    root.addEventListener('pointermove', e => {
+      if (e.pointerType !== 'mouse') return;
+      if (lx < 0 || Math.abs(e.clientX - lx) + Math.abs(e.clientY - ly) >= 3) { this.wake(); lx = e.clientX; ly = e.clientY; }
+    });
     root.addEventListener('pointerleave', () => { if (!this.paused && !this.sheetOpen && !this.scrubbing) { window.clearTimeout(this.hideTimer); this.hideTimer = window.setTimeout(() => this.setUI(false), 800); } });
     const bar = this.$('.pl-bar');
     bar.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') { this.overBar = true; this.wake(); } });

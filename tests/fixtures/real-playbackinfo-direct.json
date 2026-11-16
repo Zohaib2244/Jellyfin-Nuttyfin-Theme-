@@ -1,0 +1,173 @@
+{
+ "request": {
+  "DeviceProfile": {
+   "DirectPlayProfiles": [
+    {
+     "Container": "mp4,m4v,mov",
+     "Type": "Video",
+     "VideoCodec": "h264,av1,vp9",
+     "AudioCodec": "aac,mp3,opus,flac"
+    },
+    {
+     "Container": "mkv",
+     "Type": "Video",
+     "VideoCodec": "h264,av1,vp9",
+     "AudioCodec": "aac,mp3,opus,flac,vorbis"
+    },
+    {
+     "Container": "webm",
+     "Type": "Video",
+     "VideoCodec": "av1,vp9,vp8",
+     "AudioCodec": "opus,vorbis"
+    }
+   ],
+   "TranscodingProfiles": [
+    {
+     "Container": "ts",
+     "Type": "Video",
+     "Protocol": "hls",
+     "Context": "Streaming",
+     "VideoCodec": "h264",
+     "AudioCodec": "aac,mp3",
+     "MaxAudioChannels": "2",
+     "MinSegments": 1,
+     "BreakOnNonKeyFrames": true
+    }
+   ],
+   "MaxStreamingBitrate": 20000000
+  }
+ },
+ "response": {
+  "MediaSources": [
+   {
+    "Protocol": "File",
+    "Id": "d91dc2b7e2c148a3529e4f2e094f8634",
+    "Type": "Default",
+    "Container": "mkv",
+    "Size": 277473253,
+    "Name": "Johnny.Bravo.S01E01.480p.WEB-DL.AAC2.0.H.264-Juggalotus",
+    "IsRemote": false,
+    "ETag": "76402b95483c2782cc261b126b668214",
+    "RunTimeTicks": 13173370000,
+    "ReadAtNativeFramerate": false,
+    "IgnoreDts": false,
+    "IgnoreIndex": false,
+    "GenPtsInput": false,
+    "SupportsTranscoding": true,
+    "SupportsDirectStream": true,
+    "SupportsDirectPlay": true,
+    "IsInfiniteStream": false,
+    "UseMostCompatibleTranscodingProfile": false,
+    "RequiresOpening": false,
+    "RequiresClosing": false,
+    "RequiresLooping": false,
+    "SupportsProbing": true,
+    "VideoType": "VideoFile",
+    "MediaStreams": [
+     {
+      "Codec": "aac",
+      "Language": "eng",
+      "TimeBase": "1/1000",
+      "VideoRange": "Unknown",
+      "VideoRangeType": "Unknown",
+      "AudioSpatialFormat": "None",
+      "LocalizedDefault": "Default",
+      "LocalizedExternal": "External",
+      "LocalizedLanguage": "English",
+      "LocalizedOriginal": "Original",
+      "DisplayTitle": "English - AAC - Stereo - Default",
+      "IsInterlaced": false,
+      "ChannelLayout": "stereo",
+      "BitRate": 106444,
+      "Channels": 2,
+      "SampleRate": 44100,
+      "IsDefault": true,
+      "IsForced": false,
+      "IsHearingImpaired": false,
+      "IsOriginal": false,
+      "Profile": "LC",
+      "Type": "Audio",
+      "Index": 0,
+      "IsExternal": false,
+      "IsTextSubtitleStream": false,
+      "SupportsExternalStream": false
+     },
+     {
+      "Codec": "h264",
+      "Language": "eng",
+      "ColorSpace": "smpte170m",
+      "ColorTransfer": "bt709",
+      "ColorPrimaries": "smpte170m",
+      "TimeBase": "1/1000",
+      "VideoRange": "SDR",
+      "VideoRangeType": "SDR",
+      "AudioSpatialFormat": "None",
+      "DisplayTitle": "480p H264 SDR",
+      "NalLengthSize": "4",
+      "IsInterlaced": false,
+      "IsAVC": true,
+      "BitRate": 1575857,
+      "BitDepth": 8,
+      "RefFrames": 1,
+      "IsDefault": true,
+      "IsForced": false,
+      "IsHearingImpaired": false,
+      "IsOriginal": false,
+      "Height": 480,
+      "Width": 640,
+      "AverageFrameRate": 29.97,
+      "RealFrameRate": 29.97,
+      "ReferenceFrameRate": 29.97,
+      "Profile": "Constrained Baseline",
+      "Type": "Video",
+      "AspectRatio": "4:3",
+      "Index": 1,
+      "IsExternal": false,
+      "IsTextSubtitleStream": false,
+      "SupportsExternalStream": false,
+      "PixelFormat": "yuv420p",
+      "Level": 30,
+      "IsAnamorphic": false
+     },
+     {
+      "Codec": "subrip",
+      "Language": "eng",
+      "TimeBase": "1/1000",
+      "VideoRange": "Unknown",
+      "VideoRangeType": "Unknown",
+      "AudioSpatialFormat": "None",
+      "LocalizedUndefined": "Undefined",
+      "LocalizedDefault": "Default",
+      "LocalizedForced": "Forced",
+      "LocalizedExternal": "External",
+      "LocalizedHearingImpaired": "Hearing Impaired",
+      "LocalizedLanguage": "English",
+      "DisplayTitle": "English - Default - SUBRIP",
+      "IsInterlaced": false,
+      "IsDefault": true,
+      "IsForced": false,
+      "IsHearingImpaired": false,
+      "IsOriginal": false,
+      "Type": "Subtitle",
+      "Index": 2,
+      "IsExternal": false,
+      "DeliveryMethod": "External",
+      "DeliveryUrl": "/Videos/d91dc2b7-e2c1-48a3-529e-4f2e094f8634/d91dc2b7e2c148a3529e4f2e094f8634/Subtitles/2/0/Stream.subrip?ApiKey=REDACTED",
+      "IsExternalUrl": false,
+      "IsTextSubtitleStream": true,
+      "SupportsExternalStream": true
+     }
+    ],
+    "MediaAttachments": [],
+    "Formats": [],
+    "Bitrate": 1685055,
+    "RequiredHttpHeaders": {},
+    "TranscodingSubProtocol": "http",
+    "DefaultAudioStreamIndex": 0,
+    "DefaultSubtitleStreamIndex": 2,
+    "HasSegments": false
+   }
+  ],
+  "PlaySessionId": "399052f792384161885320fe8accba01"
+ }
+}
