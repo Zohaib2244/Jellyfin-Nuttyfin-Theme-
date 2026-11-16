@@ -140,6 +140,11 @@ const page: Page = {
 
     // "See all" and similar links inside tiles
     root.addEventListener('click', e => {
+      const dismiss = (e.target as Element).closest<HTMLElement>('[data-dismiss-tile]');
+      if (dismiss?.dataset.dismissTile) {
+        arrange?.hideTile(dismiss.dataset.dismissTile);
+        return;
+      }
       const b = (e.target as Element).closest<HTMLElement>('[data-tab-link]');
       const id = b?.dataset.tabLink;
       if (b && isTab(id)) { e.preventDefault(); select(id, { focus: true }); }

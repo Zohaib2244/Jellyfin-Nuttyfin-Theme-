@@ -42,6 +42,8 @@ export interface Arrange {
   stop(): void;
   /** re-apply the saved layout of the current tab (after a tab switch or when tiles were added) */
   refresh(): void;
+  /** Dismiss a tile using the same saved layout as Arrange's Hide action. */
+  hideTile(id: string): void;
   destroy(): void;
 }
 
@@ -258,6 +260,11 @@ export function initArrange(o: ArrangeOpts): Arrange {
     get active() { return active; },
     start, stop,
     refresh() { apply(); },
+    hideTile(id) {
+      if (!defaultIds(o.currentTab()).includes(id)) return;
+      onAct(id, 'hide');
+      btn.focus({ preventScroll: true });
+    },
     destroy() {
       o.root.removeEventListener('click', onClick);
       btn.removeEventListener('click', start);

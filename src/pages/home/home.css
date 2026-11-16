@@ -447,6 +447,8 @@ a.cwr:hover { background: var(--raise); }
 
 /* ── Newly Added ── */
 .tile .pad.nh { flex-direction: row; align-items: stretch; gap: 20px; overflow: hidden; }
+.nh-dismiss { position: absolute; top: 10px; right: 10px; z-index: 2; width: 44px; height: 44px; }
+.tile .pad.nh { padding-right: 64px; }
 .nhl { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 8px; justify-content: center; font-family: var(--font-read); }
 .nhwho { margin: 0; color: var(--muted); font-size: 14px; display: flex; align-items: center; gap: 6px; }
 .nhwho svg { color: var(--accent); width: 17px; height: 17px; }

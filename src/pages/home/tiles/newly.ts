@@ -5,7 +5,7 @@ import { html, type SafeHtml } from '../../../lib/html';
 import { store } from '../../../lib/storage';
 import { icon } from '../../../ui/icons';
 import { nutbot } from '../../../ui/nutbot';
-import { detailsPath, img, ph, playPath, posterUrl, seerrPoster, thumbUrl } from '../art';
+import { detailsPath, img, ph, posterUrl, seerrPoster, thumbUrl } from '../art';
 import { buildWeek, epLabel, requestLabel } from '../model';
 import { flowDots, statusChip } from '../requestsPanel';
 import { loadInto, quiet, skPosters, skRows, skStrip, tileHead, type TileDef } from '../tile';
@@ -26,7 +26,7 @@ export const newHeroTile: TileDef = {
   id: 'newhero', tab: 'new', title: "What's new", icon: 'spark', place: [1, 1, 12, 3], minH: 0,
   mount(host, ctx) {
     interface D { fresh: Title[]; recent: Title[]; asked: number; coming: number; since: number; first: boolean }
-    // Leaving Home counts as having seen what is new; "Mark all as seen" does it right now.
+    // Leaving Home counts as having seen what is new.
     ctx.onDispose(() => store.set(LAST_SEEN, Date.now()));
     loadInto<D>(host, ctx, {
       head: tileHead('newhero', 'spark', "What's new"),
@@ -45,36 +45,22 @@ export const newHeroTile: TileDef = {
         return paint(d, name);
       },
       empty: html`${quiet('Nothing has been added lately. When films and shows land, this page tells you.')}`,
-      after(el, d) {
-        const ac = new AbortController();
-        el.addEventListener('click', e => {
-          if (!(e.target as Element).closest('[data-seen]')) return;
-          store.set(LAST_SEEN, ctx.now().getTime());
-          const wrap = el.querySelector('.pad') as HTMLElement;
-          wrap.innerHTML = paint({ ...d, fresh: [], first: false, since: ctx.now().getTime() }, ctx.user?.name ?? '').value;
-          wrap.querySelector<HTMLElement>('.nhh')?.setAttribute('tabindex', '-1');
-          wrap.querySelector<HTMLElement>('.nhh')?.focus({ preventScroll: true });
-          ctx.shell.toast('All caught up', 'check');
-        }, { signal: ac.signal });
-        return () => ac.abort();
-      },
+
     });
 
     function paint(d: { fresh: Title[]; recent: Title[]; asked: number; coming: number; since: number; first: boolean }, name: string): SafeHtml {
       const now = ctx.now();
-      const list = d.fresh.length ? d.fresh : d.recent.filter(t => { const x = parseDate(t.added); return !!x && now.getTime() - x.getTime() < 7 * 864e5; });
       const n = d.fresh.length;
       const films = d.fresh.filter(t => t.kind === 'movie').length;
       const newestFilm = (d.fresh.length ? d.fresh : d.recent).find(t => t.kind === 'movie' && t.runtimeMin);
       const since = d.first ? 'Added in the last week' : `Added since your last visit, ${relativeTime(new Date(d.since), now).toLowerCase()}`;
       const heading = n ? `${WORDS[n] ?? n} new ${n === 1 ? 'thing' : 'things'} since you were last here${name ? `, ${name}` : ''}` : `You are all caught up${name ? `, ${name}` : ''}`;
       const fan = (d.fresh.length ? d.fresh : d.recent).filter(t => posterUrl(t)).slice(0, 5);
-      return html`<div class="nhl">
+      return html`<button class="iconbtn nh-dismiss" type="button" data-dismiss-tile="newhero" aria-label="Dismiss new arrivals banner" title="Dismiss banner">${icon('x')}</button><div class="nhl">
           <p class="nhwho">${icon('spark')}${n ? since : 'Nothing added since your last visit. Here is the last week.'}</p>
           <h2 class="nhh" id="h-newhero">${heading}</h2>
           <p class="nhchips"><span class="nhc">${icon('film')}${films} ${films === 1 ? 'film' : 'films'}</span><span class="nhc">${icon('tv')}${n - films} ${n - films === 1 ? 'show' : 'shows'}</span><span class="nhc">${icon('ask')}${d.asked} you asked for</span><span class="nhc">${icon('dl')}${d.coming} almost here</span></p>
           ${newestFilm ? html`<p class="nhbot">${nutbot(40, 'happy')}<span class="bubble">${newestFilm.name} is ${runtime(newestFilm.runtimeMin)}. Start now and you are done by ${clock(new Date(now.getTime() + newestFilm.runtimeMin * 60_000))}.</span></p>` : ''}
-          <div class="row">${list[0] ? html`<a class="btn primary sm" href="#${playPath(list[0])}">${icon('spark')}Start with the newest</a>` : ''}${n ? html`<button class="btn sm" type="button" data-seen>${icon('check')}Mark all as seen</button>` : ''}</div>
         </div>
         <div class="nhfan" aria-hidden="true">${fan.map(t => html`<span class="ph" ${ph(t.id, t.name)}>${img(posterUrl(t, 300))}</span>`)}</div>`;
     }
