@@ -276,9 +276,11 @@ export class SeerrDesk implements SeerrDeskApi {
     const { userId } = this.session();
     try {
       const r = await this.http<{ results?: RawIssue[] }>('/issue', {
-        query: { take: o.take ?? 20, skip: 0, sort: 'added', filter: 'all', createdBy: o.mine !== false && userId != null ? userId : undefined },
+        query: { take: o.mine !== false ? 100 : (o.take ?? 20), skip: 0, sort: 'added', filter: 'all' }, // Seerr 3.x has no createdBy filter: narrow to mine below
       });
-      return await Promise.all((r.results ?? []).map(async (i): Promise<SeerrIssue> => {
+      const mineOnly = o.mine !== false && userId != null;
+      const rows = (r.results ?? []).filter(i => !mineOnly || i.createdBy?.id === userId).slice(0, o.take ?? 20);
+      return await Promise.all(rows.map(async (i): Promise<SeerrIssue> => {
         const type = i.media?.mediaType === 'tv' ? 'tv' : 'movie';
         const bits = i.media?.tmdbId ? await this.titleOf(type, i.media.tmdbId) : undefined;
         const comments = i.comments ?? [];

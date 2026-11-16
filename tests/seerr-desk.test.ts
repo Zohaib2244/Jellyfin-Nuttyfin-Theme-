@@ -236,12 +236,15 @@ describe('SeerrDesk against a scripted server', () => {
 
   it('issues: kind, status, first comment is the message, replies counted', async () => {
     const { http, calls } = fakeHttp({
-      '/issue': { results: [{ id: 3, issueType: 3, status: 1, createdAt: '2026-11-10T00:00:00Z', media: { tmdbId: 9, mediaType: 'movie', jellyfinMediaId: 'abc' }, createdBy: { displayName: 'Me' }, comments: [{ message: 'Out of sync' }, { message: 'On it' }] },
-        { id: 2, issueType: 9, status: 2, media: { tmdbId: 8, mediaType: 'tv' }, comments: [] }] },
+      '/issue': { results: [{ id: 3, issueType: 3, status: 1, createdAt: '2026-11-10T00:00:00Z', media: { tmdbId: 9, mediaType: 'movie', jellyfinMediaId: 'abc' }, createdBy: { id: 1, displayName: 'Me' }, comments: [{ message: 'Out of sync' }, { message: 'On it' }] },
+        { id: 2, issueType: 9, status: 2, createdBy: { id: 1 }, media: { tmdbId: 8, mediaType: 'tv' }, comments: [] },
+        { id: 1, issueType: 1, status: 1, createdBy: { id: 7 }, media: { tmdbId: 7, mediaType: 'movie' }, comments: [] }] },
       '/movie/*': { title: 'Film' }, '/tv/*': { name: 'Show' },
     });
     const list = await new SeerrDesk(http, session(2), yes).issues({ mine: true, take: 5 });
-    expect(calls[0]?.opts.query).toMatchObject({ take: 5, createdBy: 1, sort: 'added' });
+    expect(calls[0]?.opts.query).toMatchObject({ sort: 'added' });
+    expect(calls[0]?.opts.query).not.toHaveProperty('createdBy'); // Seerr 3.x rejects it
+    expect(list).toHaveLength(2); // someone else's issue filtered out
     expect(list[0]).toMatchObject({ kind: 'subtitles', status: 'open', message: 'Out of sync', replies: 1, title: 'Film', jellyfinId: 'abc' });
     expect(list[1]).toMatchObject({ kind: 'other', status: 'resolved', replies: 0, title: 'Show' });
   });
