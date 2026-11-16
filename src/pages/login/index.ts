@@ -115,7 +115,8 @@ const page: Page = {
     let qcTimer: number | undefined;
     let qcRun = 0;
     const stopQc = () => { clearTimeout(qcTimer); qcRun++; };
-    ctx.onDispose(stopQc);
+    let gone = false;
+    ctx.onDispose(() => { gone = true; stopQc(); });
 
     const showQcButton = () => {
       setHtml(qcSlot, html`<button class="lg-alt" type="button" id="lgQc">Sign in with Quick Connect</button>`);
@@ -156,7 +157,7 @@ const page: Page = {
         showQcButton();
       }
     };
-    void ctx.backend.quickConnect.enabled().then(on => { if (on && root.isConnected !== false) showQcButton(); });
+    void ctx.backend.quickConnect.enabled().then(on => { if (on && !gone) showQcButton(); });
 
     /* artwork + motion */
     const art = $('#lgArt');

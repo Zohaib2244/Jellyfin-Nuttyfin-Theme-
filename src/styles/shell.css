@@ -66,6 +66,7 @@ body { padding-left: var(--rail-w); }
 .themesw:hover { border-color: var(--accent); }
 .themesw svg.px { width: 26px; height: 26px; }
 .themesw .sun { display: none; }
+:root[data-eff="light"] .themesw .sun g { fill: var(--accent); }
 :root[data-eff="light"] .themesw .sun { display: block; }
 :root[data-eff="light"] .themesw .moon { display: none; }
 
@@ -153,7 +154,7 @@ body[data-shell="none"] main { max-width: none; padding: 0; }
   .nav .ni[aria-current="page"] { background: none; border-color: transparent; }
   .nav .ni[aria-current="page"]::before { content: ''; position: absolute; top: -4px; width: 28px; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent); }
   .nav .ni .badge { top: 4px; right: auto; left: calc(50% + 6px); }
-  .pop { left: 12px; right: 12px; width: auto; max-width: none; top: calc(var(--top-h) + 8px); transform-origin: top right; }
+  .pop { left: 12px; right: 12px; width: auto; max-width: none; top: calc(var(--top-h) + 8px); max-height: calc(100dvh - var(--top-h) - 100px); transform-origin: top right; }
 }
 @media (max-width: 380px) { .themesw, .iconbtn.tsbtn { width: 40px; } }
 
