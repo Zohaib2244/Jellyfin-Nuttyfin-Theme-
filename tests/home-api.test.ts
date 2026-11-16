@@ -122,7 +122,7 @@ describe('DemoBackend home data is rich', () => {
     expect(sets.every(s => s.seen > 0 && s.seen < s.total)).toBe(true);
     expect((await b.leavingSoon()).length).toBeGreaterThan(0);
     const reqs = await b.seerr.requests();
-    expect(new Set(reqs.map(r => r.state))).toEqual(new Set(['downloading', 'approved', 'requested', 'available']));
+    expect(new Set(reqs.map(r => r.state))).toEqual(new Set(['downloading', 'approved', 'requested', 'available', 'declined']));
     expect(reqs.find(r => r.state === 'downloading')?.progress).toBeGreaterThan(0);
   });
 });
