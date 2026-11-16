@@ -34,6 +34,12 @@ export function subtitleChoices(version: MediaVersion | undefined): SubtitleTrac
   return list.sort((a, b) => Number(b.isForced) - Number(a.isForced) || Number(b.isDefault) - Number(a.isDefault) || a.index - b.index);
 }
 
+/** "English - SUBRIP - External" -> "English · external": the file format means nothing to most people. */
+export function friendlyLabel(label: string): string {
+  const parts = label.split(' - ').map(x => x.trim()).filter(x => x && !/^(subrip|srt|ass|ssa|webvtt|vtt|mov_text|pgs|pgssub|dvdsub|dvbsub|hdmv_pgs_subtitle|dvd_subtitle|sub|text)$/i.test(x));
+  return parts.length ? parts.join(' · ') : label;
+}
+
 /** A second line under a menu entry. */
 export function subtitleHint(t: SubtitleTrack): string {
   if (!isText(t)) return 'Picture subtitles: the server adds them to the video';

@@ -54,6 +54,8 @@ export interface UIHost {
   duration(): number;
 }
 
+/** Two taps this close on the same side are a double-tap (seek); a lone tap on a side waits this long before toggling the controls. */
+const DOUBLE_TAP_MS = 380;
 const RM = (): boolean => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const SMALL = (): boolean => matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)').matches;
 const TOUCHY = (): boolean => matchMedia('(hover: none) and (pointer: coarse)').matches;
@@ -243,7 +245,7 @@ export class PlayerUI {
     if (this.sheetOpen) { this.closeSheet(); return; }
     if (touch) {
       const chained = this.tapChain.side === side && now - this.tapChain.t < 900 && side !== 'c';
-      if ((now - this.lastTap.t < 320 && side === this.lastTap.side && side !== 'c') || chained) {
+      if ((now - this.lastTap.t < DOUBLE_TAP_MS && side === this.lastTap.side && side !== 'c') || chained) {
         window.clearTimeout(this.tapTimer);
         this.ripple(side as 'l' | 'r');
         this.host.seekBy(side === 'l' ? -10 : 10, 'tap');
@@ -252,7 +254,7 @@ export class PlayerUI {
       }
       this.lastTap = { t: now, side };
       window.clearTimeout(this.tapTimer);
-      this.tapTimer = window.setTimeout(() => { if (this.uiOn) { window.clearTimeout(this.hideTimer); this.setUI(false); } else this.wake(); }, side === 'c' ? 0 : 300);
+      this.tapTimer = window.setTimeout(() => { if (this.uiOn) { window.clearTimeout(this.hideTimer); this.setUI(false); } else this.wake(); }, side === 'c' ? 0 : DOUBLE_TAP_MS);
     } else {
       // mouse: click plays or pauses, double-click goes full screen
       if (e.detail === 2) { window.clearTimeout(this.tapTimer); this.host.toggle(); this.host.fullscreen(); return; }
@@ -512,12 +514,13 @@ export class PlayerUI {
   showError(info: { title: string; why: string; detail?: string; jellyfinUrl: string } | null): void {
     const er = this.$('.pl-error');
     this.errorOpen = !!info;
+    this.root.classList.toggle('pl-failed', !!info);
     if (!info) { er.classList.remove('on'); return; }
     setHtml(er, html`<div><span class="warn">${ic('warn')}</span><h2>${info.title}</h2><p class="why">${info.why}</p>
       <div class="acts"><button class="pl-btn primary" type="button" data-act="retry">${ic('restart')}Try again</button>
       <a class="pl-btn" href="${info.jellyfinUrl}" target="_blank" rel="noopener">${ic('ext')}Open in Jellyfin</a>
       <button class="pl-btn" type="button" data-act="back">${ic('back')}Back</button></div>
-      ${info.detail ? html`<p class="detail">${info.detail}</p>` : ''}</div>`);
+      ${info.detail ? html`<details><summary>Details</summary><p class="detail">${info.detail}</p></details>` : ''}</div>`);
     er.classList.add('on'); this.setBusy(false); this.setUI(true); this.hidePause();
     window.setTimeout(() => (er.querySelector('.primary') as HTMLElement | null)?.focus({ preventScroll: true }), 50);
   }

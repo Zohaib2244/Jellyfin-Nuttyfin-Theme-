@@ -9,7 +9,7 @@ import type { MediaItem, MediaSegment } from '../src/api/types';
 import { keyAction, percentOf, stepSpeed } from '../src/pages/watch/keys';
 import { conversionNote, jellyfinWebUrl, mediaErrorText, startSeconds } from '../src/pages/watch/playback';
 import { creditsStart, segmentAt, segmentLeft, skipLabel, skipTarget } from '../src/pages/watch/segments';
-import { audioChanged, initialAudio, initialSubtitle, modeOf, mustRepackForAudio, subtitleChoices, subtitleSwitch } from '../src/pages/watch/subs';
+import { audioChanged, friendlyLabel, initialAudio, initialSubtitle, modeOf, mustRepackForAudio, subtitleChoices, subtitleSwitch } from '../src/pages/watch/subs';
 import { clamp, fmt, leftText, parseTime, spoken } from '../src/pages/watch/timefmt';
 import { chapterAt, chapterTicks, tileAt, tileStyle } from '../src/pages/watch/trickplay';
 
@@ -199,6 +199,15 @@ describe('track and subtitle choices (real recorded sources)', () => {
     expect(mustRepackForAudio(two, 5, undefined)).toBe(true);
     expect(mustRepackForAudio(two, 1, undefined)).toBe(false);
     expect(mustRepackForAudio(lanterns, 1, undefined)).toBe(false); // one soundtrack: nothing to choose
+  });
+});
+
+describe('menu labels', () => {
+  it('drops file formats nobody needs to see', () => {
+    expect(friendlyLabel('English - SUBRIP - External')).toBe('English · External');
+    expect(friendlyLabel('French - PGSSUB')).toBe('French');
+    expect(friendlyLabel('Dolby Digital+ - 5.1 - Default')).toBe('Dolby Digital+ · 5.1 · Default');
+    expect(friendlyLabel('SUBRIP')).toBe('SUBRIP'); // never ends up empty
   });
 });
 

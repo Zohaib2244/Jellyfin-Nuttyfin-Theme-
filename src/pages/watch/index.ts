@@ -20,7 +20,7 @@ import { conversionNote, jellyfinWebUrl, mediaErrorText, openSession, playMethod
 import type { Quality } from './profile';
 import { Reporter } from './report';
 import { creditsStart, segmentAt, segmentLeft, skipLabel, skipTarget } from './segments';
-import { DEFAULT_SUBSTYLE, initialSubtitle, subtitleChoices, subtitleHint, subtitleSwitch, TrackManager, type SubStyle } from './subs';
+import { DEFAULT_SUBSTYLE, friendlyLabel, initialSubtitle, subtitleChoices, subtitleHint, subtitleSwitch, TrackManager, type SubStyle } from './subs';
 import { chapterAt, chapterTicks, preloadSheets, tileAt, tileStyle } from './trickplay';
 import { clamp, leftText, parseTime, spoken } from './timefmt';
 
@@ -180,6 +180,7 @@ class Player {
     this.choice.audio = info.audioStreamIndex ?? this.choice.audio;
     this.trickplay = item.trickplay?.[info.mediaSourceId] ?? Object.values(item.trickplay ?? {})[0] ?? null;
     this.ui.setTicks(chapterTicks(item.chapters ?? [], this.duration));
+    if (this.trickplay) preloadSheets([trickplayUrl(item.id, info.mediaSourceId, this.trickplay.width, 0, this.token)]);
     this.ui.note(conversionNote(info));
     this.paintMenus();
     this.reporter = new Reporter({ backend: this.backend, snapshot: () => this.snapshot() });
@@ -340,7 +341,9 @@ class Player {
     this.ui.setCredits(t >= this.creditsAt && !this.ended);
     // skip intro / recap / credits
     const seg = segmentAt(this.segments, t);
-    this.ui.setSkip(seg && !this.ended ? skipLabel(seg.type) : null, seg ? segmentLeft(seg, t) : 1);
+    // "Skip credits" and the Up next card would sit on top of each other: the card wins while it is showing
+    const hide = !seg || this.ended || (seg.type === 'Outro' && this.upNextActive());
+    this.ui.setSkip(hide || !seg ? null : skipLabel(seg.type), seg ? segmentLeft(seg, t) : 1);
     this.paintUpNext();
     if (this.ui.pauseVisible) this.paintEnds();
   }
@@ -350,9 +353,13 @@ class Player {
     else this.ui.setMeta(item.name, '', [item.kind === 'movie' ? item.year : '', item.certification].filter(Boolean).join(' · '));
   }
 
+  private upNextActive(): boolean {
+    return !!this.next && this.position >= this.creditsAt && !this.upDismissed && !this.ended && this.duration > 0;
+  }
+
   private paintUpNext(): void {
     const n = this.next;
-    const show = !!n && this.position >= this.creditsAt && !this.upDismissed && !this.ended && this.duration > 0;
+    const show = this.upNextActive();
     if (!show || !n) { this.ui.setUpNext(null, 0, UPNEXT_SECS, false); this.upLeft = UPNEXT_SECS; return; }
     const now = performance.now();
     if (!this.video.paused) this.upLeft = Math.max(0, this.upLeft - (now - this.upStamp) / 1000);
@@ -388,9 +395,9 @@ class Player {
     const v = info?.version ?? item.versions?.[0];
     const versions = (info?.versions?.length ? info.versions : item.versions ?? []);
     const m: Menus = {
-      audio: (v?.audio ?? []).map(a => ({ value: String(a.index), label: a.label })),
+      audio: (v?.audio ?? []).map(a => ({ value: String(a.index), label: friendlyLabel(a.label) })),
       audioNow: String(this.choice.audio ?? ''),
-      subs: [{ value: '-1', label: 'Off' }, ...subtitleChoices(v).map(s => ({ value: String(s.index), label: s.label, hint: subtitleHint(s) }))],
+      subs: [{ value: '-1', label: 'Off' }, ...subtitleChoices(v).map(s => ({ value: String(s.index), label: friendlyLabel(s.label), hint: subtitleHint(s) }))],
       subsNow: String(this.choice.sub),
       speeds: SPEEDS.map(s => ({ value: String(s), label: s === 1 ? 'Normal' : `${s}×` })),
       speedNow: String(this.video.playbackRate),

@@ -175,14 +175,18 @@ html.pl-lock, html.pl-lock body { overflow: hidden; }
 .pl-pause .ends b { color: var(--pl-text); font-weight: 600; }
 
 .pl-end, .pl-error { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px; opacity: 0; visibility: hidden; transition: opacity 700ms var(--ease), visibility 0s linear 700ms; background: rgba(8, 6, 5, .55); }
-.pl-error { background: rgba(8, 6, 5, .82); }
+.pl-error { background: rgba(8, 6, 5, .94); }
+.pl.pl-failed .pl-bar, .pl.pl-failed .pl-center, .pl.pl-failed .pl-skip, .pl.pl-failed .pl-subs { display: none; }
+.pl[data-busy="on"] .pl-center .pl-ibtn { visibility: hidden; }
 .pl-end.on, .pl-error.on { opacity: 1; visibility: visible; transition: opacity 700ms var(--ease), visibility 0s; }
 .pl-end h2, .pl-error h2 { margin: 10px 0 8px; font-size: clamp(24px, 3vw, 34px); }
 .pl-end .acts, .pl-error .acts { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
 .pl-error p.why { margin: 0 auto; max-width: 46ch; color: var(--pl-muted); }
 .pl-error .warn { display: inline-grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: rgba(255, 107, 43, .14); color: var(--pl-accent); }
 .pl-error .warn svg.i { width: 28px; height: 28px; }
-.pl-error .detail { margin: 14px auto 0; max-width: 60ch; font-family: var(--font-mono); font-size: 12px; color: var(--pl-dim); }
+.pl-error details { margin: 16px auto 0; max-width: 60ch; color: var(--pl-dim); font-size: 13px; }
+.pl-error summary { cursor: pointer; display: inline-block; padding: 8px 4px; }
+.pl-error .detail { margin: 6px auto 0; font-family: var(--font-mono); font-size: 12px; overflow-wrap: anywhere; }
 
 .pl-toast { position: absolute; left: 50%; top: calc(86px + env(safe-area-inset-top)); transform: translate(-50%, -6px); display: flex; align-items: center; gap: 14px; padding: 9px 16px; border-radius: 999px; background: rgba(20, 16, 12, .7); border: 1px solid var(--pl-hair); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: var(--pl-muted); font-size: 13px; white-space: nowrap; max-width: calc(100% - 24px); opacity: 0; visibility: hidden; transition: opacity 600ms var(--ease), transform 600ms var(--ease), visibility 0s linear 600ms; }
 .pl-toast.on { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out), visibility 0s; }
