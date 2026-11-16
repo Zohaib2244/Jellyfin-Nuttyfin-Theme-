@@ -62,10 +62,11 @@ export async function calendar(ctx: Ctx): Promise<Res> {
     });
   }
   for (const m of films) {
-    const when = [m.digitalRelease, m.physicalRelease, m.inCinemas].find(Boolean);
+    // Radarr lists a film when ANY of its dates is in the window: use the one that is (digital first)
+    const when = [m.digitalRelease, m.physicalRelease, m.inCinemas].find(d => d && Date.parse(d) >= from && Date.parse(d) < to);
     if (!when || !m.title) continue;
     const mid = m.tmdbId ? movieByTmdb.get(String(m.tmdbId)) : undefined;
-    const kind = m.digitalRelease ? 'Digital release' : m.physicalRelease ? 'Disc release' : 'In cinemas';
+    const kind = when === m.digitalRelease ? 'Digital release' : when === m.physicalRelease ? 'Disc release' : 'In cinemas';
     entries.push({ kind: 'movie', airs: when, title: clean(m.title), subtitle: kind, jellyfin: mid ? { movieId: mid } : undefined, inLibrary: !!mid, downloaded: !!m.hasFile, overview: m.overview ? clean(m.overview, 400) : undefined });
   }
   entries.sort((a, b) => a.airs.localeCompare(b.airs) || a.title.localeCompare(b.title));

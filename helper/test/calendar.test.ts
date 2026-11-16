@@ -5,6 +5,7 @@ const SERIES_JF = 's'.repeat(32);
 const EP_JF = 'e'.repeat(32);
 
 function withLibrary(r: Rig): void {
+  r.clock.t = Date.parse('2026-11-16T10:00:00Z');
   r.net.on(c => {
     if (c.url.startsWith('http://sonarr/api/v3/calendar')) {
       return { body: [
@@ -13,7 +14,7 @@ function withLibrary(r: Rig): void {
         { seriesId: 3, title: 'No date', seasonNumber: 1, episodeNumber: 1, series: { title: 'Ghost' } },
       ] };
     }
-    if (c.url.startsWith('http://radarr/api/v3/calendar')) return { body: [{ title: 'Dune 3', tmdbId: 555, digitalRelease: '2026-11-20T00:00:00Z', hasFile: false }] };
+    if (c.url.startsWith('http://radarr/api/v3/calendar')) return { body: [{ title: 'Dune 3', tmdbId: 555, digitalRelease: '2026-11-20T00:00:00Z', hasFile: false }, { title: 'Old Digital', digitalRelease: '2020-01-01T00:00:00Z', inCinemas: '2026-11-19T00:00:00Z' }, { title: 'Outside', digitalRelease: '2030-01-01T00:00:00Z' }] };
     if (c.url.includes('/Items?') && c.url.includes('includeItemTypes=Series')) return { body: { Items: [{ Id: SERIES_JF, Name: 'Silo', ProviderIds: { Tvdb: '222' } }] } };
     if (c.url.includes('/Items?') && c.url.includes('includeItemTypes=Movie')) return { body: { Items: [] } };
     if (c.url.includes('/Items?') && c.url.includes('includeItemTypes=Episode')) return { body: { Items: [{ Id: EP_JF, ParentIndexNumber: 2, IndexNumber: 5 }] } };
@@ -60,7 +61,10 @@ describe('GET /calendar', () => {
     const plain = (await r.handle(get('/nutfin-api/calendar', JF_MEMBER_TOKEN))).body as { entries: Array<{ kind: string }> };
     expect(plain.entries.some(e => e.kind === 'movie')).toBe(false);
     const withFilms = (await r.handle(get('/nutfin-api/calendar', JF_MEMBER_TOKEN, 'movies=1'))).body as { entries: Array<{ kind: string; title: string; subtitle?: string }> };
-    expect(withFilms.entries.find(e => e.kind === 'movie')).toMatchObject({ title: 'Dune 3', subtitle: 'Digital release' });
+    expect(withFilms.entries.find(e => e.title === 'Dune 3')).toMatchObject({ kind: 'movie', title: 'Dune 3', subtitle: 'Digital release' });
+    // Radarr lists a film when any date is in the window; the entry carries the date that is
+    expect(withFilms.entries.find(e => e.title === 'Old Digital')).toMatchObject({ subtitle: 'In cinemas', airs: '2026-11-19T00:00:00Z' });
+    expect(withFilms.entries.some(e => e.title === 'Outside')).toBe(false);
   });
 
   it('Sonarr down: 502, so the SPA falls back to Jellyfin\'s own list', async () => {
