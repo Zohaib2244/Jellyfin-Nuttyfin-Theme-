@@ -524,7 +524,14 @@ async function render(ctx: PageContext): Promise<HTMLElement> {
   root.addEventListener('click', onClick);
   root.addEventListener('change', onChange);
   root.addEventListener('keydown', onKey);
-  ctx.onDispose(() => closeAllDialogs());
+  // Esc closes the popover / menu wherever focus happens to be (it can be on the page after a mouse click)
+  const onDocKey = (e: KeyboardEvent): void => {
+    if (e.key !== 'Escape' || e.defaultPrevented || document.querySelector('.scrim')) return;
+    if (!menu().hidden) closeMenu(true);
+    else if (howOpen() && !howDlg) closeHow(true);
+  };
+  document.addEventListener('keydown', onDocKey);
+  ctx.onDispose(() => { document.removeEventListener('keydown', onDocKey); closeAllDialogs(); });
 
   /* ── go ── */
   paintHero();

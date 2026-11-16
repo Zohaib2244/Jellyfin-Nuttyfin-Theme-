@@ -291,6 +291,7 @@
   .dt .playrow { gap: 10px; }
   .dt .playrow > .btn.big, .dt .resume { flex: 1 1 100%; }
   .dt .resume .btn.big { width: 100%; padding: 0 18px; font-size: 18px; }
+  .dt .playrow .btn.big { max-width: 100%; height: auto; padding-top: 8px; padding-bottom: 8px; white-space: normal; text-align: left; justify-content: flex-start; flex-wrap: wrap; row-gap: 0; }
   .dt .acts2 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
   .dt .acts2 .btn { flex-direction: column; gap: 2px; padding: 6px 2px; min-height: 60px; font-size: 12.5px; letter-spacing: 0; white-space: normal; line-height: 1.15; text-align: center; }
   .dt .acts2 .morewrap .btn { width: 100%; height: 100%; }
