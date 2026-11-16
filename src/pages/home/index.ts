@@ -98,7 +98,6 @@ const page: Page = {
     function select(next: HomeTab, o: { focus?: boolean; fromTabs?: boolean; replaceUrl?: boolean } = {}): void {
       if (next === tab) { if (o.focus) document.getElementById(`tab-${next}`)?.focus(); return; }
       if (arrange?.active) arrange.stop();
-      const prev = tab;
       tab = next;
       const my = ++token;
       // keep the URL in step without going through the router (which would rebuild the whole page)
@@ -118,8 +117,10 @@ const page: Page = {
         for (const t of board.querySelectorAll<HTMLElement>('.tile')) t.hidden = t.dataset.tab !== next;
         arrange?.refresh();
         if (!reduced()) {
-          board.querySelectorAll<HTMLElement>('.tile:not([hidden])').forEach((t, i) => {
-            t.classList.remove('tab-in'); void t.offsetWidth;
+          const visible = board.querySelectorAll<HTMLElement>('.tile:not([hidden])');
+          visible.forEach(t => t.classList.remove('tab-in'));
+          void board.offsetWidth;
+          visible.forEach((t, i) => {
             t.style.setProperty('--k', String(Math.min(i, 8)));
             t.classList.add('tab-in');
             t.addEventListener('animationend', () => t.classList.remove('tab-in'), { once: true });
@@ -128,7 +129,7 @@ const page: Page = {
         const bar = root.querySelector<HTMLElement>('.boardbar');
         if (bar && bar.getBoundingClientRect().top < 0) bar.scrollIntoView({ block: 'start', behavior: reduced() ? 'auto' : 'smooth' });
       };
-      if (!reduced() && prev !== next && board.querySelector('.tile:not([hidden])')) { board.classList.add('tab-out'); window.setTimeout(swap, 140); } else swap();
+      swap();
     }
 
     pc.shell.setTabs({
@@ -165,7 +166,7 @@ const page: Page = {
     arrange.refresh();
 
     // the Requests badge in the rail: how many of your requests are still open (soft: nothing if Seerr is off)
-    void data.myRequests().then(list => { if (!pc.signal.aborted) pc.shell.setRequestsBadge(list.filter(r => r.state !== 'available' && r.state !== 'declined').length); });
+    void data.requestSummary().then(list => { if (!pc.signal.aborted) pc.shell.setRequestsBadge(list.filter(r => r.state !== 'available' && r.state !== 'declined').length); });
     return root;
   },
 };

@@ -18,8 +18,8 @@ const FACE: Record<Slot, NutBotMood> = {
 /** Facts for the one-liners, from whatever has loaded. Every part is optional. */
 async function gatherFacts(ctx: HomeCtx): Promise<Partial<Facts>> {
   const now = ctx.now();
-  const [resume, next, recent, sugg, reqs] = await Promise.allSettled([
-    ctx.data.resume(), ctx.data.nextUp(), ctx.data.recent(7), ctx.data.suggestions(), ctx.data.myRequests(),
+  const [resume, next, recent, sugg] = await Promise.allSettled([
+    ctx.data.resume(), ctx.data.nextUp(), ctx.data.recent(7), ctx.data.suggestions(),
   ]);
   const f: Partial<Facts> = { name: ctx.user?.name ?? '', clock: clock(now) };
   if (resume.status === 'fulfilled') {
@@ -40,7 +40,6 @@ async function gatherFacts(ctx: HomeCtx): Promise<Partial<Facts>> {
     f.n = String(recent.value.length);
   }
   if (sugg.status === 'fulfilled' && sugg.value[0]) f.pick = sugg.value[0].name;
-  if (reqs.status === 'fulfilled') f.ready = reqs.value.find(r => r.state === 'available')?.title ?? '';
   return f;
 }
 

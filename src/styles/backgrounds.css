@@ -44,7 +44,7 @@ body[data-bg="beam"] .pagebg::before{ content:''; position:absolute; inset:-20% 
   background:conic-gradient(from 196deg at 100% 0%, transparent 0 4deg, color-mix(in srgb, #ffd9a8 22%, transparent) 4deg 24deg, transparent 24deg);
   filter:blur(26px); animation:beamsway 18s ease-in-out infinite alternate;
   -webkit-mask:linear-gradient(200deg,#000 20%,transparent 78%); mask:linear-gradient(200deg,#000 20%,transparent 78%); }
-body[data-bg="beam"] .pagebg::after{ content:''; position:absolute; inset:-40px; opacity:.7; animation:dust 40s linear infinite;
+body[data-bg="beam"] .pagebg::after{ content:''; position:absolute; inset:-80px; opacity:.7; animation:dust 40s linear infinite alternate;
   background-image:radial-gradient(1.6px 1.6px at 12% 22%, #ffe9c9 60%, transparent), radial-gradient(1.2px 1.2px at 71% 14%, #ffe9c9 60%, transparent), radial-gradient(1.8px 1.8px at 46% 38%, #ffe9c9 55%, transparent), radial-gradient(1.2px 1.2px at 86% 52%, #ffe9c9 60%, transparent), radial-gradient(1.4px 1.4px at 28% 66%, #ffe9c9 55%, transparent), radial-gradient(1.2px 1.2px at 62% 78%, #ffe9c9 60%, transparent), radial-gradient(1.6px 1.6px at 92% 88%, #ffe9c9 55%, transparent), radial-gradient(1.2px 1.2px at 6% 90%, #ffe9c9 60%, transparent);
   background-size:520px 520px;
   -webkit-mask:radial-gradient(120% 100% at 100% 0%, #000 10%, transparent 75%); mask:radial-gradient(120% 100% at 100% 0%, #000 10%, transparent 75%); }
@@ -52,7 +52,9 @@ body[data-bg="beam"] .pagebg::after{ content:''; position:absolute; inset:-40px;
 :root[data-eff="light"] body[data-bg="beam"] .pagebg::before{ background:conic-gradient(from 196deg at 100% 0%, transparent 0 4deg, color-mix(in srgb, #ff9a4d 14%, transparent) 4deg 24deg, transparent 24deg); }
 :root[data-eff="light"] body[data-bg="beam"] .pagebg::after{ opacity:.35; filter:sepia(1) saturate(3) brightness(.7); }
 @keyframes beamsway{ from{ transform:rotate(-2.5deg); opacity:.85; } to{ transform:rotate(2.5deg); opacity:1; } }
-@keyframes dust{ to{ background-position:-520px 520px; } }
+/* Rasterise the dust once; moving its layer avoids repainting the whole viewport every frame. */
+body[data-bg="beam"] .pagebg::before, body[data-bg="beam"] .pagebg::after{ will-change:transform; }
+@keyframes dust{ to{ transform:translate3d(-48px,48px,0); } }
 @media (prefers-reduced-motion:reduce){ body[data-bg="beam"] .pagebg::before, body[data-bg="beam"] .pagebg::after{ animation:none; } }
 
 /* Page-look picker */

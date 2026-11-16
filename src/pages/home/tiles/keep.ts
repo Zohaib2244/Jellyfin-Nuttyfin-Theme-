@@ -15,16 +15,20 @@ export const keepTile: TileDef = {
   id: 'keep', tab: 'home', title: 'Keep watching', icon: 'clock', place: [6, 1, 7, 5], minH: 560, cls: 'onimg',
   mount(host, ctx) {
     let rec = -1; // -1 = the thing you were watching, else an index into the picks
+    let recommendations: Promise<Title[]> | null = null;
+    let busy = new Set<string>();
     loadInto<HeroData>(host, ctx, {
       head: tileHead('keep', 'clock', 'Keep watching'),
       skeleton: skArt(),
       bare: true,
       async fetch() {
-        const [resume, sugg] = await Promise.all([ctx.data.resume(), ctx.data.suggestions().catch(() => [] as Title[])]);
+        recommendations = ctx.data.suggestions().catch(() => [] as Title[]);
+        const resume = await ctx.data.resume();
         const rows = watchRows(resume, []);
         const base = rows[0] ?? null;
-        const busy = new Set(rows.map(r => (r.item.kind === 'episode' ? r.item.seriesId : r.item.id)));
-        const recs = sugg.filter(t => !busy.has(t.id)).slice(0, 3);
+        busy = new Set(rows.map(r => (r.item.kind === 'episode' ? r.item.seriesId : r.item.id)));
+        // Resume is usable immediately. Optional recommendations must not hold the Play button hostage.
+        const recs = base ? [] : (await recommendations).filter(t => !busy.has(t.id)).slice(0, 3);
         return { base, recs };
       },
       render(d) {
@@ -50,6 +54,11 @@ export const keepTile: TileDef = {
           el.querySelector<HTMLElement>(`[data-hero="${rec}"]`)?.focus({ preventScroll: true });
           ambient();
         }, sig);
+        if (d.base) void recommendations?.then(list => {
+          if (ac.signal.aborted || ctx.signal.aborted) return;
+          d.recs = list.filter(t => !busy.has(t.id)).slice(0, 3);
+          if (d.recs.length) el.innerHTML = paint(d, rec, ctx.now()).value;
+        });
         return () => { ac.abort(); ctx.shell.setAmbient(null); };
       },
     });

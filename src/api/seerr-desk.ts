@@ -10,6 +10,7 @@ import type {
 } from './desk-types';
 import { ApiError, type Http } from './http';
 import { downloadPercent, mediaState, requestState } from './seerr';
+import { limitConcurrency } from '../lib/concurrency';
 import type { IssueKind, RequestState, SeerrRequest, SeerrResult } from './types';
 
 /** Seerr's permission bit flags (server/lib/permissions.ts). */
@@ -160,6 +161,7 @@ interface TitleBits { title?: string; name?: string; releaseDate?: string; first
 export class SeerrDesk implements SeerrDeskApi {
   private caps: Promise<SeerrCapabilities | null> | null = null;
   private readonly titles = new Map<string, Promise<TitleBits | undefined>>();
+  private readonly metadata = limitConcurrency(4);
 
   constructor(private readonly http: Http, private readonly session: () => Session, private readonly available: () => Promise<boolean>) {}
 
@@ -226,7 +228,7 @@ export class SeerrDesk implements SeerrDeskApi {
     const key = `${mediaType}:${tmdbId}`;
     let p = this.titles.get(key);
     if (!p) {
-      p = this.http<TitleBits>(`/${mediaType}/${tmdbId}`, { timeoutMs: 8000 }).catch(() => { this.titles.delete(key); return undefined; });
+      p = this.metadata(() => this.http<TitleBits>(`/${mediaType}/${tmdbId}`, { timeoutMs: 8000 })).catch(() => { this.titles.delete(key); return undefined; });
       this.titles.set(key, p);
     }
     return p;

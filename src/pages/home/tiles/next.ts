@@ -24,11 +24,14 @@ export const nextTile: TileDef = {
       skeleton: skArt(),
       bare: true,
       async fetch() {
-        const [next, resume, sugg] = await Promise.all([ctx.data.nextUp(), ctx.data.resume(), ctx.data.suggestions().catch(() => [] as Title[])]);
+        const [next, resume] = await Promise.all([ctx.data.nextUp(), ctx.data.resume()]);
         // Skip the show the hero is already resuming: the hero covers it.
         const busy = new Set(resume.map(r => (r.kind === 'episode' ? r.seriesId : r.id)));
         const ep = next.find(e => !busy.has(e.seriesId)) ?? next[0] ?? null;
-        if (!ep) return { ep: null, season: [], fallback: sugg.find(t => !busy.has(t.id)) ?? null };
+        if (!ep) {
+          const sugg = await ctx.data.suggestions().catch(() => [] as Title[]);
+          return { ep: null, season: [], fallback: sugg.find(t => !busy.has(t.id)) ?? null };
+        }
         const season = await ctx.backend.episodes(ep.seriesId, ep.seasonId).catch(() => [] as Episode[]);
         return { ep, season, fallback: null };
       },

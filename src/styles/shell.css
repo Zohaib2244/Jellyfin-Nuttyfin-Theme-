@@ -16,7 +16,7 @@ body { padding-left: var(--rail-w); }
 .nav .ni[aria-disabled="true"] { opacity: .55; }
 
 /* ── Top bar ── */
-.top { position: sticky; top: 0; z-index: 50; display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto auto; grid-template-areas: "tabs search qopen theme acct"; grid-template-rows: var(--top-h); align-items: center; column-gap: 16px; padding: 0 28px; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); border-bottom: var(--bw) solid var(--line); }
+.top { position: sticky; top: 0; z-index: 50; display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto auto; grid-template-areas: "tabs search qopen theme acct"; grid-template-rows: var(--top-h); align-items: center; column-gap: 16px; padding: 0 28px; background: var(--bg); border-bottom: var(--bw) solid var(--line); }
 .top::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1.5px; height: 2px; background: linear-gradient(90deg, var(--pc1), var(--pc2) 30%, transparent 60%); opacity: .85; pointer-events: none; }
 .brand { grid-area: brand; display: none; align-items: center; gap: 10px; padding: 4px; min-height: 44px; text-decoration: none; }
 .brand .wm { font-family: var(--font-px); font-size: 22px; letter-spacing: .04em; }

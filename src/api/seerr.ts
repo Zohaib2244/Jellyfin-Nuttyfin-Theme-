@@ -120,7 +120,7 @@ export class SeerrClient implements SeerrApi {
     return this.toRequest(r, undefined);
   }
 
-  async requests(opts: { mine?: boolean; take?: number } = {}): Promise<SeerrRequest[]> {
+  async requests(opts: { mine?: boolean; take?: number; includeTitles?: boolean } = {}): Promise<SeerrRequest[]> {
     if (!(await this.available())) return [];
     try {
       const r = await this.http<{ results?: RequestRaw[] }>('/request', {
@@ -128,7 +128,7 @@ export class SeerrClient implements SeerrApi {
       });
       const raws = r.results ?? [];
       // The list has TMDB ids only; fetch titles in parallel (each failure just leaves a blank title).
-      const details = await Promise.all(raws.map(x => this.rowDetail(x)));
+      const details = opts.includeTitles === false ? [] : await Promise.all(raws.map(x => this.rowDetail(x)));
       return raws.map((x, i) => this.toRequest(x, details[i]));
     } catch {
       return [];
@@ -178,7 +178,7 @@ export class SeerrClient implements SeerrApi {
     const tmdb = r.media?.tmdbId;
     if (!tmdb) return undefined;
     try {
-      return await this.http(`/${r.type === 'tv' || r.media?.mediaType === 'tv' ? 'tv' : 'movie'}/${tmdb}`, { timeoutMs: 8000 });
+      return await this.desk.titleOf(r.type === 'tv' || r.media?.mediaType === 'tv' ? 'tv' : 'movie', tmdb);
     } catch {
       return undefined;
     }

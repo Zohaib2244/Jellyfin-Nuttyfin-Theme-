@@ -67,6 +67,10 @@ export class HomeData {
 
   /* ── Seerr (never rejects: fails soft to "off" / empty) ── */
   seerrOn(): Promise<boolean> { return this.get('seerrOn', () => this.backend.seerr.available().catch(() => false)); }
+  /** The rail badge needs states, never thirty separate title lookups. */
+  requestSummary(): Promise<SeerrRequest[]> {
+    return this.get('requestSummary', async () => ((await this.seerrOn()) ? this.backend.seerr.requests({ mine: true, take: 30, includeTitles: false }).catch(() => []) : []));
+  }
   myRequests(): Promise<SeerrRequest[]> {
     return this.get('myRequests', async () => ((await this.seerrOn()) ? this.backend.seerr.requests({ mine: true, take: 30 }).catch(() => []) : []));
   }

@@ -31,7 +31,7 @@ export interface SeerrApi extends SeerrDeskApi { // phase5-7: SeerrDeskApi = the
   available(): Promise<boolean>;
   search(query: string, signal?: AbortSignal): Promise<SeerrResult[]>;
   request(input: { mediaType: 'movie' | 'tv'; tmdbId: number; seasons?: number[] }): Promise<SeerrRequest>;
-  requests(opts?: { mine?: boolean; take?: number }): Promise<SeerrRequest[]>;
+  requests(opts?: { mine?: boolean; take?: number; includeTitles?: boolean }): Promise<SeerrRequest[]>;
   quota(): Promise<SeerrQuota | null>;
   // ── library/details: begin ──
   /** "Report a problem". Resolves true when Seerr took it, false when Seerr is unavailable or does not know the title. Never rejects. */
