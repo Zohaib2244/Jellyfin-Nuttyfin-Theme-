@@ -121,7 +121,7 @@ function mount(root: HTMLElement, ctx: PageContext, caps: SeerrCapabilities): vo
 
   /* ── header: quota ── */
   const paintQuota = (): void => {
-    const parts = [quotaText(st.quota?.movie, 'movie'), quotaText(st.quota?.tv, 'tv')].filter((x): x is string => !!x);
+    const parts = [quotaText(st.quota?.movie, 'movie'), quotaText(st.quota?.tv, 'tv')].filter((x): x is string => !!x && !x.startsWith('No limit')); // only limits are worth showing
     $('#rqquota').innerHTML = parts.map(p => `<span class="chip ${/^No (film|show) requests left/.test(p) ? 'declined' : 'info'}">${icon('info').value}${p.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</span>`).join('');
   };
   const loadQuota = async (): Promise<void> => { st.quota = await seerr.quota().catch(() => null); if (alive) paintQuota(); };

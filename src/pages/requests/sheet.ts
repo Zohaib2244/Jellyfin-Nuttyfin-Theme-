@@ -85,7 +85,7 @@ export function openRequestSheet(env: SheetEnv, target: SheetTarget): DialogHand
         <p class="note">Standard is right for almost everything. Bigger files take longer and may need converting to play here.</p></div>` : ''}
       ${!block && showFourK ? html`<div class="blk"><div class="opts"><label><input type="checkbox" id="rq-4k">Ask for the 4K version instead</label></div>
         <p class="note">4K files are very large, and this server often has to convert them to play.</p></div>` : ''}
-      ${qt && !block?.text.startsWith('Your account') ? html`<p class="rq-quota">${ic('info')}<span>${qt}.</span></p>` : ''}
+      ${qt && !qt.startsWith('No limit') && !block?.text.startsWith('Your account') ? html`<p class="rq-quota">${ic('info')}<span>${qt}.</span></p>` : ''}
       <p class="rq-fail" id="rqmsg" role="alert" hidden></p>
       <div class="acts">
         <button class="btn" type="button" data-close>${block ? 'Close' : 'Not now'}</button>

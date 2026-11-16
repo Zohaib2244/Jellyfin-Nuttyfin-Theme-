@@ -18,9 +18,10 @@ export function chipFor(state: RequestState | undefined, partial = false): SafeH
   return html`<span class="chip ${state}">${ic(CHIP_ICON[state])}${requestLabel(state).short}</span>`;
 }
 
-/** Poster: the library's own picture when the title is in Jellyfin, else TMDB's. Sits on a .ph gradient. */
+/** Poster on a .ph gradient. */
 export function posterOf(x: { jellyfinId?: string; posterPath?: string; title: string; tmdbId: number }, w = 342): SafeHtml {
-  const src = x.jellyfinId ? imageUrl(x.jellyfinId, 'Primary', { maxWidth: w, quality: 85 }) : tmdbImage(x.posterPath, w > 300 ? 'w342' : 'w185');
+  // TMDB's poster first (always right, even when Seerr holds a stale library id); the library's own picture when TMDB has none
+  const src = tmdbImage(x.posterPath, w > 300 ? 'w342' : 'w185') ?? (x.jellyfinId ? imageUrl(x.jellyfinId, 'Primary', { maxWidth: w, quality: 85 }) : undefined);
   return html`<span class="ph pst" ${raw(phAttrs(x.jellyfinId ?? `tmdb${x.tmdbId}`, x.title))}>${src ? raw(`<img src="${esc(src)}" alt="" loading="lazy" decoding="async">`) : ''}</span>`;
 }
 
