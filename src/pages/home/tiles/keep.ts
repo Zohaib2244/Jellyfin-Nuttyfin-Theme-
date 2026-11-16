@@ -3,6 +3,7 @@ import type { MediaItem, Title } from '../../../api/types';
 import { clock, runtime } from '../../../lib/format';
 import { html, type SafeHtml } from '../../../lib/html';
 import { icon } from '../../../ui/icons';
+import { watchLogos } from '../../../lib/logo';
 import { backdropUrl, detailsPath, img, logoUrl, ph, playPath, thumbUrl } from '../art';
 import { epLabel, leftText, watchRows, type WatchRow } from '../model';
 import { whyFor } from '../nutbot/moods';
@@ -38,10 +39,7 @@ export const keepTile: TileDef = {
         const ambient = (): void => { const cur = rec >= 0 ? d.recs[rec] : d.base?.item; ctx.shell.setAmbient((cur && backdropUrl(cur, 1280)) ?? null); };
         ambient();
         // a show with no logo image: its name is shown as text instead
-        el.addEventListener('error', e => {
-          const t = e.target;
-          if (t instanceof HTMLImageElement && t.classList.contains('logo')) t.closest('.ktitle')?.classList.add('nologo');
-        }, { capture: true, ...sig });
+        watchLogos(el, img => img.closest('.ktitle')?.classList.add('nologo'), sig);
         el.addEventListener('click', e => {
           const b = (e.target as Element).closest<HTMLElement>('[data-hero]');
           if (!b) return;

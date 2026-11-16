@@ -8,6 +8,7 @@
  * Follows design/mockups/details.html. Play/Resume only navigate to #/watch/<id>?t=..&audio=..&sub=..&version=..
  * (the player is built elsewhere); nothing here plays media.
  */
+import { watchLogos } from '../../lib/logo';
 import { ApiError, imageUrl } from '../../api';
 import type { Episode, MediaItem, MediaVersion, Season, Title } from '../../api/types';
 import { html, raw, setHtml } from '../../lib/html';
@@ -264,7 +265,7 @@ async function render(ctx: PageContext): Promise<HTMLElement> {
   /* ── events ── */
   function wireHero(): void {
     const ttl = q('.ttl');
-    q('.ttl .logo')?.addEventListener('error', () => ttl.classList.remove('haslogo'));
+    watchLogos(ttl, () => ttl.classList.remove('haslogo'));
     const tag = root.querySelector<HTMLElement>('#tagline');
     if (tag && S.clamp) {
       const ro = new ResizeObserver(() => {
