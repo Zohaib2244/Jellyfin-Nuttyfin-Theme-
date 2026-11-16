@@ -3,7 +3,7 @@
  * Only the fields Nuttyfin uses are typed here. Everything is optional because Jellyfin omits empty values.
  */
 import { ticksToMinutes } from '../lib/format';
-import type { CollectionProgress } from './types'; // home
+import type { CollectionProgress, TrickplayInfo } from './types'; // home / phase4
 import type {
   AudioTrack, Chapter, Episode, ImageTags, MediaItem, MediaVersion, Person, Progress, Season, SubtitleTrack, Title,
 } from './types';
@@ -22,6 +22,11 @@ export interface MediaStreamDto {
   Width?: number;
   Height?: number;
   BitRate?: number;
+  // ── phase4: begin ──
+  IsTextSubtitleStream?: boolean;
+  /** PlaybackInfo only: Embed | External | Hls | Encode | Drop */
+  DeliveryMethod?: string;
+  // ── phase4: end ──
 }
 
 export interface MediaSourceDto {
@@ -92,6 +97,9 @@ export interface BaseItemDto {
   RecursiveItemCount?: number;
   DateLastMediaAdded?: string;
   // ── library/details: end ──
+  // ── phase4: begin ── { <mediaSourceId>: { "320": { Width, Height, TileWidth, TileHeight, ThumbnailCount, Interval(ms) } } }
+  Trickplay?: Record<string, Record<string, { Width?: number; Height?: number; TileWidth?: number; TileHeight?: number; ThumbnailCount?: number; Interval?: number }>>;
+  // ── phase4: end ──
 }
 
 const is4kSize = (w?: number, h?: number): boolean => (w ?? 0) >= 3000 || (h ?? 0) >= 2000;
@@ -140,6 +148,7 @@ function normaliseSubtitle(s: MediaStreamDto): SubtitleTrack {
     isDefault: !!s.IsDefault,
     isForced: !!s.IsForced,
     isExternal: !!s.IsExternal,
+    isText: s.IsTextSubtitleStream ?? !/^(pgs|pgssub|dvdsub|dvbsub|dvd_subtitle|hdmv_pgs_subtitle|dvb_subtitle|xsub)$/i.test(s.Codec ?? ''), // phase4
   };
 }
 
@@ -190,8 +199,10 @@ export function normaliseChapters(list: BaseItemDto['Chapters']): Chapter[] {
 }
 
 /** Detail-only fields shared by Titles and Episodes. Empty collections are left off so list calls stay small. */
-function detailExtras(dto: BaseItemDto): Pick<Title, 'chapters' | 'providerIds' | 'tags' | 'remoteTrailers'> {
-  const out: Pick<Title, 'chapters' | 'providerIds' | 'tags' | 'remoteTrailers'> = {};
+function detailExtras(dto: BaseItemDto): Pick<Title, 'chapters' | 'providerIds' | 'tags' | 'remoteTrailers' | 'trickplay'> {
+  const out: Pick<Title, 'chapters' | 'providerIds' | 'tags' | 'remoteTrailers' | 'trickplay'> = {};
+  const tp = normaliseTrickplay(dto.Trickplay); // phase4
+  if (tp) out.trickplay = tp;
   if (dto.Chapters?.length) out.chapters = normaliseChapters(dto.Chapters);
   const ids: Record<string, string> = {};
   for (const [k, v] of Object.entries(dto.ProviderIds ?? {})) if (v) ids[k] = v;
@@ -346,5 +357,25 @@ export function rankSearch<T extends { name: string }>(list: readonly T[], query
     return 2;
   };
   return list.map((t, i) => ({ t, i, s: score(t.name) })).sort((a, b) => a.s - b.s || a.i - b.i).map(x => x.t);
+}
+// ── phase4: end ──
+
+// ── phase4: begin ──
+/** Pick the sheet size nearest 320 px wide for each media source (small enough to load fast, sharp enough for a 192 px preview). */
+export function normaliseTrickplay(raw: BaseItemDto['Trickplay']): Record<string, TrickplayInfo> | undefined {
+  if (!raw) return undefined;
+  const out: Record<string, TrickplayInfo> = {};
+  for (const [source, sizes] of Object.entries(raw)) {
+    const best = Object.entries(sizes ?? {})
+      .map(([w, t]) => ({ w: Number(w), t }))
+      .filter(x => Number.isFinite(x.w) && x.t.Width && x.t.Height && x.t.TileWidth && x.t.TileHeight && x.t.ThumbnailCount && x.t.Interval)
+      .sort((a, b) => Math.abs(a.w - 320) - Math.abs(b.w - 320))[0];
+    if (!best) continue;
+    out[source] = {
+      width: best.t.Width as number, height: best.t.Height as number, tileWidth: best.t.TileWidth as number, tileHeight: best.t.TileHeight as number,
+      thumbnailCount: best.t.ThumbnailCount as number, intervalMs: best.t.Interval as number,
+    };
+  }
+  return Object.keys(out).length ? out : undefined;
 }
 // ── phase4: end ──

@@ -3,7 +3,7 @@
  * Implementations: jellyfin.ts (real), demo.ts (fixtures from design/catalog.json). Pick with createBackend() (index.ts).
  */
 import type {
-  Collection, Episode, GenreCount, IssueKind, ItemsQuery, LibraryView, MediaItem, Paged, PlaybackInfo, PlaybackReport, QuickConnectSession, Season,
+  Collection, Episode, GenreCount, IssueKind, ItemsQuery, LibraryView, MediaItem, MediaSegment, Paged, PlaybackInfo, PlaybackReport, PlaybackRequest, QuickConnectSession, Season,
   SeerrQuota, SeerrRequest, SeerrResult, Title, User,
 } from './types';
 
@@ -85,10 +85,19 @@ export interface Backend {
   // ── home: end ──
 
   /* ── playback ── */
-  playbackInfo(id: string, opts?: { versionId?: string; audioIndex?: number; subtitleIndex?: number; startTicks?: number }): Promise<PlaybackInfo>;
+  playbackInfo(id: string, opts?: PlaybackRequest): Promise<PlaybackInfo>;
   reportStart(r: PlaybackReport): Promise<void>;
   reportProgress(r: PlaybackReport): Promise<void>;
-  reportStopped(r: PlaybackReport): Promise<void>;
+  /** `unload: true` sends with fetch keepalive so it survives the tab closing. Also ends the server-side transcode. */
+  reportStopped(r: PlaybackReport, opts?: { unload?: boolean }): Promise<void>;
+  // ── phase4: begin ──
+  /** Intro / recap / credits markers (GET /MediaSegments/{id}). Never rejects: [] when the server has none. */
+  segments(id: string, signal?: AbortSignal): Promise<MediaSegment[]>;
+  /** Ends the server-side ffmpeg job of a converted stream (used when switching sound or quality mid-film). Never rejects. */
+  stopTranscode(playSessionId: string, opts?: { unload?: boolean }): Promise<void>;
+  /** Credentials for things that cannot send headers (<video>, <img>, <track>): the token for ?api_key= and the full Authorization header for XHR. */
+  mediaAuth(): { token: string; header: string };
+  // ── phase4: end ──
 
   /* ── user actions (writes: only from the app's own UI code paths) ── */
   setPlayed(id: string, played: boolean): Promise<void>;

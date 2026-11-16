@@ -8,7 +8,7 @@ import { store } from '../lib/storage';
 import type { Backend, QuickConnectApi, SeerrApi } from './backend';
 import type { CollectionProgress, LeavingSoon } from './types'; // home
 import type {
-  AudioTrack, Chapter, Collection, Episode, GenreCount, IssueKind, ImageTags, ItemsQuery, LibraryView, MediaItem, MediaVersion, Paged, Person, PlaybackInfo,
+  AudioTrack, Chapter, Collection, Episode, GenreCount, IssueKind, ImageTags, ItemsQuery, LibraryView, MediaItem, MediaSegment, MediaVersion, Paged, Person, PlaybackInfo,
   Progress, QuickConnectSession, Season, SeerrQuota, SeerrRequest, SeerrResult, SubtitleTrack, Title, User,
 } from './types';
 
@@ -493,6 +493,11 @@ export class DemoBackend implements Backend {
   async reportStart(): Promise<void> {}
   async reportProgress(): Promise<void> {}
   async reportStopped(): Promise<void> {}
+  // ── phase4: begin ──
+  async segments(): Promise<MediaSegment[]> { return []; }
+  async stopTranscode(): Promise<void> {}
+  mediaAuth(): { token: string; header: string } { return { token: 'demo', header: '' }; }
+  // ── phase4: end ──
 
   async setPlayed(id: string, played: boolean): Promise<void> {
     playedOverride.set(id, played);

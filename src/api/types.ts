@@ -36,6 +36,10 @@ interface MediaBase {
   runtimeMin: number;
   /** ISO date the item was added to the library. */
   added?: string;
+  // ── phase4: begin ──
+  /** Detail calls only: seek-bar preview sheets, keyed by media source id. */
+  trickplay?: Record<string, TrickplayInfo>;
+  // ── phase4: end ──
   // ── library/details: begin ──
   /** Detail calls only: scene markers (with a thumbnail tag when the server made one). */
   chapters?: Chapter[];
@@ -170,6 +174,8 @@ export interface AudioTrack {
 }
 
 export interface SubtitleTrack {
+  // phase4: false for picture-based tracks (PGS, DVD): they can only be burned into the video by the server
+  isText?: boolean;
   index: number;
   language?: string;
   codec?: string;
@@ -209,6 +215,14 @@ export interface PlaybackInfo {
   audioStreamIndex?: number;
   subtitleStreamIndex?: number;
   startPositionTicks: number;
+  // ── phase4: begin ──
+  /** Why the server converts (Jellyfin's TranscodeReasons, e.g. 'AudioCodecNotSupported'). Empty for direct play. */
+  transcodeReasons?: string[];
+  /** The chosen subtitle is picture-based and the server burns it into the video. */
+  subtitleBurnedIn?: boolean;
+  /** Every file of this title (for the version menu). */
+  versions?: MediaVersion[];
+  // ── phase4: end ──
 }
 
 export interface PlaybackReport {
@@ -219,6 +233,12 @@ export interface PlaybackReport {
   isPaused?: boolean;
   audioStreamIndex?: number;
   subtitleStreamIndex?: number;
+  // ── phase4: begin ──
+  playMethod?: 'DirectPlay' | 'DirectStream' | 'Transcode';
+  /** 0-100 */
+  volume?: number;
+  isMuted?: boolean;
+  // ── phase4: end ──
 }
 
 export interface User {
@@ -358,3 +378,39 @@ export interface LeavingSoon {
   reason: string;
 }
 // ── home: end ──
+
+// ── phase4: begin ──
+/** Seek-bar preview sheets: tiles of `width` x `height`, laid out tileWidth x tileHeight per JPEG, one every `intervalMs`. */
+export interface TrickplayInfo {
+  width: number;
+  height: number;
+  tileWidth: number;
+  tileHeight: number;
+  thumbnailCount: number;
+  intervalMs: number;
+}
+
+/** "Skip intro" style marker, in seconds. */
+export interface MediaSegment {
+  id: string;
+  type: 'Intro' | 'Outro' | 'Recap' | 'Preview' | 'Commercial' | 'Unknown';
+  start: number;
+  end: number;
+}
+
+/** What the browser can play, as a Jellyfin DeviceProfile (built in pages/watch/profile.ts). Opaque to the api layer. */
+export type DeviceProfile = Record<string, unknown>;
+
+export interface PlaybackRequest {
+  versionId?: string;
+  audioIndex?: number;
+  /** -1 = none */
+  subtitleIndex?: number;
+  startTicks?: number;
+  profile?: DeviceProfile;
+  /** bits per second the connection / the person's quality choice allows */
+  maxBitrate?: number;
+  /** ask the server to repack/convert even if the file could play as it is (audio change, saver mode) */
+  noDirectPlay?: boolean;
+}
+// ── phase4: end ──

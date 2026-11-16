@@ -3,16 +3,17 @@
  * A 401 on any call (except the sign-in calls themselves) signs out and sends the browser to #/login.
  * Field lists are chosen so ONE call returns everything the UI shows (no per-row follow-up requests).
  */
-import { currentAuthHeader, session as sessionStore, type StoredSession } from './auth';
+import { currentAuthHeader, getDeviceId, session as sessionStore, type StoredSession } from './auth';
 import type { Backend, QuickConnectApi } from './backend';
 import { SignInError } from './backend';
-import { ApiError, createHttp, type Http } from './http';
+import { ApiError, buildQuery, createHttp, type Http } from './http';
 import { JF_BASE } from './images';
-import { normaliseCollection, normaliseItem, rankSearch, normaliseSeason, normaliseVersion, withinDays, type BaseItemDto } from './normalise';
+import { interpretPlayback, normaliseSegments, type PlaybackInfoResult } from './playback';
+import { normaliseCollection, normaliseItem, rankSearch, normaliseSeason, withinDays, type BaseItemDto } from './normalise';
 import { SeerrClient } from './seerr';
 import type { CollectionProgress, LeavingSoon } from './types'; // home
 import type {
-  Collection, Episode, GenreCount, ItemsQuery, LibraryView, MediaItem, Paged, PlaybackInfo, PlaybackReport, QuickConnectSession, Season,
+  Collection, Episode, GenreCount, ItemsQuery, LibraryView, MediaItem, MediaSegment, Paged, PlaybackInfo, PlaybackReport, PlaybackRequest, QuickConnectSession, Season,
   SortKey, Title, User,
 } from './types';
 
@@ -38,21 +39,6 @@ interface AuthResult {
 }
 interface ItemsResult { Items?: BaseItemDto[]; TotalRecordCount?: number; StartIndex?: number }
 interface QuickConnectResult { Secret: string; Code: string; Authenticated?: boolean }
-
-interface PlaybackInfoResult {
-  PlaySessionId?: string;
-  MediaSources?: Array<{
-    Id?: string;
-    ETag?: string;
-    SupportsDirectPlay?: boolean;
-    SupportsDirectStream?: boolean;
-    SupportsTranscoding?: boolean;
-    TranscodingUrl?: string;
-    DirectStreamUrl?: string;
-    DefaultAudioStreamIndex?: number;
-    DefaultSubtitleStreamIndex?: number;
-  } & import('./normalise').MediaSourceDto>;
-}
 
 /** Browser-side playback capabilities sent to PlaybackInfo. The server is Haswell (H.264 hardware only):
  *  prefer direct play of H.264/AAC MP4/MKV, otherwise ask for an H.264 <=1080p HLS transcode. */
@@ -365,52 +351,78 @@ export class JellyfinBackend implements Backend {
   // ── home: end ──
 
   /* ── playback ── */
-  async playbackInfo(id: string, opts: { versionId?: string; audioIndex?: number; subtitleIndex?: number; startTicks?: number } = {}): Promise<PlaybackInfo> {
+  // ── phase4: begin ──
+  async playbackInfo(id: string, opts: PlaybackRequest = {}): Promise<PlaybackInfo> {
+    const maxBitrate = opts.maxBitrate ?? DEVICE_PROFILE.MaxStreamingBitrate;
+    const flags = { enableDirectPlay: opts.noDirectPlay ? false : undefined };
     const r = await this.http<PlaybackInfoResult>(`/Items/${encodeURIComponent(id)}/PlaybackInfo`, {
       method: 'POST',
+      // Jellyfin 10.9+ reads these from the body, older servers from the query: send both
       query: {
-        userId: this.uid, mediaSourceId: opts.versionId, audioStreamIndex: opts.audioIndex, subtitleStreamIndex: opts.subtitleIndex,
-        startTimeTicks: opts.startTicks, maxStreamingBitrate: DEVICE_PROFILE.MaxStreamingBitrate, autoOpenLiveStream: false,
+        userId: this.uid, mediaSourceId: opts.versionId, audioStreamIndex: opts.audioIndex, startTimeTicks: opts.startTicks,
+        subtitleStreamIndex: opts.subtitleIndex != null && opts.subtitleIndex >= 0 ? opts.subtitleIndex : undefined,
+        maxStreamingBitrate: maxBitrate, autoOpenLiveStream: false, enableDirectPlay: flags.enableDirectPlay,
       },
-      body: { DeviceProfile: DEVICE_PROFILE },
+      body: {
+        UserId: this.uid, MediaSourceId: opts.versionId, AudioStreamIndex: opts.audioIndex, StartTimeTicks: opts.startTicks,
+        SubtitleStreamIndex: opts.subtitleIndex != null && opts.subtitleIndex >= 0 ? opts.subtitleIndex : undefined,
+        MaxStreamingBitrate: maxBitrate, AutoOpenLiveStream: false, EnableDirectPlay: flags.enableDirectPlay,
+        DeviceProfile: opts.profile ?? DEVICE_PROFILE,
+      },
     });
     const sources = r.MediaSources ?? [];
     const src = sources.find(s => s.Id === opts.versionId) ?? sources[0];
     if (!src?.Id) throw new ApiError(404, 'not-found', 'No playable file for this title');
-    const version = normaliseVersion(src);
-    const key = encodeURIComponent(this.token ?? '');
-    let url = '';
-    let method: PlaybackInfo['method'] = 'unavailable';
-    if (src.SupportsDirectPlay) {
-      method = 'direct';
-      url = `${JF_BASE}/Videos/${encodeURIComponent(id)}/stream?static=true&mediaSourceId=${encodeURIComponent(src.Id)}&api_key=${key}${src.ETag ? `&tag=${encodeURIComponent(src.ETag)}` : ''}`;
-    } else if (src.TranscodingUrl) {
-      method = src.SupportsDirectStream ? 'directStream' : 'transcode';
-      url = `${JF_BASE}${src.TranscodingUrl}`;
-      if (!/api_key=/i.test(url)) url += `${url.includes('?') ? '&' : '?'}api_key=${key}`;
-    }
-    return {
-      itemId: id, mediaSourceId: src.Id, playSessionId: r.PlaySessionId, url, method,
-      badge: method === 'transcode' ? 'Will be converted' : method === 'unavailable' ? 'Cannot play here' : 'Plays perfectly here',
-      isHls: /\.m3u8/i.test(url), version,
-      audioStreamIndex: opts.audioIndex ?? src.DefaultAudioStreamIndex,
-      subtitleStreamIndex: opts.subtitleIndex ?? src.DefaultSubtitleStreamIndex,
-      startPositionTicks: opts.startTicks ?? 0,
-    };
+    return interpretPlayback(id, r, src, this.token ?? '', opts);
   }
+  // ── phase4: end ──
 
-  private report(path: string, r: PlaybackReport): Promise<void> {
-    return this.http<void>(`/Sessions/Playing${path}`, {
-      method: 'POST',
-      body: {
-        ItemId: r.itemId, MediaSourceId: r.mediaSourceId, PlaySessionId: r.playSessionId, PositionTicks: r.positionTicks,
-        IsPaused: !!r.isPaused, CanSeek: true, AudioStreamIndex: r.audioStreamIndex, SubtitleStreamIndex: r.subtitleStreamIndex,
-      },
-    });
+  private report(path: string, r: PlaybackReport, unload = false): Promise<void> {
+    const body = {
+      ItemId: r.itemId, MediaSourceId: r.mediaSourceId, PlaySessionId: r.playSessionId, PositionTicks: Math.max(0, Math.round(r.positionTicks)),
+      IsPaused: !!r.isPaused, CanSeek: true, AudioStreamIndex: r.audioStreamIndex, SubtitleStreamIndex: r.subtitleStreamIndex,
+      // ── phase4: begin ──
+      PlayMethod: r.playMethod, VolumeLevel: r.volume != null ? Math.round(r.volume) : undefined, IsMuted: r.isMuted,
+      // ── phase4: end ──
+    };
+    if (unload) {
+      // fetch with keepalive outlives the page (a normal request is cancelled when the tab closes)
+      return fetch(`${JF_BASE}/Sessions/Playing${path}`, {
+        method: 'POST', keepalive: true, credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', Authorization: currentAuthHeader(this.token ?? undefined) },
+        body: JSON.stringify(body),
+      }).then(() => undefined, () => undefined);
+    }
+    return this.http<void>(`/Sessions/Playing${path}`, { method: 'POST', body });
   }
   reportStart(r: PlaybackReport): Promise<void> { return this.report('', r); }
   reportProgress(r: PlaybackReport): Promise<void> { return this.report('/Progress', r); }
-  reportStopped(r: PlaybackReport): Promise<void> { return this.report('/Stopped', r); }
+  // ── phase4: begin ──
+  async reportStopped(r: PlaybackReport, opts: { unload?: boolean } = {}): Promise<void> {
+    const sent = this.report('/Stopped', r, opts.unload);
+    // a converted stream keeps an ffmpeg job on the server until someone stops it
+    const stop = r.playMethod && r.playMethod !== 'DirectPlay' && r.playSessionId ? this.stopTranscode(r.playSessionId, opts) : Promise.resolve();
+    await Promise.all([sent, stop]);
+  }
+
+  async stopTranscode(playSessionId: string, opts: { unload?: boolean } = {}): Promise<void> {
+    const q = buildQuery({ deviceId: getDeviceId(), playSessionId });
+    if (opts.unload) {
+      await fetch(`${JF_BASE}/Videos/ActiveEncodings?${q}`, { method: 'DELETE', keepalive: true, headers: { Authorization: currentAuthHeader(this.token ?? undefined) } }).catch(() => undefined);
+      return;
+    }
+    await this.http<void>('/Videos/ActiveEncodings', { method: 'DELETE', query: { deviceId: getDeviceId(), playSessionId } }).catch(() => undefined);
+  }
+
+  mediaAuth(): { token: string; header: string } { return { token: this.token ?? '', header: currentAuthHeader(this.token ?? undefined) }; }
+
+  async segments(id: string, signal?: AbortSignal): Promise<MediaSegment[]> {
+    try {
+      const r = await this.http<{ Items?: Array<{ Id?: string; Type?: string; StartTicks?: number; EndTicks?: number }> }>(`/MediaSegments/${encodeURIComponent(id)}`, { signal, timeoutMs: 6000 });
+      return normaliseSegments(r.Items);
+    } catch { return []; }
+  }
+  // ── phase4: end ──
 
   // ── library/details: begin ──
   async genres(kind: 'movie' | 'series', signal?: AbortSignal): Promise<GenreCount[]> {
