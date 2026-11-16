@@ -156,10 +156,31 @@ export function normaliseVersion(src: MediaSourceDto): MediaVersion {
     videoCodec: video?.Codec,
     bitrate: src.Bitrate,
     sizeBytes: src.Size,
-    audio: streams.filter(s => s.Type === 'Audio').map(normaliseAudio),
-    subtitles: streams.filter(s => s.Type === 'Subtitle').map(normaliseSubtitle),
+    audio: streams.filter(s => s.Type === 'Audio').map(normaliseAudio).map(a => ({ ...a, label: dropUndefined(a.label) })),
+    subtitles: nameUnlabelled(streams.filter(s => s.Type === 'Subtitle').map(normaliseSubtitle)),
   };
 }
+
+// ── phase4: begin ──
+/** Jellyfin writes "Undefined - Default - SUBRIP" for tracks with no language tag. */
+export const dropUndefined = (label: string): string => label.replace(/^(undefined|unknown)( - )?/i, '');
+
+/** Tracks without a language (a file can carry 40 of them) become "Subtitles 1 · default", "Subtitles 2 · hearing impaired". */
+export function nameUnlabelled(subs: SubtitleTrack[]): SubtitleTrack[] {
+  let n = 0;
+  return subs.map(s => {
+    if (!/^(undefined|unknown)\b/i.test(s.label) && s.language && !/^und$/i.test(s.language)) return s;
+    n += 1;
+    const rest = dropUndefined(s.label);
+    const bits = [`Subtitles ${n}`];
+    if (/hearing impaired|sdh/i.test(rest)) bits.push('hearing impaired');
+    if (s.isForced || /forced/i.test(rest)) bits.push('forced');
+    if (s.isDefault) bits.push('default');
+    if (s.isExternal) bits.push('external');
+    return { ...s, language: undefined, label: bits.join(' · ') };
+  });
+}
+// ── phase4: end ──
 
 // ── library/details: begin ──
 export function normaliseChapters(list: BaseItemDto['Chapters']): Chapter[] {

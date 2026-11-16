@@ -185,7 +185,7 @@ export function epRow(e: Episode, i: number, o: { now: boolean; open: boolean; o
   const guests = (e.people ?? []).filter(p => p.type === 'GuestStar');
   const v = e.versions?.[0];
   const a = v?.audio.find(x => x.isDefault) ?? v?.audio[0];
-  const tech = v ? [`${e.runtimeMin} min`, v.videoCodec ? codecName(v.videoCodec) : '', a ? audioShort(a) : '', v.subtitles.length ? `subtitles: ${[...new Set(v.subtitles.map(s => s.language ?? s.label))].slice(0, 4).join(', ')}` : ''].filter(Boolean).join(' · ') : `${e.runtimeMin} min`;
+  const tech = v ? [`${e.runtimeMin} min`, v.videoCodec ? codecName(v.videoCodec) : '', a ? audioShort(a) : '', v.subtitles.length ? subtitleSummary(v.subtitles) : ''].filter(Boolean).join(' · ') : `${e.runtimeMin} min`;
   return html`<div class="ep${o.now ? ' now' : ''}${o.open ? ' open' : ''}" style="--i:${Math.min(i, 12)}" data-ep="${e.id}">
     <a class="hit" href="${c.href(watchPath(e.id, { seconds: e.progress ? ticksToSeconds(e.progress.positionTicks) : undefined }))}" aria-label="${e.progress ? 'Resume' : 'Play'} season ${e.season} episode ${e.episode}, ${e.name}"></a>
     <div class="th ph" ${raw(phAttrs(`ep${e.id}`, `E${e.episode}`))}>${e.imageTags.primary ? html`<img loading="lazy" src="${imageUrl(e.id, 'Primary', { maxWidth: 480, tag: e.imageTags.primary })}" alt="">` : ''}${e.progress ? html`<span class="prog" aria-hidden="true"><i style="width:${e.progress.percent}%"></i></span>` : ''}<span class="pl">${ic('play')}</span></div>
@@ -292,3 +292,11 @@ export function moreSection(items: readonly Title[], series: boolean, c: Ctx, cu
 }
 
 export const endsAtText = (remaining: number): string => `ends at ${clock(new Date(Date.now() + remaining * 60_000))}`;
+
+// ── phase4: begin ──
+/** "subtitles: eng, fra" or, when no track names its language, "40 subtitle tracks". */
+export function subtitleSummary(subs: readonly { language?: string }[]): string {
+  const langs = [...new Set(subs.map(s => s.language).filter((l): l is string => !!l && !/^und$/i.test(l)))];
+  return langs.length ? `subtitles: ${langs.slice(0, 4).join(', ')}` : `${subs.length} subtitle track${subs.length === 1 ? '' : 's'}`;
+}
+// ── phase4: end ──

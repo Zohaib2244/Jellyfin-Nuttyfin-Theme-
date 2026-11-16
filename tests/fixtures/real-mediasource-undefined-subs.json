@@ -1,0 +1,107 @@
+{
+ "Id": "8a5ff9ff8973e538cac53e612e69ced9",
+ "Name": "Lanterns.S01E07.1080p.HEVC.x265-MeGusta[EZTVx.to].mkv[eztvx.to]",
+ "Container": "mkv",
+ "Size": 418760571,
+ "Bitrate": 1182418,
+ "SupportsDirectPlay": true,
+ "SupportsDirectStream": true,
+ "SupportsTranscoding": true,
+ "DefaultAudioStreamIndex": 1,
+ "DefaultSubtitleStreamIndex": 2,
+ "MediaStreams": [
+  {
+   "Index": 0,
+   "Type": "Video",
+   "Codec": "hevc",
+   "DisplayTitle": "1080p HEVC SDR",
+   "IsDefault": true,
+   "IsForced": false,
+   "IsExternal": false,
+   "IsTextSubtitleStream": false,
+   "SupportsExternalStream": false,
+   "Width": 2160,
+   "Height": 1080,
+   "BitRate": 542418
+  },
+  {
+   "Index": 1,
+   "Type": "Audio",
+   "Codec": "eac3",
+   "DisplayTitle": "Dolby Digital+ - 5.1 - Default",
+   "IsDefault": true,
+   "IsForced": false,
+   "IsExternal": false,
+   "IsTextSubtitleStream": false,
+   "SupportsExternalStream": false,
+   "Channels": 6,
+   "BitRate": 640000
+  },
+  {
+   "Index": 2,
+   "Type": "Subtitle",
+   "Codec": "subrip",
+   "DisplayTitle": "Undefined - Default - SUBRIP",
+   "IsDefault": true,
+   "IsForced": false,
+   "IsExternal": false,
+   "IsTextSubtitleStream": true,
+   "SupportsExternalStream": true
+  },
+  {
+   "Index": 3,
+   "Type": "Subtitle",
+   "Codec": "subrip",
+   "DisplayTitle": "Undefined - Hearing Impaired - SUBRIP",
+   "IsDefault": false,
+   "IsForced": false,
+   "IsExternal": false,
+   "IsTextSubtitleStream": true,
+   "SupportsExternalStream": true
+  },
+  {
+   "Index": 4,
+   "Type": "Subtitle",
+   "Codec": "subrip",
+   "DisplayTitle": "Undefined - SUBRIP",
+   "IsDefault": false,
+   "IsForced": false,
+   "IsExternal": false,
+   "IsTextSubtitleStream": true,
+   "SupportsExternalStream": true
+  },
+  {
+   "Index": 5,
+   "Type": "Subtitle",
+   "Codec": "subrip",
+   "DisplayTitle": "Undefined - SUBRIP",
+   "IsDefault": false,
+   "IsForced": false,
+   "IsExternal": false,
+   "IsTextSubtitleStream": true,
+   "SupportsExternalStream": true
+  },
+  {
+   "Index": 6,
+   "Type": "Subtitle",
+   "Codec": "subrip",
+   "DisplayTitle": "Undefined - SUBRIP",
+   "IsDefault": false,
+   "IsForced": false,
+   "IsExternal": false,
+   "IsTextSubtitleStream": true,
+   "SupportsExternalStream": true
+  },
+  {
+   "Index": 7,
+   "Type": "Subtitle",
+   "Codec": "subrip",
+   "DisplayTitle": "Undefined - SUBRIP",
+   "IsDefault": false,
+   "IsForced": false,
+   "IsExternal": false,
+   "IsTextSubtitleStream": true,
+   "SupportsExternalStream": true
+  }
+ ]
+}

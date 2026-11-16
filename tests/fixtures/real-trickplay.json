@@ -1,0 +1,17 @@
+{
+ "Trickplay": {
+  "8a5ff9ff8973e538cac53e612e69ced9": {
+   "320": {
+    "Width": 320,
+    "Height": 160,
+    "TileWidth": 10,
+    "TileHeight": 10,
+    "ThumbnailCount": 283,
+    "Interval": 10000,
+    "Bandwidth": 4670
+   }
+  }
+ },
+ "Id": "8a5ff9ff8973e538cac53e612e69ced9",
+ "RunTimeTicks": 28332480000
+}

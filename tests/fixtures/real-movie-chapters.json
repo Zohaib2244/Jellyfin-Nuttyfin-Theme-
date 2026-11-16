@@ -1,0 +1,159 @@
+{
+ "Id": "c64c5a00acc048a5a43953f981f837e9",
+ "RunTimeTicks": 103556801670,
+ "Chapters": [
+  {
+   "StartPositionTicks": 0,
+   "Name": "Chapter 1",
+   "ImagePath": "/config/metadata/library/c6/c64c5a00acc048a5a43953f981f837e9/chapters/639297085141302170_0.jpg",
+   "ImageDateModified": "2026-11-08T04:23:25.0165192Z",
+   "ImageTag": "7893f0325de03c78c13d9b9616645bb5"
+  },
+  {
+   "StartPositionTicks": 5623530000,
+   "Name": "Chapter 2",
+   "ImagePath": "/config/metadata/library/c6/c64c5a00acc048a5a43953f981f837e9/chapters/639297085141302170_5623530000.jpg",
+   "ImageDateModified": "2026-11-08T04:23:25.5661623Z",
+   "ImageTag": "09d631bb25b885450d271a3799f0da8f"
+  },
+  {
+   "StartPositionTicks": 11588240000,
+   "Name": "Chapter 3",
+   "ImagePath": "/config/metadata/library/c6/c64c5a00acc048a5a43953f981f837e9/chapters/639297085141302170_11588240000.jpg",
+   "ImageDateModified": "2026-11-08T04:23:25.9977155Z",
+   "ImageTag": "aae20ccc39ef8e39aef566d64002da81"
+  },
+  {
+   "StartPositionTicks": 13779600000,
+   "Name": "Chapter 4",
+   "ImagePath": "/config/metadata/library/c6/c64c5a00acc048a5a43953f981f837e9/chapters/639297085141302170_13779600000.jpg",
+   "ImageDateModified": "2026-11-08T04:23:26.9602043Z",
+   "ImageTag": "65f2e50381bdc3081757aa76adc6eaae"
+  },
+  {
+   "StartPositionTicks": 19096580000,
+   "Name": "Chapter 5",
+   "ImagePath": "/config/metadata/library/c6/c64c5a00acc048a5a43953f981f837e9/chapters/639297085141302170_19096580000.jpg",
+   "ImageDateModified": "2026-11-08T04:23:27.3669588Z",
+   "ImageTag": "f86de2b0da5418d06883696c8463d149"
+  },
+  {
+   "StartPositionTicks": 26960270000,
+   "Name": "Chapter 6",
+   "ImagePath": "/config/metadata/library/c6/c64c5a00acc048a5a43953f981f837e9/chapters/639297085141302170_26960270000.jpg",
+   "ImageDateModified": "2026-11-08T04:23:27.7387247Z",
+   "ImageTag": "89203a0fbb85affd2085c224c87dcdf5"
+  },
+  {
+   "StartPositionTicks": 31810950000,
+   "Name": "Chapter 7",
+   "ImagePath": "/config/metadata/library/c6/c64c5a00acc048a5a43953f981f837e9/chapters/639297085141302170_31810950000.jpg",
+   "ImageDateModified": "2026-11-08T04:23:28.2872791Z",
+   "ImageTag": "a77b6213c7447f36f5ab6293da56ce46"
+  },
+  {
+   "StartPositionTicks": 35539670000,
+   "Name": "Chapter 8",
+   "ImagePath": "/config/metadata/library/c6/c64c5a00acc048a5a43953f981f837e9/chapters/639297085141302170_35539670000.jpg",
+   "ImageDateModified": "2026-11-08T04:23:28.793894Z",
+   "ImageTag": "bab6c06a69c4506a43eb380d52c7ffc1"
+  },
+  {
+   "StartPositionTicks": 40921300000,
+   "Name": "Chapter 9",
+   "ImagePath": "/config/metadata/library/c6/c64c5a00acc048a5a43953f981f837e9/chapters/639297085141302170_40921300000.jpg",
+   "ImageDateModified": "2026-11-08T04:23:29.1846846Z",
+   "ImageTag": "2347f880a6db39b771a9d6991806ba4c"
+  },
+  {
+   "StartPositionTicks": 48344960000,
+   "Name": "Chapter 10",
+   "ImagePath": "/config/metadata/library/c6/c64c5a00acc048a5a43953f981f837e9/chapters/639297085141302170_48344960000.jpg",
+   "ImageDateModified": "2026-11-08T04:23:29.6414011Z",
+   "ImageTag": "f6ff8d8d8553d5a2125de9598e90a143"
+  },
+  {
+   "StartPositionTicks": 55063760000,
+   "Name": "Chapter 11",
+   "ImagePath": "/config/metadata/library/c6/c64c5a00acc048a5a43953f981f837e9/chapters/639297085141302170_55063760000.jpg",
+   "ImageDateModified": "2026-11-08T04:23:30.2662192Z",
+   "ImageTag": "9fba27bc2e8984b6eb0571fcb3e5d2a1"
+  },
+  {
+   "StartPositionTicks": 59214570000,
+   "Name": "Chapter 12",
+   "ImagePath": "/config/metadata/library/c6/c64c5a00acc048a5a43953f981f837e9/chapters/639297085141302170_59214570000.jpg",
+   "ImageDateModified": "2026-11-08T04:23:30.7753245Z",
+   "ImageTag": "81b93cc1ababec496c6629720f496ed8"
+  },
+  {
+   "StartPositionTicks": 64085690000,
+   "Name": "Chapter 13",
+   "ImagePath": "/config/metadata/library/c6/c64c5a00acc048a5a43953f981f837e9/chapters/639297085141302170_64085690000.jpg",
+   "ImageDateModified": "2026-11-08T04:23:31.1340878Z",
+   "ImageTag": "cf3de373d6f2421291926cee963f9608"
+  },
+  {
+   "StartPositionTicks": 70331930000,
+   "Name": "Chapter 14",
+   "ImagePath": "/config/metadata/library/c6/c64c5a00acc048a5a43953f981f837e9/chapters/639297085141302170_70331930000.jpg",
+   "ImageDateModified": "2026-11-08T04:23:31.580889Z",
+   "ImageTag": "57d2bf8d3008149e68220bf84ad35783"
+  },
+  {
+   "StartPositionTicks": 75587600000,
+   "Name": "Chapter 15",
+   "ImagePath": "/config/metadata/library/c6/c64c5a00acc048a5a43953f981f837e9/chapters/639297085141302170_75587600000.jpg",
+   "ImageDateModified": "2026-11-08T04:23:32.4030593Z",
+   "ImageTag": "804f4a2e06fb3441e313cbe44256c3d4"
+  },
+  {
+   "StartPositionTicks": 79857280000,
+   "Name": "Chapter 16",
+   "ImagePath": "/config/metadata/library/c6/c64c5a00acc048a5a43953f981f837e9/chapters/639297085141302170_79857280000.jpg",
+   "ImageDateModified": "2026-11-08T04:23:32.8092944Z",
+   "ImageTag": "b5328a768aebdb6a400ed65c32326f61"
+  },
+  {
+   "StartPositionTicks": 82542460000,
+   "Name": "Chapter 17",
+   "ImagePath": "/config/metadata/library/c6/c64c5a00acc048a5a43953f981f837e9/chapters/639297085141302170_82542460000.jpg",
+   "ImageDateModified": "2026-11-08T04:23:33.4672221Z",
+   "ImageTag": "ad2fdba5b629c8590ae32fbd42095807"
+  },
+  {
+   "StartPositionTicks": 88838750000,
+   "Name": "Chapter 18",
+   "ImagePath": "/config/metadata/library/c6/c64c5a00acc048a5a43953f981f837e9/chapters/639297085141302170_88838750000.jpg",
+   "ImageDateModified": "2026-11-08T04:23:33.9857585Z",
+   "ImageTag": "0be5305e80b1c931dcbc525e6fe2c80b"
+  },
+  {
+   "StartPositionTicks": 97779770000,
+   "Name": "Chapter 19",
+   "ImagePath": "/config/metadata/library/c6/c64c5a00acc048a5a43953f981f837e9/chapters/639297085141302170_97779770000.jpg",
+   "ImageDateModified": "2026-11-08T04:23:34.4672257Z",
+   "ImageTag": "fed5510b2f173c8477e2d0664be25445"
+  },
+  {
+   "StartPositionTicks": 99411400000,
+   "Name": "Chapter 20",
+   "ImagePath": "/config/metadata/library/c6/c64c5a00acc048a5a43953f981f837e9/chapters/639297085141302170_99411400000.jpg",
+   "ImageDateModified": "2026-11-08T04:23:34.7799519Z",
+   "ImageTag": "57202e6bb58b81dfafde53b5f5837dcd"
+  }
+ ],
+ "Trickplay": {
+  "c64c5a00acc048a5a43953f981f837e9": {
+   "320": {
+    "Width": 320,
+    "Height": 180,
+    "TileWidth": 10,
+    "TileHeight": 10,
+    "ThumbnailCount": 1036,
+    "Interval": 10000,
+    "Bandwidth": 7884
+   }
+  }
+ }
+}

@@ -1,0 +1,55 @@
+{
+ "Id": "c64c5a00acc048a5a43953f981f837e9",
+ "Name": "The Odyssey (2026) [1080p] [BluRay] [5.1] [YTS.GG - YTS.BZ]",
+ "Container": "mp4",
+ "Size": 3418028733,
+ "Bitrate": 2640505,
+ "SupportsDirectPlay": true,
+ "SupportsDirectStream": true,
+ "SupportsTranscoding": true,
+ "DefaultAudioStreamIndex": 2,
+ "DefaultSubtitleStreamIndex": 0,
+ "MediaStreams": [
+  {
+   "Index": 1,
+   "Type": "Video",
+   "Codec": "h264",
+   "Language": "und",
+   "DisplayTitle": "1080p H264 SDR",
+   "IsDefault": true,
+   "IsForced": false,
+   "IsExternal": false,
+   "IsTextSubtitleStream": false,
+   "SupportsExternalStream": false,
+   "Width": 1920,
+   "Height": 1080,
+   "BitRate": 2249640
+  },
+  {
+   "Index": 2,
+   "Type": "Audio",
+   "Codec": "aac",
+   "Language": "und",
+   "DisplayTitle": "AAC - 5.1 - Default",
+   "IsDefault": true,
+   "IsForced": false,
+   "IsExternal": false,
+   "IsTextSubtitleStream": false,
+   "SupportsExternalStream": false,
+   "Channels": 6,
+   "BitRate": 383999
+  },
+  {
+   "Index": 0,
+   "Type": "Subtitle",
+   "Codec": "subrip",
+   "Language": "eng",
+   "DisplayTitle": "English - SUBRIP - External",
+   "IsDefault": false,
+   "IsForced": false,
+   "IsExternal": true,
+   "IsTextSubtitleStream": true,
+   "SupportsExternalStream": true
+  }
+ ]
+}
