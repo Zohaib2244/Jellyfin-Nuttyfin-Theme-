@@ -1,0 +1,57 @@
+{
+  "server": {
+    "id": 0,
+    "name": "Sonarr",
+    "is4k": false,
+    "isDefault": true,
+    "activeDirectory": "/media/TV Shows",
+    "activeProfileId": 1,
+    "activeAnimeProfileId": 3,
+    "activeAnimeDirectory": "/media/TV Shows",
+    "activeTags": [],
+    "activeAnimeTags": []
+  },
+  "profiles": [
+    {
+      "id": 1,
+      "name": "Any"
+    },
+    {
+      "id": 2,
+      "name": "SD"
+    },
+    {
+      "id": 3,
+      "name": "HD-720p"
+    },
+    {
+      "id": 4,
+      "name": "HD-1080p"
+    },
+    {
+      "id": 5,
+      "name": "Ultra-HD"
+    },
+    {
+      "id": 6,
+      "name": "HD - 720p/1080p"
+    },
+    {
+      "id": 7,
+      "name": "720p x265 (MeGusta > ELiTE)"
+    },
+    {
+      "id": 8,
+      "name": "1080p x265 (MeGusta > ELiTE)"
+    }
+  ],
+  "rootFolders": [
+    {
+      "id": 1,
+      "freeSpace": 69959192576,
+      "path": "/media/TV Shows"
+    }
+  ],
+  "languageProfiles": null,
+  "tags": []
+}

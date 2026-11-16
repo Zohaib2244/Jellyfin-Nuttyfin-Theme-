@@ -7,6 +7,7 @@
  */
 import type { SeerrApi } from './backend';
 import { ApiError, createHttp, type Http } from './http';
+import { hitToResult, SeerrDesk } from './seerr-desk'; // phase5-7
 import type { IssueKind, QuotaLine, RequestState, SeerrQuota, SeerrRequest, SeerrResult, User } from './types';
 
 export const SEERR_BASE = '/seerr/api/v1';
@@ -18,7 +19,7 @@ interface SearchHit {
   posterPath?: string; overview?: string; mediaInfo?: MediaInfo;
 }
 interface RequestRaw {
-  id: number; status: number; createdAt?: string; type?: string; seasons?: Array<{ seasonNumber: number }>;
+  id?: number; status: number; createdAt?: string; type?: string; seasons?: Array<{ seasonNumber: number }>;
   media?: MediaInfo & { status?: number }; requestedBy?: { displayName?: string; jellyfinUsername?: string; username?: string };
 }
 interface Quota { movie?: RawLine; tv?: RawLine }
@@ -54,16 +55,22 @@ export class SeerrClient implements SeerrApi {
   private seerrUserId: number | null = null;
   private probing: Promise<boolean> | null = null;
   private readonly http: Http;
+  // ── phase5-7: begin ──
+  private perms = 0;
+  private readonly desk: SeerrDesk;
+  // ── phase5-7: end ──
 
   constructor(private readonly getUser: () => User | null) {
     this.http = createHttp({ base: SEERR_BASE, headers: () => ({}) });
+    this.desk = new SeerrDesk(this.http, () => ({ userId: this.seerrUserId, perms: this.perms }), () => this.available()); // phase5-7
   }
 
   /** Called by the Jellyfin client after a password sign-in. Never throws. */
   async connect(username: string, password: string): Promise<boolean> {
     try {
-      const me = await this.http<{ id?: number }>('/auth/jellyfin', { method: 'POST', body: { username, password }, timeoutMs: 8000 });
+      const me = await this.http<{ id?: number; permissions?: number }>('/auth/jellyfin', { method: 'POST', body: { username, password }, timeoutMs: 8000 });
       this.seerrUserId = me.id ?? null;
+      this.perms = me.permissions ?? 0; // phase5-7
       this.ok = true;
     } catch {
       this.ok = false;
@@ -71,15 +78,16 @@ export class SeerrClient implements SeerrApi {
     return this.ok;
   }
 
-  reset(): void { this.ok = null; this.seerrUserId = null; this.probing = null; }
+  reset(): void { this.ok = null; this.seerrUserId = null; this.probing = null; this.desk.reset(); /* phase5-7 */ }
 
   async available(): Promise<boolean> {
     if (!this.getUser()) return false;
     if (this.ok !== null) return this.ok;
     this.probing ??= (async () => {
       try {
-        const me = await this.http<{ id?: number }>('/auth/me', { timeoutMs: 6000 });
+        const me = await this.http<{ id?: number; permissions?: number }>('/auth/me', { timeoutMs: 6000 });
         this.seerrUserId = me.id ?? null;
+        this.perms = me.permissions ?? 0; // phase5-7
         this.ok = true;
       } catch {
         this.ok = false;
@@ -94,17 +102,7 @@ export class SeerrClient implements SeerrApi {
     if (!query.trim() || !(await this.available())) return [];
     try {
       const r = await this.http<{ results?: SearchHit[] }>('/search', { query: { query: query.trim(), page: 1 }, signal });
-      return (r.results ?? [])
-        .filter(h => h.mediaType === 'movie' || h.mediaType === 'tv')
-        .map((h): SeerrResult => ({
-          tmdbId: h.id,
-          mediaType: h.mediaType as 'movie' | 'tv',
-          title: h.title ?? h.name ?? '',
-          year: yearOf(h.releaseDate ?? h.firstAirDate),
-          overview: h.overview || undefined,
-          posterPath: h.posterPath || undefined,
-          state: mediaState(h.mediaInfo?.status),
-        }));
+      return (r.results ?? []).map(hitToResult).filter((x): x is SeerrResult => !!x); // phase5-7: adds partial + library id
     } catch (e) {
       if (signal?.aborted) throw e;
       return [];
@@ -118,6 +116,7 @@ export class SeerrClient implements SeerrApi {
       method: 'POST',
       body: { mediaType: input.mediaType, mediaId: input.tmdbId, ...(input.mediaType === 'tv' ? { seasons: input.seasons ?? 'all' } : {}) },
     });
+    if (typeof r.id !== 'number') throw new ApiError(202, 'client', 'No seasons available to request', { message: 'No seasons available to request' }); // phase5-7
     return this.toRequest(r, undefined);
   }
 
@@ -129,7 +128,7 @@ export class SeerrClient implements SeerrApi {
       });
       const raws = r.results ?? [];
       // The list has TMDB ids only; fetch titles in parallel (each failure just leaves a blank title).
-      const details = await Promise.all(raws.map(x => this.detail(x)));
+      const details = await Promise.all(raws.map(x => this.rowDetail(x)));
       return raws.map((x, i) => this.toRequest(x, details[i]));
     } catch {
       return [];
@@ -163,7 +162,19 @@ export class SeerrClient implements SeerrApi {
   }
   // ── library/details: end ──
 
-  private async detail(r: RequestRaw): Promise<{ title?: string; name?: string; releaseDate?: string; firstAirDate?: string; posterPath?: string } | undefined> {
+  // ── phase5-7: begin ── the full Requests page (see seerr-desk.ts)
+  capabilities(): ReturnType<SeerrApi['capabilities']> { return this.desk.capabilities(); }
+  detail(...a: Parameters<SeerrApi['detail']>): ReturnType<SeerrApi['detail']> { return this.desk.detail(...a); }
+  discover(signal?: AbortSignal): ReturnType<SeerrApi['discover']> { return this.desk.discover(signal); }
+  requestsPage(...a: Parameters<SeerrApi['requestsPage']>): ReturnType<SeerrApi['requestsPage']> { return this.desk.requestsPage(...a); }
+  createRequest(...a: Parameters<SeerrApi['createRequest']>): ReturnType<SeerrApi['createRequest']> { return this.desk.createRequest(...a); }
+  cancelRequest(id: number): Promise<void> { return this.desk.cancelRequest(id); }
+  approveRequest(id: number): Promise<void> { return this.desk.approveRequest(id); }
+  declineRequest(id: number): Promise<void> { return this.desk.declineRequest(id); }
+  issues(...a: Parameters<SeerrApi['issues']>): ReturnType<SeerrApi['issues']> { return this.desk.issues(...a); }
+  // ── phase5-7: end ──
+
+  private async rowDetail(r: RequestRaw): Promise<{ title?: string; name?: string; releaseDate?: string; firstAirDate?: string; posterPath?: string } | undefined> {
     const tmdb = r.media?.tmdbId;
     if (!tmdb) return undefined;
     try {
@@ -176,7 +187,7 @@ export class SeerrClient implements SeerrApi {
   private toRequest(r: RequestRaw, d?: { title?: string; name?: string; releaseDate?: string; firstAirDate?: string; posterPath?: string }): SeerrRequest {
     const tv = r.type === 'tv' || r.media?.mediaType === 'tv';
     return {
-      id: r.id,
+      id: r.id ?? 0,
       tmdbId: r.media?.tmdbId ?? 0,
       mediaType: tv ? 'tv' : 'movie',
       title: d?.title ?? d?.name ?? '',

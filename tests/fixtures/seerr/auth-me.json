@@ -1,0 +1,16 @@
+{
+  "permissions": 2,
+  "id": 1,
+  "jellyfinUsername": "Owner",
+  "username": null,
+  "userType": 3,
+  "movieQuotaLimit": null,
+  "movieQuotaDays": null,
+  "tvQuotaLimit": null,
+  "tvQuotaDays": null,
+  "createdAt": "2026-07-11T13:15:45.000Z",
+  "updatedAt": "2026-07-11T13:15:45.000Z",
+  "requestCount": 131,
+  "displayName": "Owner",
+  "settings": null
+}

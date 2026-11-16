@@ -1,0 +1,58 @@
+# Nuttyfin helper service: systemd unit. DRAFT, NOT APPLIED. Copy to /etc/systemd/system/nuttyfin-helper.service (deploy/README.md).
+#
+# Why a host service and not Docker: NutBot shells out to the claude CLI, which lives in the owner's home and is logged in
+# as nutmag2469 (same reason AVN Hub runs on the host). It also needs to READ the media drive to count hardlinks.
+# So it runs as that user, but boxed in: no new privileges, the whole system read-only, the media drive read-only,
+# the other drive invisible, only the CLI's own folders writable, no shell, no extra network families.
+# Secrets live in /etc/nuttyfin-helper.env (root:nutmag2469, mode 640), never in the repo.
+[Unit]
+Description=Nuttyfin helper (NutBot brain, On TV calendar, smart delete)
+Documentation=file:///opt/nuttyfin/helper/.env.example
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nutmag2469
+Group=nutmag2469
+WorkingDirectory=/opt/nuttyfin/helper
+EnvironmentFile=/etc/nuttyfin-helper.env
+# Node 22.6+ runs TypeScript directly (no build step, no dependencies to install).
+ExecStart=/usr/bin/node --disable-warning=ExperimentalWarning src/server.ts
+Restart=on-failure
+RestartSec=5
+
+# ── hardening ──
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=read-only
+# The claude CLI keeps its login and small caches here. If NutBot says "could not answer" and the journal shows a
+# permission error, this is the list to extend (or set NUTFIN_CLI_CONFIG_DIR to a folder you made for it).
+ReadWritePaths=/home/nutmag2469/.claude /home/nutmag2469/.cache /home/nutmag2469/.config
+ReadOnlyPaths=/mnt/nuttyfin
+InaccessiblePaths=/mnt/nuttyd /opt/docker
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+UMask=0077
+# The box has 16 GB and little spare: the helper is tiny, the CLI child is the heavy part.
+MemoryMax=600M
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target

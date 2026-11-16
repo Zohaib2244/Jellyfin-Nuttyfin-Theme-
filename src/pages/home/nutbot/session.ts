@@ -2,6 +2,7 @@
 import type { HomeCtx } from '../tile';
 import { LocalBrain } from './local';
 import { createChat, type ChatHandle } from './chat';
+import { RemoteBrain } from './remote'; // phase5-7
 
 const sessions = new WeakMap<object, { chat: ChatHandle; listeners: Set<() => void> }>();
 
@@ -10,8 +11,8 @@ export function chatFor(ctx: HomeCtx): { chat: ChatHandle; onChange(fn: () => vo
   let s = sessions.get(ctx.data);
   if (!s) {
     const listeners = new Set<() => void>();
-    // The brain is the only thing that changes when the helper service's LLM arrives.
-    const chat = createChat(ctx, new LocalBrain(ctx.backend), () => listeners.forEach(fn => fn()));
+    // The helper service's LLM answers when it is there; the scripted local brain answers when it is not (or fails).
+    const chat = createChat(ctx, new RemoteBrain(ctx.backend, new LocalBrain(ctx.backend)), () => listeners.forEach(fn => fn()));
     s = { chat, listeners };
     sessions.set(ctx.data, s);
     ctx.onDispose(() => { chat.destroy(); sessions.delete(ctx.data); });

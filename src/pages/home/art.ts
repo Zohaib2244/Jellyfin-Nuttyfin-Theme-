@@ -38,8 +38,10 @@ export function thumbUrl(item: MediaItem, w = 480): string | undefined {
 
 /** Where "Play" and "Details" go. Details of an episode is its show. */
 export const playPath = (item: { id: string }): string => `/watch/${encodeURIComponent(item.id)}`;
-export const detailsPath = (item: MediaItem | { id: string }): string =>
-  `/title/${encodeURIComponent('kind' in item && item.kind === 'episode' ? item.seriesId : item.id)}`;
+export const detailsPath = (item: MediaItem | { id: string }): string => {
+  const id = 'kind' in item && item.kind === 'episode' ? item.seriesId : item.id;
+  return id ? `/title/${encodeURIComponent(id)}` : '/requests'; // phase5-7: a show that is not in the library yet leads to Requests
+};
 
 /** <img> that lazy-loads and hides itself when it fails (the .ph gradient behind it shows through). */
 export function img(src: string | undefined, cls = '', alt = ''): SafeHtml {

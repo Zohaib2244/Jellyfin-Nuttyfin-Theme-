@@ -5,6 +5,8 @@
  */
 import catalog from '../../design/catalog.json';
 import { store } from '../lib/storage';
+import { createDemoDesk, seedDemoDesk, type DemoDeskCtx } from './demo-desk'; // phase5-7
+import { createDemoHelper } from './demo-helper'; // phase5-7
 import type { Backend, QuickConnectApi, SeerrApi } from './backend';
 import type { CollectionProgress, LeavingSoon } from './types'; // home
 import type {
@@ -213,6 +215,11 @@ FAKE_SEARCH.push(
   { tmdbId: 1396, mediaType: 'tv', title: 'Breaking Bad', year: 2008, state: 'approved', overview: 'A chemistry teacher turns to a life of crime.' },
 );
 
+// ── phase5-7: begin ──
+const DESK_CTX: Omit<DemoDeskCtx, 'user'> = { requests: FAKE_REQUESTS, search: FAKE_SEARCH, libraryId: n => ITEMS.find(i => i.name === n)?.id };
+seedDemoDesk({ ...DESK_CTX, user: () => null });
+// ── phase5-7: end ──
+
 /** Catalog dates are a snapshot; shift them so the newest title looks about two hours old. */
 const NEWEST_ADDED = Math.max(...ITEMS.map(i => new Date(iso(i.added) ?? 0).getTime()));
 const rebase = (iso0: string | undefined): string | undefined =>
@@ -251,23 +258,18 @@ export class DemoBackend implements Backend {
     poll: async () => (++this.qcPolls < 3 ? null : this.adopt('Demo')),
   };
 
+  // ── phase5-7: begin ──
+  private readonly desk = createDemoDesk({ ...DESK_CTX, user: () => this.user });
+  readonly helper = createDemoHelper({
+    isAdmin: () => !!this.user?.isAdmin, upcoming: () => this.upcoming({ days: 7, limit: 40 }), titles: () => this.all(),
+    titleById: id => this.all().find(t => t.id === id), removeFromJellyfin: id => this.deleteFromJellyfin(id),
+  });
+  // ── phase5-7: end ──
+
   readonly seerr: SeerrApi = {
     available: async () => !!this.user,
     search: async (q: string): Promise<SeerrResult[]> => FAKE_SEARCH.filter(r => r.title.toLowerCase().includes(q.trim().toLowerCase())),
-    request: async input => {
-      const hit = FAKE_SEARCH.find(r => r.tmdbId === input.tmdbId);
-      const req: SeerrRequest = { id: Date.now(), tmdbId: input.tmdbId, mediaType: input.mediaType, title: hit?.title ?? 'Requested title', year: hit?.year, state: 'requested', requestedBy: this.user?.name ?? 'Demo', createdAt: new Date().toISOString(), seasons: input.seasons };
-      FAKE_REQUESTS.unshift(req);
-      return req;
-    },
-    // ── library/details: begin ──
-    reportIssue: async (_input: { mediaType: 'movie' | 'tv'; tmdbId: number; kind: IssueKind; message: string }) => true,
-    // ── library/details: end ──
-    requests: async () => [...FAKE_REQUESTS],
-    quota: async (): Promise<SeerrQuota> => ({
-      movie: { limit: 5, used: 2, remaining: 3, days: 7 },
-      tv: { limit: null, used: 1, remaining: null, days: null },
-    }),
+    ...this.desk, // phase5-7: the desk (requests page, quota that counts down, issues) replaces the plain versions above
   };
 
   private adopt(name: string): User {

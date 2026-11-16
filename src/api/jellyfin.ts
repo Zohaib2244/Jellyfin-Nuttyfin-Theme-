@@ -9,7 +9,8 @@ import { SignInError } from './backend';
 import { ApiError, buildQuery, createHttp, type Http } from './http';
 import { JF_BASE } from './images';
 import { interpretPlayback, normaliseSegments, type PlaybackInfoResult } from './playback';
-import { normaliseCollection, normaliseItem, rankSearch, normaliseSeason, withinDays, type BaseItemDto } from './normalise';
+import { normaliseCollection, normaliseItem, rankSearch, normaliseSeason, normaliseVersion, withinDays, type BaseItemDto } from './normalise';
+import { HelperClient } from './helper'; // phase5-7
 import { SeerrClient } from './seerr';
 import type { CollectionProgress, LeavingSoon } from './types'; // home
 import type {
@@ -78,6 +79,7 @@ export function toSignInError(e: unknown): SignInError {
 export class JellyfinBackend implements Backend {
   readonly mode = 'jellyfin' as const;
   readonly seerr: SeerrClient;
+  readonly helper = new HelperClient(() => this.token); // phase5-7
   readonly quickConnect: QuickConnectApi;
   private user: User | null = null;
   private token: string | null = null;
@@ -130,6 +132,7 @@ export class JellyfinBackend implements Backend {
   private adopt(auth: AuthResult): User {
     const user: User = { id: auth.User.Id, name: auth.User.Name, isAdmin: !!auth.User.Policy?.IsAdministrator, avatarTag: auth.User.PrimaryImageTag };
     this.token = auth.AccessToken;
+    this.helper.reset(); // phase5-7
     this.user = user;
     const stored: StoredSession = { token: auth.AccessToken, userId: user.id, userName: user.name, isAdmin: user.isAdmin, avatarTag: user.avatarTag };
     sessionStore.save(stored);
@@ -152,6 +155,7 @@ export class JellyfinBackend implements Backend {
     const wasSignedIn = !!this.token;
     if (wasSignedIn) { try { await this.http('/Sessions/Logout', { method: 'POST', expect401: true, timeoutMs: 4000 }); } catch { /* the token may already be dead */ } }
     this.seerr.reset();
+    this.helper.reset(); // phase5-7
     this.clear();
   }
 
