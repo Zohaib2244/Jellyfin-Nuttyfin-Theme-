@@ -17,9 +17,13 @@ describe('assess (will it play here?)', () => {
   it('H.264 + AAC in MP4 plays directly', () => {
     expect(assess(ver(), aud(), chromeish)).toMatchObject({ level: 'direct', badge: 'Plays perfectly here', tone: 'ok' });
   });
-  it('MKV or AC-3 sound is only repacked: "Will be converted", no stutter warning', () => {
-    const mkv = assess(ver({ container: 'mkv' }), aud(), chromeish);
+  it('MKV plays directly where the browser takes matroska (the player sends it as it is), and is repacked where it does not', () => {
+    expect(assess(ver({ container: 'mkv' }), aud(), chromeish).level).toBe('direct');
+    const firefoxish: CanPlay = m => !/hvc1|ac-3|ec-3|matroska/.test(m);
+    const mkv = assess(ver({ container: 'mkv' }), aud(), firefoxish);
     expect(mkv).toMatchObject({ level: 'convert', badge: 'Will be converted', mayStutter: false });
+  });
+  it('AC-3 sound is only converted: "Will be converted", no stutter warning', () => {
     const ac3 = assess(ver(), aud({ codec: 'ac3' }), chromeish);
     expect(ac3.level).toBe('convert');
     expect(ac3.why).toContain('sound');

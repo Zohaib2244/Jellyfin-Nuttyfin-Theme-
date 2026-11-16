@@ -174,6 +174,7 @@ class Player {
       return;
     }
     if (my !== this.generation || this.disposed) return;
+    if (this.backend.mode === 'demo') { this.fail('Demo mode has no video to play. Sign in to your own server to watch.', undefined, undefined); return; }
     if (info.method === 'unavailable' || !info.url) { this.fail('This file cannot be played in this browser, and the server could not convert it.', undefined, new Error('PlaybackInfo: no usable stream')); return; }
     this.info = info;
     this.choice.version = info.mediaSourceId;

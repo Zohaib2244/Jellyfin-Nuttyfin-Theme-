@@ -61,7 +61,8 @@ export function assess(v: MediaVersion | undefined, audio: AudioTrack | undefine
   const videoOk = vc ? (VIDEO_MIME[vc] ? can(VIDEO_MIME[vc] as string) : false) : true;
   const ac = norm(audio?.codec);
   const audioOk = !ac || (AUDIO_MIME[ac] ? can(AUDIO_MIME[ac] as string) : false);
-  const containerOk = !container || DIRECT_CONTAINERS.includes(container);
+  // phase4: the player sends matroska straight to <video> when the browser says it can play it (Chrome, Edge; not Firefox or Safari)
+  const containerOk = !container || DIRECT_CONTAINERS.includes(container) || ((container === 'mkv' || container === 'matroska') && can('video/x-matroska; codecs="avc1.640028,mp4a.40.2"'));
   const big = v.is4k || (v.height ?? 0) > 1080 || (v.width ?? 0) > 1920;
   const tech = [v.container?.toUpperCase(), codecName(v.videoCodec), v.width && v.height ? `${v.width}x${v.height}` : '', audio ? `${audio.codec?.toUpperCase() ?? ''}${audio.channels ? ` ${audio.channels === 6 ? '5.1' : audio.channels === 2 ? 'stereo' : `${audio.channels}ch`}` : ''}`.trim() : '']
     .filter(Boolean).join(' · ');
