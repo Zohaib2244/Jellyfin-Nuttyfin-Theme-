@@ -12,7 +12,7 @@ import type { QuotaLine, RequestState, SeerrQuota, SeerrRequest, SeerrResult, Us
 export const SEERR_BASE = '/seerr/api/v1';
 
 /* ── raw shapes (only what we read) ── */
-interface MediaInfo { status?: number; tmdbId?: number; mediaType?: string }
+interface MediaInfo { status?: number; tmdbId?: number; mediaType?: string; downloadStatus?: Array<{ size?: number; sizeLeft?: number }> }
 interface SearchHit {
   id: number; mediaType: string; title?: string; name?: string; releaseDate?: string; firstAirDate?: string;
   posterPath?: string; overview?: string; mediaInfo?: MediaInfo;
@@ -169,6 +169,18 @@ export class SeerrClient implements SeerrApi {
       requestedBy: r.requestedBy?.displayName ?? r.requestedBy?.jellyfinUsername ?? r.requestedBy?.username ?? '',
       createdAt: r.createdAt ?? '',
       seasons: r.seasons?.map(s => s.seasonNumber),
+      progress: downloadPercent(r.media?.downloadStatus), // home
     };
   }
 }
+
+// ── home: begin ──
+/** Percent downloaded (0-100) from Seerr's downloadStatus list, or undefined when nothing is downloading / sizes are unknown. */
+export function downloadPercent(list: Array<{ size?: number; sizeLeft?: number }> | undefined): number | undefined {
+  if (!list?.length) return undefined;
+  const size = list.reduce((a, d) => a + (d.size ?? 0), 0);
+  const left = list.reduce((a, d) => a + (d.sizeLeft ?? 0), 0);
+  if (size <= 0) return undefined;
+  return Math.max(0, Math.min(100, Math.round(((size - left) / size) * 100)));
+}
+// ── home: end ──

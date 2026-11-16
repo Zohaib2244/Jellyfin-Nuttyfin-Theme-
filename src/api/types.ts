@@ -240,6 +240,8 @@ export interface SeerrRequest {
   createdAt: string;
   /** TV: requested season numbers */
   seasons?: number[];
+  /** home: download progress 0-100 while state is 'downloading' (when Seerr/Radarr/Sonarr report it) */
+  progress?: number;
 }
 
 export interface SeerrQuota {
@@ -253,3 +255,38 @@ export interface QuotaLine {
   remaining: number | null;
   days: number | null;
 }
+
+// ── home: begin ──
+/** One film inside a box set. */
+export interface CollectionItem {
+  id: string;
+  name: string;
+  played: boolean;
+  imageTags: ImageTags;
+  year?: number;
+}
+
+/** A box set ("collection") with how much of it you have watched. `items` are in release order. */
+export interface CollectionProgress {
+  id: string;
+  name: string;
+  imageTags: ImageTags;
+  total: number;
+  seen: number;
+  items: CollectionItem[];
+  /** First unwatched film, in release order. */
+  nextId?: string;
+}
+
+/** Something the server will remove soon (Jellyfin does not know this itself; the helper service will). */
+export interface LeavingSoon {
+  id: string;
+  name: string;
+  kind: 'movie' | 'series';
+  imageTags: ImageTags;
+  /** ISO date it goes */
+  leavesOn: string;
+  /** plain-language reason, e.g. "Makes room on the movies drive" */
+  reason: string;
+}
+// ── home: end ──

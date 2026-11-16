@@ -7,6 +7,8 @@ import type {
   SeerrQuota, SeerrRequest, SeerrResult, Title, User,
 } from './types';
 
+import type { CollectionProgress, LeavingSoon } from './types'; // home
+
 export type BackendMode = 'jellyfin' | 'demo';
 
 /** Why a sign-in failed, in terms the login page can turn into plain language. */
@@ -62,6 +64,21 @@ export interface Backend {
   episodes(seriesId: string, seasonId?: string): Promise<Episode[]>;
   /** Title search for the top-bar combobox. Pass a signal to cancel superseded searches. */
   search(query: string, limit?: number, signal?: AbortSignal): Promise<Title[]>;
+
+  // ── home: begin ──
+  /** Personalised picks (Jellyfin /Items/Suggestions): films and shows, never episodes. */
+  suggestions(limit?: number): Promise<Title[]>;
+  /** Films/shows added to the library within the last `days` days (default 14), newest first. */
+  recentlyAdded(opts?: { kind?: 'movie' | 'series'; days?: number; limit?: number }): Promise<Title[]>;
+  /** Episodes added to the library within the last `days` days, newest first ("Aired this week" fallback). */
+  recentEpisodes(opts?: { days?: number; limit?: number }): Promise<Episode[]>;
+  /** Episodes of shows you follow that air in the next `days` days (Jellyfin /Shows/Upcoming), soonest first. Air date is Episode.premiered. */
+  upcoming(opts?: { days?: number; limit?: number }): Promise<Episode[]>;
+  /** Box sets with watch progress, most-finished-but-not-done first is left to the UI. */
+  boxsets(limit?: number): Promise<CollectionProgress[]>;
+  /** Titles the server will remove soon. Usually []: Jellyfin does not know, the helper service (phase 6) will. */
+  leavingSoon(): Promise<LeavingSoon[]>;
+  // ── home: end ──
 
   /* ── playback ── */
   playbackInfo(id: string, opts?: { versionId?: string; audioIndex?: number; subtitleIndex?: number; startTicks?: number }): Promise<PlaybackInfo>;

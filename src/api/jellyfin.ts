@@ -8,8 +8,9 @@ import type { Backend, QuickConnectApi } from './backend';
 import { SignInError } from './backend';
 import { ApiError, createHttp, type Http } from './http';
 import { JF_BASE } from './images';
-import { normaliseItem, normaliseSeason, normaliseVersion, type BaseItemDto } from './normalise';
+import { normaliseCollection, normaliseItem, normaliseSeason, normaliseVersion, withinDays, type BaseItemDto } from './normalise';
 import { SeerrClient } from './seerr';
+import type { CollectionProgress, LeavingSoon } from './types'; // home
 import type {
   Episode, ItemsQuery, LibraryView, MediaItem, Paged, PlaybackInfo, PlaybackReport, QuickConnectSession, Season,
   SortKey, Title, User,
@@ -257,6 +258,69 @@ export class JellyfinBackend implements Backend {
     const r = await this.items({ search: query, limit }, signal);
     return r.items;
   }
+
+  // ── home: begin ──
+  async suggestions(limit = 12): Promise<Title[]> {
+    const r = await this.http<ItemsResult>('/Items/Suggestions', {
+      query: { userId: this.uid, limit, mediaType: 'Video', type: ['Movie', 'Series'], enableTotalRecordCount: false },
+    });
+    const dtos = r.Items ?? [];
+    // This endpoint ignores Fields: if it came back bare, hydrate all picks in ONE follow-up call.
+    if (dtos.length && !dtos.some(d => d.Overview || d.Genres?.length)) {
+      const h = await this.http<ItemsResult>('/Items', {
+        query: { userId: this.uid, ids: dtos.map(d => d.Id), fields: LIST_FIELDS, enableImageTypes: IMAGE_TYPES, imageTypeLimit: 1 },
+      });
+      const byId = new Map((h.Items ?? []).map(d => [d.Id, d] as const));
+      return titles(dtos.map(d => byId.get(d.Id) ?? d));
+    }
+    return titles(dtos);
+  }
+
+  async recentlyAdded(opts: { kind?: 'movie' | 'series'; days?: number; limit?: number } = {}): Promise<Title[]> {
+    const r = await this.items({ kind: opts.kind, sort: 'added', descending: true, limit: opts.limit ?? 40 });
+    return withinDays(r.items, opts.days ?? 14);
+  }
+
+  async recentEpisodes(opts: { days?: number; limit?: number } = {}): Promise<Episode[]> {
+    const r = await this.http<ItemsResult>('/Items', {
+      query: {
+        userId: this.uid, recursive: true, includeItemTypes: 'Episode', sortBy: ['DateCreated'], sortOrder: 'Descending',
+        limit: opts.limit ?? 40, fields: EPISODE_FIELDS, enableImageTypes: IMAGE_TYPES, imageTypeLimit: 1, enableTotalRecordCount: false,
+      },
+    });
+    const eps = (r.Items ?? []).map(normaliseItem).filter((i): i is Episode => i.kind === 'episode');
+    return withinDays(eps, opts.days ?? 7);
+  }
+
+  async upcoming(opts: { days?: number; limit?: number } = {}): Promise<Episode[]> {
+    const r = await this.http<ItemsResult>('/Shows/Upcoming', {
+      query: { userId: this.uid, limit: opts.limit ?? 30, fields: EPISODE_FIELDS, enableImageTypes: IMAGE_TYPES, imageTypeLimit: 1, enableTotalRecordCount: false },
+    });
+    const horizon = Date.now() + (opts.days ?? 7) * 864e5;
+    return (r.Items ?? []).map(normaliseItem)
+      .filter((i): i is Episode => i.kind === 'episode')
+      .filter(e => !e.premiered || new Date(e.premiered).getTime() <= horizon)
+      .sort((a, b) => (a.premiered ?? '').localeCompare(b.premiered ?? ''));
+  }
+
+  async boxsets(limit = 6): Promise<CollectionProgress[]> {
+    const sets = await this.http<ItemsResult>('/Items', {
+      query: { userId: this.uid, recursive: true, includeItemTypes: 'BoxSet', sortBy: 'SortName', fields: ['ChildCount'], enableImageTypes: ['Primary'], imageTypeLimit: 1, enableTotalRecordCount: false },
+    });
+    // Sets we know are partly watched first (UnplayedItemCount < ChildCount); the rest only if there is room.
+    const list = (sets.Items ?? []).map(d => ({ d, started: d.ChildCount != null && d.UserData?.UnplayedItemCount != null && d.UserData.UnplayedItemCount < d.ChildCount && d.UserData.UnplayedItemCount > 0 }));
+    const picked = [...list.filter(x => x.started), ...list.filter(x => !x.started)].slice(0, limit * 2).map(x => x.d);
+    const out = await Promise.all(picked.map(async set => {
+      const kids = await this.http<ItemsResult>('/Items', {
+        query: { userId: this.uid, parentId: set.Id, includeItemTypes: 'Movie', sortBy: ['PremiereDate', 'ProductionYear', 'SortName'], fields: ['PrimaryImageAspectRatio'], enableImageTypes: ['Primary'], imageTypeLimit: 1, enableTotalRecordCount: false },
+      }).catch(() => ({ Items: [] as BaseItemDto[] }));
+      return normaliseCollection(set, kids.Items ?? []);
+    }));
+    return out.filter(c => c.total >= 2).slice(0, limit);
+  }
+
+  async leavingSoon(): Promise<LeavingSoon[]> { return []; }
+  // ── home: end ──
 
   /* ── playback ── */
   async playbackInfo(id: string, opts: { versionId?: string; audioIndex?: number; subtitleIndex?: number; startTicks?: number } = {}): Promise<PlaybackInfo> {

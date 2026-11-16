@@ -3,6 +3,7 @@
  * Only the fields NutFin uses are typed here. Everything is optional because Jellyfin omits empty values.
  */
 import { ticksToMinutes } from '../lib/format';
+import type { CollectionProgress } from './types'; // home
 import type {
   AudioTrack, Episode, ImageTags, MediaItem, MediaVersion, Person, Progress, Season, SubtitleTrack, Title,
 } from './types';
@@ -246,3 +247,25 @@ export function normaliseSeason(dto: BaseItemDto): Season {
   };
 }
 
+
+// ── home: begin ──
+/** A box set plus its films (any order in) -> progress. Films are put in release order; `nextId` is the first unwatched. */
+export function normaliseCollection(set: BaseItemDto, children: BaseItemDto[]): CollectionProgress {
+  const films = children
+    .filter(c => c.Type === undefined || c.Type === 'Movie')
+    .map(c => ({ id: c.Id, name: c.Name ?? '', played: !!c.UserData?.Played, imageTags: tags(c), year: c.ProductionYear, at: c.PremiereDate ?? '' }))
+    .sort((a, b) => (a.year ?? 0) - (b.year ?? 0) || a.at.localeCompare(b.at) || a.name.localeCompare(b.name));
+  const items = films.map(({ at: _at, ...f }) => f);
+  const next = items.find(f => !f.played);
+  return { id: set.Id, name: set.Name ?? '', imageTags: tags(set), total: items.length, seen: items.filter(f => f.played).length, items, nextId: next?.id };
+}
+
+/** Keep items whose `added` date lies within the last `days` days (undated items are dropped). */
+export function withinDays<T extends { added?: string }>(list: readonly T[], days: number, now: number = Date.now()): T[] {
+  const cutoff = now - days * 864e5;
+  return list.filter(i => {
+    const t = i.added ? new Date(i.added.replace(/(\.\d{3})\d+/, '$1')).getTime() : NaN;
+    return Number.isFinite(t) && t >= cutoff;
+  });
+}
+// ── home: end ──

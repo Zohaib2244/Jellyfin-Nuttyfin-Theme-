@@ -6,6 +6,7 @@
 import catalog from '../../design/catalog.json';
 import { store } from '../lib/storage';
 import type { Backend, QuickConnectApi, SeerrApi } from './backend';
+import type { CollectionProgress, LeavingSoon } from './types'; // home
 import type {
   AudioTrack, Episode, ImageTags, ItemsQuery, LibraryView, MediaItem, MediaVersion, Paged, Person, PlaybackInfo,
   Progress, QuickConnectSession, Season, SeerrQuota, SeerrRequest, SeerrResult, SubtitleTrack, Title, User,
@@ -77,7 +78,7 @@ function seriesEpisodes(seriesId: string): Episode[] {
   }
   return Array.from({ length: 8 }, (_, i): Episode => ({
     kind: 'episode', id: `demo-${seriesId}-1-${i + 1}`, name: `Episode ${i + 1}`, overview: series?.overview, imageTags: {}, backdropCount: 0,
-    played: i < 2, favourite: false, runtimeMin: 42, seriesId, seriesName: name, seasonId: `${seriesId}-s1`, season: 1, episode: i + 1,
+    played: i < 2 + (hash(seriesId) % 5), favourite: false, runtimeMin: 42, seriesId, seriesName: name, seasonId: `${seriesId}-s1`, season: 1, episode: i + 1,
     missing: false, seriesImageTags: ART,
   }));
 }
@@ -99,6 +100,42 @@ const FAKE_SEARCH: SeerrResult[] = [
   { tmdbId: 157336, mediaType: 'movie', title: 'Interstellar', year: 2014 },
   { tmdbId: 66732, mediaType: 'tv', title: 'Stranger Things', year: 2016 },
 ];
+
+// ── home: begin ──
+/* Richer Seerr data so the Requests tab and "On the way" look lived-in. No poster paths: placeholders show the title. */
+FAKE_REQUESTS[0]!.progress = 64;
+FAKE_REQUESTS.push(
+  { id: 5, tmdbId: 1241982, mediaType: 'movie', title: 'Moana 3', year: 2027, state: 'downloading', requestedBy: 'Demo', createdAt: new Date(NOW - 5 * 3600e3).toISOString(), progress: 23 },
+  { id: 6, tmdbId: 83867, mediaType: 'tv', title: 'Andor', year: 2022, state: 'requested', requestedBy: 'Demo', createdAt: new Date(NOW - 4 * 3600e3).toISOString(), seasons: [1] },
+  { id: 7, tmdbId: 1100988, mediaType: 'movie', title: 'Paddington in Peru', year: 2024, state: 'available', requestedBy: 'Demo', createdAt: new Date(NOW - 20 * 864e5).toISOString() },
+  { id: 8, tmdbId: 94997, mediaType: 'tv', title: 'House of the Dragon', year: 2022, state: 'approved', requestedBy: 'Demo', createdAt: new Date(NOW - 2 * 864e5).toISOString(), seasons: [1, 2] },
+);
+FAKE_SEARCH.push(
+  { tmdbId: 1100988, mediaType: 'movie', title: 'Paddington in Peru', year: 2024, state: 'available', overview: 'Paddington goes back to Peru to visit Aunt Lucy.' },
+  { tmdbId: 346698, mediaType: 'movie', title: 'Barbie', year: 2023, overview: 'Barbie suffers a crisis that leads her to question her world and her existence.' },
+  { tmdbId: 693134, mediaType: 'movie', title: 'Dune: Part Two', year: 2024, overview: 'Paul Atreides unites with the Fremen to take revenge on the conspirators who destroyed his family.' },
+  { tmdbId: 83867, mediaType: 'tv', title: 'Andor', year: 2022, state: 'requested', overview: 'Cassian Andor discovers the Rebellion.' },
+  { tmdbId: 94997, mediaType: 'tv', title: 'House of the Dragon', year: 2022, state: 'approved', overview: 'The Targaryen civil war, 200 years before Game of Thrones.' },
+  { tmdbId: 1241982, mediaType: 'movie', title: 'Moana 3', year: 2027, state: 'downloading', overview: 'Moana sets sail again.' },
+  { tmdbId: 76479, mediaType: 'tv', title: 'The Boys', year: 2019, overview: 'A group of vigilantes set out to take down corrupt superheroes.' },
+  { tmdbId: 1396, mediaType: 'tv', title: 'Breaking Bad', year: 2008, state: 'approved', overview: 'A chemistry teacher turns to a life of crime.' },
+);
+
+/** Catalog dates are a snapshot; shift them so the newest title looks about two hours old. */
+const NEWEST_ADDED = Math.max(...ITEMS.map(i => new Date(iso(i.added) ?? 0).getTime()));
+const rebase = (iso0: string | undefined): string | undefined =>
+  iso0 ? new Date(new Date(iso0).getTime() + (Date.now() - 2 * 3600e3 - NEWEST_ADDED)).toISOString() : undefined;
+
+const COLLECTIONS: Array<{ name: string; re: RegExp; seen: number }> = [
+  { name: 'Scream collection', re: /^Scream/, seen: 3 },
+  { name: 'Transformers collection', re: /^Transformers/, seen: 4 },
+  { name: 'Night at the Museum collection', re: /^Night at the Museum/, seen: 1 },
+  { name: 'The Purge collection', re: /^The (Forever )?Purge/, seen: 2 },
+];
+
+const DAY = 864e5;
+const startOfDay = (t: number): number => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
+// ── home: end ──
 
 const SORTERS: Record<NonNullable<ItemsQuery['sort']>, (a: Title, b: Title) => number> = {
   name: (a, b) => a.name.localeCompare(b.name),
@@ -233,6 +270,71 @@ export class DemoBackend implements Backend {
     return this.all().filter(t => t.name.toLowerCase().includes(s))
       .sort((a, b) => Number(b.name.toLowerCase().startsWith(s)) - Number(a.name.toLowerCase().startsWith(s)) || a.name.localeCompare(b.name)).slice(0, limit);
   }
+
+  // ── home: begin ──
+  async suggestions(limit = 12): Promise<Title[]> {
+    return this.all().filter(t => !t.played && !t.progress)
+      .sort((a, b) => (b.rating ?? 0) + (hash(b.id + 'sg') % 15) / 10 - ((a.rating ?? 0) + (hash(a.id + 'sg') % 15) / 10))
+      .slice(0, limit);
+  }
+
+  async recentlyAdded(opts: { kind?: 'movie' | 'series'; days?: number; limit?: number } = {}): Promise<Title[]> {
+    const cutoff = Date.now() - (opts.days ?? 14) * DAY;
+    return this.all().filter(t => !opts.kind || t.kind === opts.kind)
+      .map(t => ({ ...t, added: rebase(t.added) }))
+      .filter(t => t.added && new Date(t.added).getTime() >= cutoff)
+      .sort((a, b) => (b.added ?? '').localeCompare(a.added ?? ''))
+      .slice(0, opts.limit ?? 40);
+  }
+
+  /** Demo episodes for a show: real Silo episode ids (so artwork loads), generated ones for the rest. */
+  private demoEpisode(seriesId: string, index: number): Episode | undefined {
+    return seriesEpisodes(seriesId)[index];
+  }
+
+  async recentEpisodes(opts: { days?: number; limit?: number } = {}): Promise<Episode[]> {
+    const shows = ITEMS.filter(i => i.type === 'series');
+    const out: Episode[] = [];
+    shows.forEach((s, i) => {
+      const e = this.demoEpisode(s.id, 3);
+      if (e) out.push({ ...e, played: false, added: new Date(Date.now() - (i * 0.5 + 0.2) * DAY).toISOString(), premiered: new Date(Date.now() - (i * 0.5 + 0.2) * DAY).toISOString() });
+    });
+    const cutoff = Date.now() - (opts.days ?? 7) * DAY;
+    return out.filter(e => new Date(e.added ?? 0).getTime() >= cutoff).slice(0, opts.limit ?? 40);
+  }
+
+  async upcoming(opts: { days?: number; limit?: number } = {}): Promise<Episode[]> {
+    if (typeof location !== 'undefined' && new URLSearchParams(location.search).has('noupcoming')) return []; // review aid for the fallback
+    const shows = ITEMS.filter(i => i.type === 'series');
+    const plan: Array<[number, number]> = [[0, 0], [0, 7], [1, 2], [2, 5], [3, 1], [3, 9], [5, 4], [6, 6]];
+    const today = startOfDay(Date.now());
+    const out: Episode[] = [];
+    plan.forEach(([d, si], i) => {
+      const s = shows[si % shows.length];
+      const e = s && this.demoEpisode(s.id, 4 + (i % 3));
+      if (!s || !e) return;
+      // Jellyfin lists future episodes as "missing" until they download; today's has arrived.
+      out.push({ ...e, played: false, missing: d > 0, premiered: new Date(today + d * DAY + (18 + (i % 4)) * 3600e3).toISOString() });
+    });
+    return out.slice(0, opts.limit ?? 30);
+  }
+
+  async boxsets(limit = 6): Promise<CollectionProgress[]> {
+    const all = this.all();
+    return COLLECTIONS.map((c): CollectionProgress | null => {
+      const films = all.filter(t => t.kind === 'movie' && c.re.test(t.name)).sort((a, b) => (a.year ?? 0) - (b.year ?? 0));
+      if (films.length < 2) return null;
+      const items = films.map((f, i) => ({ id: f.id, name: f.name, played: i < c.seen, imageTags: f.imageTags, year: f.year }));
+      return { id: `demo-set-${c.name}`, name: c.name, imageTags: films[0]!.imageTags, total: items.length, seen: Math.min(c.seen, items.length), items, nextId: items.find(f => !f.played)?.id };
+    }).filter((c): c is CollectionProgress => !!c).slice(0, limit);
+  }
+
+  async leavingSoon(): Promise<LeavingSoon[]> {
+    const films = this.all().filter(t => t.kind === 'movie' && !t.progress).slice(20, 24);
+    const sunday = new Date(startOfDay(Date.now()) + ((7 - new Date().getDay()) % 7 || 7) * DAY).toISOString();
+    return films.map((f, i) => ({ id: f.id, name: f.name, kind: 'movie', imageTags: f.imageTags, leavesOn: sunday, reason: ['Makes room on the movies drive', 'Nobody has watched it in a year', 'A bigger copy is coming', 'Makes room on the movies drive'][i] ?? '' }));
+  }
+  // ── home: end ──
 
   async playbackInfo(id: string): Promise<PlaybackInfo> {
     const item = await this.item(id);
