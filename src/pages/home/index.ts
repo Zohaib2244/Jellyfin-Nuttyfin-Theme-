@@ -4,7 +4,7 @@ import { placeholderView } from '../placeholder';
 
 const TABS = [
   { id: 'home', label: 'Home' }, { id: 'continue', label: 'Continue Watching' }, { id: 'explore', label: 'Explore' },
-  { id: 'new', label: 'New films' }, { id: 'requests', label: 'Requests' },
+  { id: 'new', label: 'Newly Added' }, { id: 'requests', label: 'Requests' },
 ] as const;
 
 const page: Page = {
