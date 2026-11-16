@@ -93,8 +93,8 @@ function tags(dto: BaseItemDto): ImageTags {
   if (t.Primary) out.primary = t.Primary;
   if (t.Logo) out.logo = t.Logo;
   if (t.Thumb) out.thumb = t.Thumb;
-  const backdrop = dto.BackdropImageTags?.[0] ?? dto.ParentBackdropImageTags?.[0];
-  if (backdrop) out.backdrop = backdrop;
+  // an episode's own backdrop only; the series' backdrop lives in Episode.seriesImageTags (it belongs to the series id)
+  if (dto.BackdropImageTags?.[0]) out.backdrop = dto.BackdropImageTags[0];
   return out;
 }
 

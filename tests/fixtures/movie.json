@@ -1,0 +1,37 @@
+{
+  "Name": "Pacific Rim: Uprising",
+  "ServerId": "d9cfcf32893643f8b13a9c3ba6ffc6bf",
+  "Id": "38f92fdc6d95b243a1a56002d646f094",
+  "DateCreated": "2026-11-15T09:44:19.4178445Z",
+  "Taglines": ["The Next Generation Rises"],
+  "Genres": ["Action", "Fantasy", "Science Fiction"],
+  "OfficialRating": "PG-13",
+  "CommunityRating": 6.109,
+  "RunTimeTicks": 66660000000,
+  "ProductionYear": 2018,
+  "PremiereDate": "2018-03-21T00:00:00.0000000Z",
+  "Overview": "It has been ten years since The Battle of the Breach and the oceans are still, but restless.",
+  "Studios": [{ "Name": "Legendary Pictures", "Id": "a1" }, { "Name": "Universal Pictures", "Id": "a2" }],
+  "Width": 3840,
+  "Height": 1600,
+  "Type": "Movie",
+  "People": [
+    { "Name": "John Boyega", "Id": "p1", "Role": "Jake Pentecost", "Type": "Actor", "PrimaryImageTag": "tagp1" },
+    { "Name": "Steven S. DeKnight", "Id": "p2", "Type": "Director" }
+  ],
+  "UserData": { "PlaybackPositionTicks": 20000000000, "PlayCount": 1, "IsFavorite": true, "Played": false, "Key": "tmdb-1" },
+  "MediaSources": [
+    {
+      "Id": "mediasource1", "Name": "Pacific Rim Uprising 4K", "Container": "mkv", "Size": 18500000000, "Bitrate": 22000000,
+      "MediaStreams": [
+        { "Index": 0, "Type": "Video", "Codec": "hevc", "Width": 3840, "Height": 1600, "BitRate": 20000000 },
+        { "Index": 1, "Type": "Audio", "Codec": "eac3", "Language": "eng", "Channels": 6, "DisplayTitle": "English - Dolby Digital+ - 5.1 - Default", "IsDefault": true },
+        { "Index": 2, "Type": "Audio", "Codec": "ac3", "Language": "spa", "Channels": 6, "DisplayTitle": "Spanish - Dolby Digital - 5.1" },
+        { "Index": 3, "Type": "Subtitle", "Codec": "subrip", "Language": "eng", "DisplayTitle": "English - SRT", "IsExternal": false, "IsForced": false },
+        { "Index": 4, "Type": "Subtitle", "Codec": "subrip", "Language": "eng", "DisplayTitle": "English - Forced - SRT", "IsForced": true, "IsExternal": true }
+      ]
+    }
+  ],
+  "ImageTags": { "Primary": "primarytag1", "Logo": "logotag1" },
+  "BackdropImageTags": ["backdroptag1", "backdroptag2"]
+}

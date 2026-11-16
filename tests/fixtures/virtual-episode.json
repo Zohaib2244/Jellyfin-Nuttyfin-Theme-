@@ -1,0 +1,12 @@
+{
+  "Name": "Finale",
+  "Id": "virtual1",
+  "Type": "Episode",
+  "SeriesId": "71966498ed674de9f326ddf559d40ce9",
+  "SeriesName": "Silo",
+  "IndexNumber": 10,
+  "IndexNumberEnd": 11,
+  "ParentIndexNumber": 2,
+  "LocationType": "Virtual",
+  "UserData": { "Played": true, "PlaybackPositionTicks": 0 }
+}

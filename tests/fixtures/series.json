@@ -1,0 +1,18 @@
+{
+  "Name": "Silo",
+  "ServerId": "d9cfcf32893643f8b13a9c3ba6ffc6bf",
+  "Id": "71966498ed674de9f326ddf559d40ce9",
+  "DateCreated": "2026-11-14T18:33:07.4360484Z",
+  "Genres": ["Sci-Fi & Fantasy", "Drama"],
+  "OfficialRating": "TV-MA",
+  "CommunityRating": 8.229,
+  "ProductionYear": 2023,
+  "EndDate": "2026-12-01T00:00:00.0000000Z",
+  "Status": "Continuing",
+  "ChildCount": 2,
+  "Overview": "In a ruined and toxic future, thousands live in a giant silo deep underground.",
+  "Type": "Series",
+  "UserData": { "UnplayedItemCount": 6, "PlaybackPositionTicks": 0, "PlayCount": 0, "IsFavorite": false, "Played": false },
+  "ImageTags": { "Primary": "sp", "Thumb": "st" },
+  "BackdropImageTags": ["sb"]
+}
