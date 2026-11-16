@@ -1,0 +1,106 @@
+/* Base / reset, buttons, chips, cards. Lifted from design/mockups/home.html (final overrides applied):
+   no hover glows, no lifting cards (docs/DESIGN-RULES.md). */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--font-mono); font-size: 15px; line-height: 1.5;
+  overflow-x: hidden; -webkit-font-smoothing: antialiased;
+}
+@media (max-width: 760px) { body { font-size: 14.5px; } }
+img { display: block; max-width: 100%; }
+img.broken { opacity: 0 !important; }
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: inherit; }
+h1, h2, h3 { font-family: var(--font-read); }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip { position: fixed; left: 12px; top: -80px; z-index: 600; padding: 10px 16px; border-radius: var(--r-ctl); background: var(--accent); color: var(--accent-ink); font-family: var(--font-read); font-weight: 700; text-decoration: none; }
+.skip:focus { top: 12px; }
+
+svg.i { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+svg.px { shape-rendering: crispEdges; flex: none; }
+
+/* Image fallback: every picture sits on a gradient. Set style="--h:<hue>;--h2:<hue>" (see lib/dom.ts phStyle) */
+.ph { position: relative; background:
+  radial-gradient(120% 80% at 18% 12%, hsl(var(--h, 20) 70% 58% / .55), transparent 60%),
+  radial-gradient(90% 70% at 92% 100%, hsl(var(--h2, 60) 70% 48% / .5), transparent 62%),
+  linear-gradient(160deg, hsl(var(--h, 20) 38% 24%), hsl(var(--h2, 60) 42% 9%)); }
+.ph > img { position: relative; }
+.ph[data-t]::before { content: attr(data-t); position: absolute; left: 8px; right: 8px; bottom: 8px; font-family: var(--font-px); font-size: 12px; line-height: 1.15; color: rgba(255, 255, 255, .88); text-shadow: 0 1px 0 rgba(0, 0, 0, .45); }
+
+/* ── Buttons, chips, switches ── */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 0 22px; border-radius: var(--r-ctl); border: var(--bw) solid var(--line); background: var(--panel); box-shadow: var(--lift-btn); font-family: var(--font-px); font-size: 16px; letter-spacing: .05em; cursor: pointer; text-decoration: none; transition: transform var(--d-micro) var(--ease), border-color var(--d-micro), box-shadow var(--d-micro); white-space: nowrap; color: var(--text); }
+.btn:hover { border-color: var(--accent); }
+.btn:active { transform: translate(2px, 2px); box-shadow: none; }
+.btn:disabled, .btn[aria-disabled="true"] { opacity: .6; cursor: not-allowed; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { border-color: var(--text); }
+.btn.sm { min-height: 44px; padding: 0 14px; font-size: 14.5px; gap: 8px; }
+.btn.ghost { background: transparent; box-shadow: none; }
+.btn.glass { background: rgba(19, 16, 12, .45); border-color: rgba(246, 240, 228, .45); color: var(--on-img); backdrop-filter: blur(6px); box-shadow: none; }
+.btn.glass:hover { border-color: var(--on-img); }
+.btn.req { background: var(--num-soft); border-color: var(--num); }
+.btn.req svg { color: var(--num); }
+
+.iconbtn { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: var(--r-ctl); border: var(--bw) solid var(--line); background: var(--panel); cursor: pointer; color: var(--text); flex: none; transition: border-color var(--d-micro), transform var(--d-micro) var(--ease); }
+.iconbtn:hover { border-color: var(--accent); }
+.iconbtn:active { transform: scale(.94); }
+
+.badge { white-space: nowrap; font-family: var(--font-read); font-weight: 700; font-size: 13px; background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 0 6px; line-height: 18px; }
+.badge:empty { display: none; }
+
+.chip { position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 8px; border-radius: 999px; border: var(--bw) solid currentColor; font-family: var(--font-read); font-weight: 700; font-size: 13.5px; line-height: 1.4; white-space: nowrap; }
+.chip svg { width: 15px; height: 15px; }
+.chip.requested { color: var(--warn); background: var(--warn-soft); }
+.chip.approved { color: var(--info); background: var(--info-soft); }
+.chip.downloading { color: var(--num); background: var(--num-soft); }
+.chip.available { color: var(--ok); background: var(--ok-soft); }
+
+.prog { height: 6px; border-radius: 3px; background: color-mix(in srgb, #000 55%, transparent); overflow: hidden; }
+.prog i { display: block; height: 100%; background: var(--accent); border-radius: 3px; transition: width var(--d-large) var(--ease-out); }
+
+/* switch (role="switch") */
+.swt { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px 0 6px; border-radius: 999px; border: var(--bw) solid var(--line); background: var(--panel); cursor: pointer; font-family: var(--font-read); font-weight: 700; font-size: 14px; text-align: left; }
+.swt:hover { border-color: var(--accent); }
+.swt .tr { position: relative; width: 42px; height: 26px; border-radius: 999px; background: var(--raise); border: var(--bw) solid var(--line); flex: none; transition: background var(--d-small); }
+.swt .tr i { position: absolute; top: 2.5px; left: 3px; width: 18px; height: 18px; border-radius: 6px; background: var(--muted); transition: transform var(--d-med) var(--ease-spring), background var(--d-small); }
+.swt[aria-checked="true"] .tr { background: var(--ok-soft); border-color: var(--ok); }
+.swt[aria-checked="true"] .tr i { transform: translateX(15px); background: var(--ok); }
+
+/* Cards / tiles: the "sticker" look is a panel with a 1.5px border and soft corners (no shadow, no hover lift). */
+.card, .tile { position: relative; border-radius: var(--r-card); border: var(--bw) solid var(--line); background: var(--panel); min-width: 0; }
+.tile { border-radius: var(--r-tile); }
+.note { margin: 0; font-family: var(--font-read); font-size: 13px; color: var(--muted); line-height: 1.35; }
+.note b { color: var(--text); }
+
+/* Page scaffolding shared by every page */
+.page { display: block; }
+.page-h { margin: 0 0 6px; font-family: var(--font-read); font-weight: 700; font-size: clamp(26px, 3.4vw, 36px); letter-spacing: -.02em; line-height: 1.15; }
+.page-h:focus { outline: none; }
+.page-sub { margin: 0 0 20px; font-family: var(--font-read); color: var(--muted); font-size: 16px; }
+.empty { padding: 32px 20px; text-align: center; font-family: var(--font-read); color: var(--muted); border: var(--bw) dashed var(--line); border-radius: var(--r-card); }
+.empty b { display: block; color: var(--text); font-size: 18px; margin-bottom: 4px; }
+
+/* NutBot mascot */
+.nb { display: inline-block; flex: none; }
+.nb.blink .eyes { animation: blink 4.5s infinite; transform-origin: 50% 45%; }
+@keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+.nb.hop { animation: hop .6s var(--ease) 1; }
+@keyframes hop { 30% { transform: translateY(-8px) rotate(-4deg); } 60% { transform: translateY(0) rotate(2deg); } }
+.nb.doze { animation: doze 4s ease-in-out infinite; transform-origin: 50% 90%; }
+@keyframes doze { 50% { transform: rotate(-5deg) translateY(1px); } }
+
+/* Toasts */
+.toasts { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 430; display: flex; flex-direction: column; gap: 8px; width: min(460px, calc(100% - 32px)); pointer-events: none; }
+.toast { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--panel); border: var(--bw) solid var(--line); border-radius: var(--r-card); font-family: var(--font-read); font-size: 15.5px; pointer-events: auto; animation: toastin 260ms var(--ease-spring) both; }
+@keyframes toastin { from { opacity: 0; transform: translateY(16px) scale(.98); } }
+.toast.leaving { animation: toastout 180ms var(--ease-in) both; }
+@keyframes toastout { to { opacity: 0; transform: translateY(8px); } }
+.toast svg { color: var(--ok); }
+@media (max-width: 760px) { .toasts { bottom: 88px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

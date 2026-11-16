@@ -1,0 +1,96 @@
+/* Nutstyle Ember tokens (lifted from design/mockups/home.html).
+   Dark is the default. Light swaps tokens explicitly: light-dark() through var() did not re-resolve
+   on toggle in Chrome. Theme state lives on <html>:
+     data-theme="light|dark"  explicit choice (absent = Auto, follows the device)
+     data-eff="light|dark"    effective theme, always set by src/state/prefs.ts (CSS keys off this for details) */
+:root {
+  color-scheme: dark;
+  --font-px: 'DotGothic16', ui-monospace, monospace;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-read: 'Atkinson Hyperlegible', 'JetBrains Mono', sans-serif;
+  --bw: 1.5px;
+  --r-card: 12px;
+  --r-ctl: 10px;
+  --r-tile: 16px;
+  --lift: 3px 3px 0 var(--shadow-c);
+  --lift-hi: 5px 5px 0 var(--shadow-c);
+  --lift-btn: 2px 2px 0 var(--shadow-c);
+  --lift-peek: 9px 9px 0 var(--shadow-c);
+
+  --ease: cubic-bezier(.33, 1, .68, 1);
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --ease-in: cubic-bezier(.4, 0, 1, 1);
+  --ease-spring: var(--ease-out);
+  --d-micro: 120ms;
+  --d-small: 200ms;
+  --d-med: 280ms;
+  --d-large: 420ms;
+  --d-hero: 700ms;
+  --d-sky: 1600ms;
+
+  --bg: #13100c;
+  --panel: #1e1a14;
+  --nested: #1a1610;
+  --line: #3d3220;
+  --shadow-c: #070604;
+  --text: #e8dfc8;
+  --muted: #b5b0a3;
+  --dim: #8b8576;
+  --accent: #ff6b2b;
+  --accent-ink: #13100c;
+  --num: #00b4c8;
+  --ok: #7ccf8c;
+  --info: #86b4ea;
+  --warn: #e8c46b;
+  --bad: #ff8a7a;
+  --raise: color-mix(in srgb, var(--panel) 90%, var(--text));
+  --accent-soft: color-mix(in srgb, var(--accent) 14%, var(--panel));
+  --ok-soft: color-mix(in srgb, var(--ok) 14%, var(--panel));
+  --info-soft: color-mix(in srgb, var(--info) 14%, var(--panel));
+  --warn-soft: color-mix(in srgb, var(--warn) 14%, var(--panel));
+  --num-soft: color-mix(in srgb, var(--num) 14%, var(--panel));
+  --on-img: #f6f0e4;
+  --on-img-dim: rgba(246, 240, 228, .78);
+
+  --row: 84px;
+  --gap: 16px;
+  --rail-w: 92px;
+  --top-h: 66px;
+  --pc1: #ff8a4c; /* profile gradient (avatar, header underline) */
+  --pc2: #b9361a;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #d8cfbc; --panel: #f5f0e6; --nested: #faf6f0; --line: #7a6a52; --shadow-c: #a89878;
+    --text: #1c1810; --muted: #514739; --dim: #796856; --accent: #e05a18; --accent-ink: #f5f0e6;
+    --num: #00768a; --ok: #1f6b33; --info: #2d62a6; --warn: #8f6400; --bad: #a3271a;
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #d8cfbc; --panel: #f5f0e6; --nested: #faf6f0; --line: #7a6a52; --shadow-c: #a89878;
+  --text: #1c1810; --muted: #514739; --dim: #796856; --accent: #e05a18; --accent-ink: #f5f0e6;
+  --num: #00768a; --ok: #1f6b33; --info: #2d62a6; --warn: #8f6400; --bad: #a3271a;
+}
+:root[data-theme="dark"] { color-scheme: dark; }
+
+@supports (transition-timing-function: linear(0, 1)) {
+  :root { --ease-spring: linear(0, .12 4%, .38 10%, .66 17%, .87 25%, 1 33%, 1.04 41%, 1.035 48%, 1.015 58%, 1.002 70%, .999 82%, 1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --d-micro: 0ms; --d-small: 0ms; --d-med: 0ms; --d-large: 0ms; --d-hero: 0ms; --d-sky: 0ms; }
+}
+@media (min-width: 1360px) { :root { --row: 92px; } }
+@media (max-width: 760px) { :root { --top-h: 58px; } }
+
+/* Time-of-day colours, registered so they cross-fade (Time of day background). Set by src/ui/shell/pagebg.ts */
+@property --sky-a { syntax: '<color>'; inherits: true; initial-value: #ff6b2b; }
+@property --sky-b { syntax: '<color>'; inherits: true; initial-value: #b0306a; }
+@property --ox { syntax: '<percentage>'; inherits: true; initial-value: 88%; }
+@property --oy { syntax: '<percentage>'; inherits: true; initial-value: 60%; }
+body {
+  transition: --sky-a var(--d-sky) var(--ease-out), --sky-b var(--d-sky) var(--ease-out),
+              --ox var(--d-sky) var(--ease-out), --oy var(--d-sky) var(--ease-out);
+}
