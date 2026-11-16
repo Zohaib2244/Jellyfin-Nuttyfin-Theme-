@@ -9,6 +9,8 @@ export default defineConfig({
     proxy: {
       '/jf': { target: JELLYFIN, changeOrigin: true, ws: true, rewrite: p => p.replace(/^\/jf/, '') },
       '/seerr': { target: SEERR, changeOrigin: true, rewrite: p => p.replace(/^\/seerr/, '') },
+      // phase5-7: the optional helper service (npm run helper). Without it the SPA just hides the features that need it.
+      '/nutfin-api': { target: process.env.NUTFIN_HELPER ?? 'http://127.0.0.1:8120', changeOrigin: false },
     },
   },
   build: { target: 'es2022', sourcemap: true },

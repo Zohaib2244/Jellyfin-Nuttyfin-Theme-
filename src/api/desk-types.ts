@@ -174,6 +174,8 @@ export interface DeletePlan {
   modes: Record<DeleteMode, DeletePlanModeInfo>;
   /** plain-language notes ("The torrent is still seeding...") */
   notes: string[];
+  /** false when the helper could not read the media drive (the numbers are then 0) */
+  measured: boolean;
   deleteEnabled: boolean;
 }
 

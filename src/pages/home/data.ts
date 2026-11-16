@@ -4,6 +4,7 @@
  */
 import type { Backend } from '../../api';
 import type { CollectionProgress, Episode, MediaItem, SeerrRequest, Title } from '../../api/types';
+import { calendarToEpisodes } from './calendar'; // phase5-7
 import { byClosestToDone, seasonProgress, startedCollections, type SeasonProgress } from './model';
 
 export class HomeData {
@@ -31,7 +32,13 @@ export class HomeData {
     return this.get(`recent:${days}:${kind ?? ''}`, () => this.backend.recentlyAdded({ days, kind, limit: 60 }));
   }
   recentEpisodes(): Promise<Episode[]> { return this.get('recentEpisodes', () => this.backend.recentEpisodes({ days: 7, limit: 50 })); }
-  upcoming(): Promise<Episode[]> { return this.get('upcoming', () => this.backend.upcoming({ days: 7, limit: 40 })); }
+  /** The helper's Sonarr calendar when the helper is there (it knows shows that are not in the library yet), else Jellyfin's own list. */
+  upcoming(): Promise<Episode[]> {
+    return this.get('upcoming', async () => { // phase5-7
+      const cal = calendarToEpisodes(await this.backend.helper.calendar(7));
+      return cal.length ? cal : this.backend.upcoming({ days: 7, limit: 40 });
+    });
+  }
   /** Unwatched films, best rated first (one call: the runtime filter happens in the browser). */
   unplayedMovies(): Promise<Title[]> {
     return this.get('unplayedMovies', async () => (await this.backend.items({ kind: 'movie', played: false, sort: 'rating', descending: true, limit: 300 })).items);

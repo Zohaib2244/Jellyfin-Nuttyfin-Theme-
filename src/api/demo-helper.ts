@@ -44,7 +44,7 @@ export function createDemoHelper(ctx: DemoHelperCtx): HelperApi {
       arr: { app: series ? 'sonarr' : 'radarr', id: 100 + (hash(id) % 400), title: t.name, path: `/media/${series ? 'TV Shows' : 'Movies'}/${t.name}` },
       files: { count: files, bytes: size },
       torrents: [{ hash: (hash(id).toString(16) + 'a1b2c3d4e5f60718').slice(0, 40).padEnd(40, '0'), name: `${t.name.replace(/\s+/g, '.')}.1080p.WEB-DL`, state: seeding ? 'stalledUP' : 'pausedUP', seeding, ratio: 0.6 + (hash(id) % 20) / 10, sizeBytes: size, sharedFiles: files }],
-      hardlinked: true,
+      hardlinked: true, measured: true,
       modes,
       notes: seeding
         ? ['The torrent is still seeding and shares these files, so deleting only from Jellyfin gives no space back.']
