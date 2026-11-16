@@ -103,7 +103,7 @@ export function createDemoDesk(ctx: DemoDeskCtx): DemoDesk {
     const mine = ctx.requests.find(r => r.tmdbId === tmdbId && isMine(r) && (r.state === 'requested' || (manage() && r.state === 'approved')));
     return {
       tmdbId, mediaType, title: hit.title, year: hit.year, overview: ('overview' in hit ? hit.overview : undefined) ?? 'A good one for the whole house.', genres: ['Drama', 'Adventure'],
-      rating: 7.4 + (tmdbId % 17) / 10, runtimeMin: mediaType === 'movie' ? 100 + (tmdbId % 50) : 45, state: st.state, partial: st.partial, jellyfinId: st.jellyfinId, seasons, myRequestId: mine?.id,
+      rating: Math.round(74 + (tmdbId % 17)) / 10, runtimeMin: mediaType === 'movie' ? 100 + (tmdbId % 50) : 45, state: st.state, partial: st.partial, jellyfinId: st.jellyfinId, seasons, myRequestId: mine?.id,
     };
   };
 

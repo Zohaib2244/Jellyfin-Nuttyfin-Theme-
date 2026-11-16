@@ -76,9 +76,9 @@ export function seasonsText(seasons: readonly number[] | undefined): string {
 
 /* ── who may do what ── */
 export const isMine = (r: SeerrRequest, caps: SeerrCapabilities | null): boolean => !!caps && r.requestedById === caps.userId;
-/** Own request that is still waiting, or anything for people with the manage permission. */
+/** Own request that is still waiting, or anything unfinished for people with the manage permission. */
 export const canCancel = (r: SeerrRequest, caps: SeerrCapabilities | null): boolean =>
-  !!caps && (caps.perms.manageRequests || (isMine(r, caps) && r.state === 'requested'));
+  !!caps && ((caps.perms.manageRequests && r.state !== 'available') || (isMine(r, caps) && r.state === 'requested'));
 export const canDecide = (r: SeerrRequest, caps: SeerrCapabilities | null): boolean => !!caps && caps.perms.manageRequests && r.state === 'requested';
 
 /** Open = not finished and not declined (what the rail badge counts). */

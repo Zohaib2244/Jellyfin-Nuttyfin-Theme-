@@ -83,6 +83,7 @@ describe('who may do what', () => {
     expect(canCancel(req({ requestedById: 8, state: 'approved' }), admin)).toBe(true);
     expect(canDecide(req({ requestedById: 8 }), admin)).toBe(true);
     expect(canDecide(req({ state: 'approved' }), admin)).toBe(false);
+    expect(canCancel(req({ state: 'available' }), admin)).toBe(false); // finished: nothing to cancel
     expect(canCancel(req(), null)).toBe(false);
   });
   it('permission text', () => {

@@ -110,7 +110,8 @@
   .rq .rq-ask .cnt { display: none; }
   .rq .rq-form .btn .lbl { display: none; }
   .rq .rq-form .btn { padding: 0 14px; }
-  .rq .rq-grid, .rq .rq-skgrid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 14px 10px; }
+  .rq .rq-grid, .rq .rq-skgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 10px; }
+  .rq .rq-open b { font-size: 13px; }
   .rq .card { padding: 14px 14px 16px; }
 }
 
