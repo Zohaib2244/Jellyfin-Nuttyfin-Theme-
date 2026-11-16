@@ -300,6 +300,7 @@ export class DemoBackend implements Backend {
     if (q.nameLessThan) list = list.filter(t => key(t).toLowerCase() < q.nameLessThan!.toLowerCase());
     const sorter = q.sort === 'name' || q.sort === undefined ? (a: Title, b: Title) => key(a).localeCompare(key(b), 'en', { sensitivity: 'base' }) : SORTERS[q.sort];
     list.sort(q.descending ? (a, b) => sorter(b, a) : sorter);
+    if (q.sort === 'random') list = list.map(t => ({ t, r: Math.random() })).sort((a, b) => a.r - b.r).map(x => x.t);
     const start = q.start ?? 0;
     await new Promise(r => setTimeout(r, 120)); // a little latency so loading states can be seen
     return { items: list.slice(start, start + (q.limit ?? 60)), total: list.length, start };
