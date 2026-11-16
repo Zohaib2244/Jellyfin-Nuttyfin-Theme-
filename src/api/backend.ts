@@ -3,7 +3,7 @@
  * Implementations: jellyfin.ts (real), demo.ts (fixtures from design/catalog.json). Pick with createBackend() (index.ts).
  */
 import type {
-  Episode, ItemsQuery, LibraryView, MediaItem, Paged, PlaybackInfo, PlaybackReport, QuickConnectSession, Season,
+  Collection, Episode, GenreCount, IssueKind, ItemsQuery, LibraryView, MediaItem, Paged, PlaybackInfo, PlaybackReport, QuickConnectSession, Season,
   SeerrQuota, SeerrRequest, SeerrResult, Title, User,
 } from './types';
 
@@ -30,6 +30,10 @@ export interface SeerrApi {
   request(input: { mediaType: 'movie' | 'tv'; tmdbId: number; seasons?: number[] }): Promise<SeerrRequest>;
   requests(opts?: { mine?: boolean; take?: number }): Promise<SeerrRequest[]>;
   quota(): Promise<SeerrQuota | null>;
+  // ── library/details: begin ──
+  /** "Report a problem". Resolves true when Seerr took it, false when Seerr is unavailable or does not know the title. Never rejects. */
+  reportIssue(input: { mediaType: 'movie' | 'tv'; tmdbId: number; kind: IssueKind; message: string }): Promise<boolean>;
+  // ── library/details: end ──
 }
 
 export interface Backend {
@@ -74,6 +78,17 @@ export interface Backend {
   setFavourite(id: string, favourite: boolean): Promise<void>;
 
   readonly seerr: SeerrApi;
+
+  // ── library/details: begin ──
+  /** Genres in use with how many titles of `kind` have each (for the Genre switches). */
+  genres(kind: 'movie' | 'series', signal?: AbortSignal): Promise<GenreCount[]>;
+  /** Every season of every series in one call (episode counts + unplayed counts for the progress board). */
+  allSeasons(signal?: AbortSignal): Promise<Season[]>;
+  /** Box sets with their films in order (Shelves by collection). */
+  collections(signal?: AbortSignal): Promise<Collection[]>;
+  /** Owner only. Removes the item from Jellyfin (the library entry and its file). Radarr/Sonarr/torrents are NOT touched. */
+  deleteFromJellyfin(id: string): Promise<void>;
+  // ── library/details: end ──
 }
 
 /** Thrown by signIn / quick connect with a reason the UI can explain. */

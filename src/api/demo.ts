@@ -7,7 +7,7 @@ import catalog from '../../design/catalog.json';
 import { store } from '../lib/storage';
 import type { Backend, QuickConnectApi, SeerrApi } from './backend';
 import type {
-  AudioTrack, Episode, ImageTags, ItemsQuery, LibraryView, MediaItem, MediaVersion, Paged, Person, PlaybackInfo,
+  AudioTrack, Chapter, Collection, Episode, GenreCount, IssueKind, ImageTags, ItemsQuery, LibraryView, MediaItem, MediaVersion, Paged, Person, PlaybackInfo,
   Progress, QuickConnectSession, Season, SeerrQuota, SeerrRequest, SeerrResult, SubtitleTrack, Title, User,
 } from './types';
 
@@ -24,24 +24,71 @@ const ART: ImageTags = { primary: 'demo', backdrop: 'demo', logo: 'demo', thumb:
 const hash = (s: string): number => { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
 const iso = (s?: string): string | undefined => (s ? `${s.replace(' ', 'T').slice(0, 23)}Z` : undefined);
 
-const PEOPLE: Person[] = [
-  ['Maya Okafor', 'Captain Reyes', 'Actor'], ['Theo Lindqvist', 'Dr. Hale', 'Actor'], ['Priya Nair', 'Sam', 'Actor'],
-  ['Jonas Weber', 'Old Pete', 'Actor'], ['Lucia Ferrante', 'Mara', 'Actor'], ['Dev Malhotra', 'The Courier', 'Actor'],
-  ['Ada Whitlock', '', 'Director'], ['Remy Castellan', '', 'Writer'],
-].map(([name, role, type], i) => ({ id: `demo-person-${i}`, name: name as string, role: role || undefined, type: type as string }));
+// ── library/details: begin ──
+const mkAudio = (index: number, lang: string, codec: string, ch: number, label: string, isDefault = false): AudioTrack =>
+  ({ index, language: lang, codec, channels: ch, label, isDefault });
+const mkSub = (index: number, lang: string, label: string, o: Partial<SubtitleTrack> = {}): SubtitleTrack =>
+  ({ index, language: lang, codec: 'subrip', label, isDefault: false, isForced: false, isExternal: false, ...o });
 
 const AUDIO: AudioTrack[] = [
-  { index: 1, language: 'eng', codec: 'eac3', channels: 6, label: 'English - Dolby Digital+ - 5.1 - Default', isDefault: true },
-  { index: 2, language: 'spa', codec: 'ac3', channels: 6, label: 'Spanish - Dolby Digital - 5.1', isDefault: false },
+  mkAudio(1, 'eng', 'eac3', 6, 'English - Dolby Digital+ - 5.1 - Default', true),
+  mkAudio(2, 'spa', 'ac3', 6, 'Spanish - Dolby Digital - 5.1'),
+  mkAudio(3, 'eng', 'aac', 2, 'English - AAC - Stereo (commentary)'),
 ];
+const AUDIO_AAC: AudioTrack[] = [mkAudio(1, 'eng', 'aac', 2, 'English - AAC - Stereo - Default', true)];
 const SUBS: SubtitleTrack[] = [
-  { index: 3, language: 'eng', codec: 'subrip', label: 'English - SRT', isDefault: false, isForced: false, isExternal: false },
-  { index: 4, language: 'spa', codec: 'subrip', label: 'Spanish - SRT', isDefault: false, isForced: false, isExternal: true },
+  mkSub(4, 'eng', 'English - SRT'),
+  mkSub(5, 'spa', 'Spanish - SRT', { isExternal: true }),
+  mkSub(6, 'eng', 'English - Forced', { isForced: true }),
+  mkSub(7, 'eng', 'English - SDH', { isExternal: true }),
 ];
-const version = (is4k: boolean): MediaVersion => ({
-  id: 'demo-version', name: is4k ? '4K' : '1080p', container: 'mkv', width: is4k ? 3840 : 1920, height: is4k ? 2160 : 1080, is4k,
-  videoCodec: is4k ? 'hevc' : 'h264', bitrate: is4k ? 25_000_000 : 8_000_000, sizeBytes: is4k ? 18e9 : 6e9, audio: AUDIO, subtitles: SUBS,
+
+/** Versions vary by title so the badges and the version picker can all be seen: 4K HEVC, HD H.264, HD HEVC, 720p. */
+function versionsOf(c: CatItem, episode = false): MediaVersion[] {
+  const h = hash(c.id);
+  const mk = (id: string, name: string, w: number, hgt: number, codec: string, container: string, br: number, size: number, audio: AudioTrack[]): MediaVersion =>
+    ({ id, name, container, width: w, height: hgt, is4k: w >= 3000, videoCodec: codec, bitrate: br, sizeBytes: size, audio, subtitles: SUBS });
+  if (episode) return [mk('v1', '1080p', 1920, 1080, h % 3 === 0 ? 'hevc' : 'h264', 'mkv', 6_000_000, 2.1e9, AUDIO_AAC)];
+  if (c.is4k) return [mk('v-4k', '4K HDR', 3840, 2160, 'hevc', 'mkv', 25_000_000, 18e9, AUDIO), mk('v-hd', '1080p', 1920, 1080, 'h264', 'mp4', 8_000_000, 6e9, AUDIO_AAC)];
+  if (h % 4 === 0) return [mk('v-hd', '1080p', 1920, 1080, 'h264', 'mp4', 8_000_000, 6e9, AUDIO_AAC), mk('v-sd', '720p', 1280, 720, 'h264', 'mp4', 3_500_000, 2.4e9, AUDIO_AAC)];
+  if (h % 5 === 0) return [mk('v-hevc', '1080p HEVC', 1920, 1080, 'hevc', 'mkv', 4_500_000, 3.8e9, AUDIO)];
+  if (h % 3 === 0) return [mk('v-mkv', '1080p', 1920, 1080, 'h264', 'mkv', 9_000_000, 7e9, AUDIO)];
+  return [mk('v-hd', '1080p', 1920, 1080, 'h264', 'mp4', 8_000_000, 6e9, AUDIO_AAC)];
+}
+
+const FIRST = ['Maya', 'Theo', 'Priya', 'Jonas', 'Lucia', 'Dev', 'Ada', 'Remy', 'Noor', 'Felix', 'Sana', 'Oskar', 'Ines', 'Kofi', 'Mina', 'Tomas'];
+const LAST = ['Okafor', 'Lindqvist', 'Nair', 'Weber', 'Ferrante', 'Malhotra', 'Whitlock', 'Castellan', 'Haddad', 'Brandt', 'Mori', 'Eriksen', 'Duarte', 'Mensah', 'Kim', 'Novak'];
+const ROLES = ['Captain Reyes', 'Dr. Hale', 'Sam', 'Old Pete', 'Mara', 'The Courier', 'Inspector Vale', 'Nia', 'Grandpa Joe', 'Agent Cole', 'Ellis', 'The Mayor'];
+const personName = (seed: string, i: number): string => `${FIRST[(hash(seed) + i * 5) % FIRST.length]} ${LAST[(hash(seed) / 7 + i * 3 | 0) % LAST.length]}`;
+const peopleOf = (c: CatItem): Person[] => {
+  const cast = Array.from({ length: 10 }, (_, i): Person => ({ id: `demo-p-${c.id}-${i}`, name: personName(c.id, i), role: ROLES[(hash(c.id) + i) % ROLES.length], type: 'Actor' }));
+  const crew: Person[] = [
+    { id: `demo-d-${c.id}`, name: personName(c.id + 'd', 1), type: 'Director' },
+    { id: `demo-w-${c.id}`, name: personName(c.id + 'w', 2), type: 'Writer' },
+    { id: `demo-w2-${c.id}`, name: personName(c.id + 'w2', 3), type: 'Writer' },
+  ];
+  return [...cast, ...crew];
+};
+const GUEST_ROLES = ['Deputy Marsh', 'The Archivist', 'Young Kit', 'Nurse Okoye', 'Warden Pike'];
+const guestsOf = (epId: string): Person[] => Array.from({ length: 1 + hash(epId) % 3 }, (_, i): Person =>
+  ({ id: `demo-g-${epId}-${i}`, name: personName(epId, i + 2), role: GUEST_ROLES[(hash(epId) + i) % GUEST_ROLES.length], type: 'GuestStar' }));
+
+function chaptersOf(c: CatItem): Chapter[] {
+  const n = c.runtimeMin >= 60 ? 8 : 5;
+  const names = ['Opening', 'The call', 'Crossing over', 'First trouble', 'The plan', 'Turning point', 'Everything at stake', 'Showdown', 'Aftermath'];
+  return Array.from({ length: n }, (_, i): Chapter => ({ index: i, name: names[i % names.length] ?? `Chapter ${i + 1}`, startTicks: Math.round((c.runtimeMin / n) * i * 600_000_000) }));
+}
+const TAGS = ['Edge of your seat', 'Great soundtrack', 'Family night', 'Rainy day', 'Big screen', 'Rewatchable'];
+const detailExtras = (c: CatItem): Pick<Title, 'chapters' | 'providerIds' | 'tags' | 'remoteTrailers' | 'studios' | 'tagline'> => ({
+  chapters: c.type === 'series' ? undefined : chaptersOf(c),
+  providerIds: { Imdb: `tt${1000000 + (hash(c.id) % 8000000)}`, Tmdb: String(10000 + (hash(c.id) % 900000)) },
+  tags: [TAGS[hash(c.id) % TAGS.length] as string, TAGS[(hash(c.id) + 2) % TAGS.length] as string],
+  // two out of three have a trailer, so the Trailer button is seen both shown and hidden
+  remoteTrailers: hash(c.id) % 3 === 0 ? [] : [{ url: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ', name: `${c.name} trailer` }],
+  studios: ['Northlight Pictures', 'Ember Films'].slice(0, 1 + (hash(c.id) % 2)),
+  tagline: ['Nothing is what it seems.', 'Some doors should stay closed.', 'The adventure starts tonight.'][hash(c.id) % 3],
 });
+// ── library/details: end ──
 
 function toTitle(c: CatItem, detail = false): Title {
   const kind = c.type === 'series' ? 'series' : 'movie';
@@ -49,12 +96,26 @@ function toTitle(c: CatItem, detail = false): Title {
     kind, id: c.id, name: c.name, overview: c.overview, imageTags: ART, backdropCount: 1,
     played: kind === 'movie' && hash(c.id) % 5 === 0, favourite: favourites.has(c.id),
     runtimeMin: c.runtimeMin, added: iso(c.added), year: c.year, genres: c.genres, rating: c.rating,
-    certification: c.cert, is4k: c.is4k, studios: [],
+    certification: c.cert ?? undefined, is4k: c.is4k, studios: [],
   };
   const p = progressOf(c.id, c.runtimeMin);
   if (p && kind === 'movie' && !t.played && RESUMING.has(c.id)) t.progress = p;
-  if (kind === 'series') { t.status = 'Continuing'; t.seasonCount = 2; t.unplayedCount = 4 + (hash(c.id) % 9); }
-  if (detail) { t.people = PEOPLE; t.versions = [version(c.is4k)]; t.tagline = 'Demo data'; }
+  // ── library/details: begin ──
+  if (kind === 'series') {
+    const eps = allEpisodes(c.id);
+    t.status = hash(c.id) % 2 === 0 ? 'Continuing' : 'Ended';
+    t.seasonCount = new Set(eps.map(e => e.season)).size;
+    t.episodeCount = eps.length;
+    t.unplayedCount = eps.filter(e => !e.played).length;
+    if (hash(c.id) % 4 === 0) t.lastEpisodeAdded = new Date(Date.now() - 3 * 864e5).toISOString();
+    if (!t.runtimeMin) t.runtimeMin = 0;
+  }
+  if (detail) {
+    t.people = peopleOf(c);
+    t.versions = kind === 'series' ? [versionsOf(c, true)[0] as MediaVersion] : versionsOf(c);
+    Object.assign(t, detailExtras(c));
+  }
+  // ── library/details: end ──
   return t;
 }
 
@@ -81,6 +142,37 @@ function seriesEpisodes(seriesId: string): Episode[] {
     missing: false, seriesImageTags: ART,
   }));
 }
+
+// ── library/details: begin ──
+/** Every episode of a series. Silo: an invented watched season 1 + the real catalog season 2. Others: 1 to 3 seasons of 8. */
+const S1_NAMES = ['Freedom Day', 'Holston\'s Story', 'Machines', 'Truth', 'The Relic', 'Hanna', 'The Janitor\'s Boy', 'Order', 'The Flare', 'Allen\'s Fate'];
+function allEpisodes(seriesId: string): Episode[] {
+  const series = ITEMS.find(i => i.id === seriesId);
+  const name = series?.name ?? 'Series';
+  const ov = (e: Episode): Episode => {
+    const o = playedOverride.get(e.id);
+    const withProg = seriesId === SERIES_DETAIL.series.id && e.season === 2 && e.episode === 5 && !e.played ? { ...e, progress: progressOf(e.id, e.runtimeMin) } : e;
+    return o === undefined ? withProg : { ...withProg, played: o, progress: o ? undefined : withProg.progress };
+  };
+  const base = seriesEpisodes(seriesId);
+  const mk = (season: number, n: number, ename: string, played: boolean): Episode => ({
+    kind: 'episode', id: `demo-${seriesId}-${season}-${n}`, name: ename, overview: series?.overview, imageTags: {}, backdropCount: 0,
+    played, favourite: false, runtimeMin: 40 + ((n * 7) % 15), seriesId, seriesName: name, seasonId: `${seriesId}-s${season}`, season, episode: n,
+    missing: false, seriesImageTags: ART,
+  });
+  const extra: Episode[] = [];
+  if (seriesId === SERIES_DETAIL.series.id) {
+    extra.push(...S1_NAMES.map((n, i) => mk(1, i + 1, n, true)));
+    return [...extra, ...base].map(ov);
+  }
+  const seasons = 1 + (hash(seriesId) % 3);
+  for (let sn = 2; sn <= seasons; sn++) for (let n = 1; n <= 8; n++) extra.push(mk(sn, n, `Episode ${n}`, false));
+  return [...base, ...extra].map(ov);
+}
+const DELETED = new Set<string>();
+/** Jellyfin sorts "The Matrix" under M: leading articles are ignored. */
+export const sortName = (n: string): string => n.replace(/^(the|a|an)\s+/i, '');
+// ── library/details: end ──
 
 /* ── in-memory state ── */
 const favourites = new Set<string>();
@@ -131,6 +223,9 @@ export class DemoBackend implements Backend {
       FAKE_REQUESTS.unshift(req);
       return req;
     },
+    // ── library/details: begin ──
+    reportIssue: async (_input: { mediaType: 'movie' | 'tv'; tmdbId: number; kind: IssueKind; message: string }) => true,
+    // ── library/details: end ──
     requests: async () => [...FAKE_REQUESTS],
     quota: async (): Promise<SeerrQuota> => ({
       movie: { limit: 5, used: 2, remaining: 3, days: 7 },
@@ -157,7 +252,7 @@ export class DemoBackend implements Backend {
   }
 
   private all(): Title[] {
-    return ITEMS.map(c => {
+    return ITEMS.filter(c => !DELETED.has(c.id)).map(c => {
       const t = toTitle(c);
       const o = playedOverride.get(c.id);
       return o === undefined ? t : { ...t, played: o, ...(o ? { progress: undefined } : {}) };
@@ -183,6 +278,7 @@ export class DemoBackend implements Backend {
     return this.all().filter(t => !opts.kind || t.kind === opts.kind).sort(SORTERS.added).reverse().slice(0, opts.limit ?? 20);
   }
 
+  // ── library/details: begin ──
   async items(q: ItemsQuery): Promise<Paged<Title>> {
     let list = this.all();
     if (q.kind === 'movie' || q.kind === 'series') list = list.filter(t => t.kind === q.kind);
@@ -190,25 +286,68 @@ export class DemoBackend implements Backend {
     if (q.search) { const s = q.search.toLowerCase(); list = list.filter(t => t.name.toLowerCase().includes(s)); }
     if (q.genres?.length) list = list.filter(t => q.genres!.some(g => t.genres.includes(g)));
     if (q.years?.length) list = list.filter(t => t.year != null && q.years!.includes(t.year));
+    if (q.ratings?.length) list = list.filter(t => t.certification != null && q.ratings!.includes(t.certification));
+    if (q.minRuntimeMin != null) list = list.filter(t => t.runtimeMin >= q.minRuntimeMin!);
+    if (q.maxRuntimeMin != null) list = list.filter(t => t.runtimeMin <= q.maxRuntimeMin!);
+    if (q.is4k) list = list.filter(t => t.is4k);
+    if (q.seriesStatus) list = list.filter(t => t.status === q.seriesStatus);
     if (q.played !== undefined) list = list.filter(t => t.played === q.played);
     if (q.favourite) list = list.filter(t => t.favourite);
     if (q.resumable) list = list.filter(t => t.progress);
     if (q.ids) list = list.filter(t => q.ids!.includes(t.id));
-    const sorter = SORTERS[q.sort ?? 'name'];
+    const key = (t: Title): string => sortName(t.name);
+    if (q.nameStartsWith) list = list.filter(t => key(t).toLowerCase().startsWith(q.nameStartsWith!.toLowerCase()));
+    if (q.nameLessThan) list = list.filter(t => key(t).toLowerCase() < q.nameLessThan!.toLowerCase());
+    const sorter = q.sort === 'name' || q.sort === undefined ? (a: Title, b: Title) => key(a).localeCompare(key(b), 'en', { sensitivity: 'base' }) : SORTERS[q.sort];
     list.sort(q.descending ? (a, b) => sorter(b, a) : sorter);
     const start = q.start ?? 0;
+    await new Promise(r => setTimeout(r, 120)); // a little latency so loading states can be seen
     return { items: list.slice(start, start + (q.limit ?? 60)), total: list.length, start };
+  }
+
+  async genres(kind: 'movie' | 'series'): Promise<GenreCount[]> {
+    const counts = new Map<string, number>();
+    for (const t of this.all()) if (t.kind === kind) for (const g of t.genres) counts.set(g, (counts.get(g) ?? 0) + 1);
+    return [...counts].map(([name, count]) => ({ name, count })).sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async allSeasons(): Promise<Season[]> {
+    const out: Season[] = [];
+    for (const c of ITEMS.filter(i => i.type === 'series' && !DELETED.has(i.id))) out.push(...(await this.seasons(c.id)));
+    return out;
+  }
+
+  async collections(): Promise<Collection[]> {
+    const SETS: Array<[string, RegExp]> = [
+      ['Transformers', /^Transformers/], ['Scream', /^Scream/], ['Toy Story', /^Toy Story/], ['The Purge', /Purge/], ['Pacific Rim', /^Pacific Rim/],
+      ['Night at the Museum', /^Night at the Museum/], ['The Hangover', /^The Hangover/], ['Now You See Me', /^Now You See Me/], ['Moana', /^Moana/],
+      ['Diary of a Wimpy Kid', /^Diary of a Wimpy Kid/], ['Scary Movie', /^Scary Movie/], ['Ace Ventura', /^Ace Ventura/],
+    ];
+    const movies = this.all().filter(t => t.kind === 'movie');
+    return SETS.map(([name, re]) => ({ id: `demo-set-${name}`, name, items: movies.filter(m => re.test(m.name)).sort((a, b) => (a.year ?? 0) - (b.year ?? 0)) }))
+      .filter(c => c.items.length > 1).sort((a, b) => b.items.length - a.items.length);
+  }
+
+  /** The demo only pretends: the item disappears from this session's lists. Nothing real is touched. */
+  async deleteFromJellyfin(id: string): Promise<void> {
+    await new Promise(r => setTimeout(r, 400));
+    DELETED.add(id);
   }
 
   async item(id: string): Promise<MediaItem> {
     const c = ITEMS.find(i => i.id === id);
+    if (c && DELETED.has(id)) throw new Error(`Demo: ${id} was removed`);
     if (c) { const t = toTitle(c, true); const o = playedOverride.get(id); return o === undefined ? t : { ...t, played: o }; }
     for (const s of ITEMS.filter(i => i.type === 'series')) {
-      const ep = seriesEpisodes(s.id).find(e => e.id === id);
-      if (ep) return ep;
+      const ep = allEpisodes(s.id).find(e => e.id === id);
+      if (ep) {
+        const meta = ITEMS.find(i => i.id === s.id) as CatItem;
+        return { ...ep, people: guestsOf(ep.id), versions: versionsOf(meta, true), chapters: chaptersOf({ ...meta, runtimeMin: ep.runtimeMin }) };
+      }
     }
     throw new Error(`Demo: no item ${id}`);
   }
+  // ── library/details: end ──
 
   async similar(id: string, limit = 12): Promise<Title[]> {
     const me = ITEMS.find(i => i.id === id);
@@ -218,13 +357,17 @@ export class DemoBackend implements Backend {
   }
 
   async seasons(seriesId: string): Promise<Season[]> {
-    const eps = seriesEpisodes(seriesId);
+    const eps = allEpisodes(seriesId); // library/details: all seasons, with watched counts
     const nums = [...new Set(eps.map(e => e.season))];
-    return nums.map(n => ({ id: `${seriesId}-s${n}`, seriesId, name: `Season ${n}`, number: n, episodeCount: eps.filter(e => e.season === n).length, imageTags: {}, played: false }));
+    return nums.map(n => {
+      const mine = eps.filter(e => e.season === n);
+      const unplayed = mine.filter(e => !e.played).length;
+      return { id: `${seriesId}-s${n}`, seriesId, name: `Season ${n}`, number: n, episodeCount: mine.length, imageTags: {}, played: unplayed === 0, unplayedCount: unplayed };
+    });
   }
 
   async episodes(seriesId: string, seasonId?: string): Promise<Episode[]> {
-    return seriesEpisodes(seriesId).filter(e => !seasonId || e.seasonId === seasonId);
+    return allEpisodes(seriesId).filter(e => !seasonId || e.seasonId === seasonId);
   }
 
   async search(query: string, limit = 8): Promise<Title[]> {
@@ -236,13 +379,18 @@ export class DemoBackend implements Backend {
 
   async playbackInfo(id: string): Promise<PlaybackInfo> {
     const item = await this.item(id);
-    const v = item.kind === 'episode' ? version(false) : (item.versions?.[0] ?? version(false));
+    const v = item.versions?.[0] as MediaVersion;
     return { itemId: id, mediaSourceId: v.id, url: '', method: 'unavailable', badge: 'Demo mode: no video', isHls: false, version: v, startPositionTicks: 0 };
   }
   async reportStart(): Promise<void> {}
   async reportProgress(): Promise<void> {}
   async reportStopped(): Promise<void> {}
 
-  async setPlayed(id: string, played: boolean): Promise<void> { playedOverride.set(id, played); }
+  async setPlayed(id: string, played: boolean): Promise<void> {
+    playedOverride.set(id, played);
+    // ── library/details: begin ── marking a series watched marks every episode
+    if (ITEMS.some(i => i.id === id && i.type === 'series')) for (const e of allEpisodes(id)) playedOverride.set(e.id, played);
+    // ── library/details: end ──
+  }
   async setFavourite(id: string, favourite: boolean): Promise<void> { if (favourite) favourites.add(id); else favourites.delete(id); }
 }

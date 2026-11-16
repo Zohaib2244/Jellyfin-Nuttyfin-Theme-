@@ -4,7 +4,7 @@
  */
 import { ticksToMinutes } from '../lib/format';
 import type {
-  AudioTrack, Episode, ImageTags, MediaItem, MediaVersion, Person, Progress, Season, SubtitleTrack, Title,
+  AudioTrack, Chapter, Episode, ImageTags, MediaItem, MediaVersion, Person, Progress, Season, SubtitleTrack, Title,
 } from './types';
 
 export interface MediaStreamDto {
@@ -83,6 +83,14 @@ export interface BaseItemDto {
   Studios?: { Name?: string }[];
   People?: PersonDto[];
   MediaSources?: MediaSourceDto[];
+  // ── library/details: begin ──
+  ProviderIds?: Record<string, string | null>;
+  Tags?: string[];
+  RemoteTrailers?: { Url?: string; Name?: string }[];
+  Chapters?: { StartPositionTicks?: number; Name?: string; ImageTag?: string }[];
+  RecursiveItemCount?: number;
+  DateLastMediaAdded?: string;
+  // ── library/details: end ──
 }
 
 const is4kSize = (w?: number, h?: number): boolean => (w ?? 0) >= 3000 || (h ?? 0) >= 2000;
@@ -152,6 +160,27 @@ export function normaliseVersion(src: MediaSourceDto): MediaVersion {
   };
 }
 
+// ── library/details: begin ──
+export function normaliseChapters(list: BaseItemDto['Chapters']): Chapter[] {
+  return (list ?? []).map((c, i): Chapter => ({
+    index: i, name: c.Name || `Chapter ${i + 1}`, startTicks: c.StartPositionTicks ?? 0, imageTag: c.ImageTag || undefined,
+  }));
+}
+
+/** Detail-only fields shared by Titles and Episodes. Empty collections are left off so list calls stay small. */
+function detailExtras(dto: BaseItemDto): Pick<Title, 'chapters' | 'providerIds' | 'tags' | 'remoteTrailers'> {
+  const out: Pick<Title, 'chapters' | 'providerIds' | 'tags' | 'remoteTrailers'> = {};
+  if (dto.Chapters?.length) out.chapters = normaliseChapters(dto.Chapters);
+  const ids: Record<string, string> = {};
+  for (const [k, v] of Object.entries(dto.ProviderIds ?? {})) if (v) ids[k] = v;
+  if (Object.keys(ids).length) out.providerIds = ids;
+  if (dto.Tags?.length) out.tags = dto.Tags;
+  const trailers = (dto.RemoteTrailers ?? []).filter(t => !!t.Url).map(t => ({ url: t.Url as string, name: t.Name || undefined }));
+  if (trailers.length) out.remoteTrailers = trailers;
+  return out;
+}
+// ── library/details: end ──
+
 export function normalisePerson(p: PersonDto): Person {
   return { id: p.Id ?? '', name: p.Name ?? '', role: p.Role || undefined, type: p.Type ?? 'Actor', imageTag: p.PrimaryImageTag };
 }
@@ -192,6 +221,15 @@ function normaliseTitle(dto: BaseItemDto): Title {
   }
   if (dto.People) t.people = dto.People.map(normalisePerson);
   if (versions) t.versions = versions;
+  // ── library/details: begin ──
+  Object.assign(t, detailExtras(dto));
+  if (dto.Type && dto.Type !== 'Movie' && dto.Type !== 'Series') t.rawType = dto.Type;
+  if (dto.Type === 'Season') { t.seriesId = dto.SeriesId; t.seasonNumber = dto.IndexNumber; }
+  if (kind === 'series') {
+    t.episodeCount = dto.RecursiveItemCount;
+    t.lastEpisodeAdded = dto.DateLastMediaAdded;
+  }
+  // ── library/details: end ──
   return t;
 }
 
@@ -225,6 +263,11 @@ function normaliseEpisode(dto: BaseItemDto): Episode {
   };
   const prog = progress(dto, runtimeMin);
   if (prog) e.progress = prog;
+  // ── library/details: begin ──
+  if (dto.People) e.people = dto.People.map(normalisePerson);
+  if (dto.MediaSources) e.versions = dto.MediaSources.map(normaliseVersion);
+  Object.assign(e, detailExtras(dto));
+  // ── library/details: end ──
   return e;
 }
 

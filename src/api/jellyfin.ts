@@ -11,7 +11,7 @@ import { JF_BASE } from './images';
 import { normaliseItem, normaliseSeason, normaliseVersion, type BaseItemDto } from './normalise';
 import { SeerrClient } from './seerr';
 import type {
-  Episode, ItemsQuery, LibraryView, MediaItem, Paged, PlaybackInfo, PlaybackReport, QuickConnectSession, Season,
+  Collection, Episode, GenreCount, ItemsQuery, LibraryView, MediaItem, Paged, PlaybackInfo, PlaybackReport, QuickConnectSession, Season,
   SortKey, Title, User,
 } from './types';
 
@@ -19,6 +19,11 @@ import type {
 export const LIST_FIELDS = ['Overview', 'Genres', 'DateCreated', 'PrimaryImageAspectRatio', 'Taglines', 'ChildCount', 'Studios'] as const;
 export const EPISODE_FIELDS = ['Overview', 'DateCreated', 'PrimaryImageAspectRatio', 'ParentId'] as const;
 const IMAGE_TYPES = ['Primary', 'Backdrop', 'Thumb', 'Logo'] as const;
+// ── library/details: begin ──
+/** Library lists also need the episode totals and "last added" date that drive the shows progress board. */
+export const LIB_FIELDS = [...LIST_FIELDS, 'RecursiveItemCount', 'DateLastMediaAdded'] as const;
+const PAGE_CHUNK = 500;
+// ── library/details: end ──
 
 const SORT: Record<SortKey, string> = {
   name: 'SortName', added: 'DateCreated', rating: 'CommunityRating', year: 'PremiereDate',
@@ -213,23 +218,58 @@ export class JellyfinBackend implements Backend {
     return titles(r ?? []);
   }
 
+  // ── library/details: begin ── (filters, runtime window, name windows; genres/ratings are PIPE separated in Jellyfin)
   async items(q: ItemsQuery, signal?: AbortSignal): Promise<Paged<Title>> {
+    if (q.minRuntimeMin != null || q.maxRuntimeMin != null) return this.itemsByRuntime(q, signal);
+    return this.itemsPage(q, signal);
+  }
+
+  private async itemsPage(q: ItemsQuery, signal?: AbortSignal): Promise<Paged<Title>> {
     const sort = SORT[q.sort ?? 'name'];
     const r = await this.http<ItemsResult>('/Items', {
       signal,
       query: {
         userId: this.uid, recursive: true,
         includeItemTypes: q.kind ? TYPE[q.kind] : ['Movie', 'Series'],
-        searchTerm: q.search, genres: q.genres, years: q.years, parentId: q.parentId, ids: q.ids,
+        searchTerm: q.search, genres: q.genres?.length ? q.genres.join('|') : undefined, years: q.years,
+        officialRatings: q.ratings?.length ? q.ratings.join('|') : undefined,
+        is4K: q.is4k || undefined, seriesStatus: q.seriesStatus,
+        nameLessThan: q.nameLessThan, nameStartsWith: q.nameStartsWith,
+        parentId: q.parentId, ids: q.ids,
         sortBy: sort === 'SortName' ? 'SortName' : [sort, 'SortName'],
         sortOrder: q.descending ? 'Descending' : 'Ascending',
         startIndex: q.start ?? 0, limit: q.limit ?? 60,
         isPlayed: q.played, isFavorite: q.favourite, filters: q.resumable ? 'IsResumable' : undefined,
-        fields: LIST_FIELDS, enableImageTypes: IMAGE_TYPES, imageTypeLimit: 1,
+        fields: LIB_FIELDS, enableImageTypes: IMAGE_TYPES, imageTypeLimit: 1,
       },
     });
     return { items: titles(r.Items ?? []), total: r.TotalRecordCount ?? 0, start: r.StartIndex ?? q.start ?? 0 };
   }
+
+  /** Jellyfin has no runtime filter, so walk the (otherwise filtered) list in big chunks and slice it ourselves.
+   *  The walked list is kept for a minute so "Show more" and A to Z jumps do not repeat the walk. */
+  private runtimeCache: { key: string; at: number; items: Title[] } | null = null;
+  private async itemsByRuntime(q: ItemsQuery, signal?: AbortSignal): Promise<Paged<Title>> {
+    const { start: _s, limit: _l, ...rest } = q;
+    const key = JSON.stringify(rest);
+    let all: Title[];
+    const hit = this.runtimeCache;
+    if (hit && hit.key === key && Date.now() - hit.at < 60_000) {
+      all = hit.items;
+    } else {
+      const base: ItemsQuery = { ...rest, minRuntimeMin: undefined, maxRuntimeMin: undefined };
+      all = [];
+      for (let at = 0; ; at += PAGE_CHUNK) {
+        const page = await this.itemsPage({ ...base, start: at, limit: PAGE_CHUNK }, signal);
+        all.push(...page.items.filter(t => (q.minRuntimeMin == null || t.runtimeMin >= q.minRuntimeMin) && (q.maxRuntimeMin == null || t.runtimeMin <= q.maxRuntimeMin)));
+        if (at + PAGE_CHUNK >= page.total || page.items.length === 0) break;
+      }
+      this.runtimeCache = { key, at: Date.now(), items: all };
+    }
+    const start = q.start ?? 0;
+    return { items: all.slice(start, start + (q.limit ?? 60)), total: all.length, start };
+  }
+  // ── library/details: end ──
 
   async item(id: string): Promise<MediaItem> {
     const dto = await this.http<BaseItemDto>(`/Items/${encodeURIComponent(id)}`, { query: { userId: this.uid } });
@@ -305,6 +345,44 @@ export class JellyfinBackend implements Backend {
   reportStart(r: PlaybackReport): Promise<void> { return this.report('', r); }
   reportProgress(r: PlaybackReport): Promise<void> { return this.report('/Progress', r); }
   reportStopped(r: PlaybackReport): Promise<void> { return this.report('/Stopped', r); }
+
+  // ── library/details: begin ──
+  async genres(kind: 'movie' | 'series', signal?: AbortSignal): Promise<GenreCount[]> {
+    const r = await this.http<{ Items?: Array<BaseItemDto & { MovieCount?: number; SeriesCount?: number }> }>('/Genres', {
+      signal, query: { userId: this.uid, includeItemTypes: TYPE[kind], sortBy: 'SortName', fields: 'ItemCounts' },
+    });
+    return (r.Items ?? []).map(g => ({ name: g.Name ?? '', count: (kind === 'movie' ? g.MovieCount : g.SeriesCount) ?? 0 })).filter(g => g.name);
+  }
+
+  async allSeasons(signal?: AbortSignal): Promise<Season[]> {
+    const r = await this.http<ItemsResult>('/Items', {
+      signal, query: { userId: this.uid, recursive: true, includeItemTypes: 'Season', fields: ['ChildCount'], enableImageTypes: ['Primary'], limit: 3000 },
+    });
+    return (r.Items ?? []).map(normaliseSeason);
+  }
+
+  async collections(signal?: AbortSignal): Promise<Collection[]> {
+    const sets = await this.http<ItemsResult>('/Items', { signal, query: { userId: this.uid, recursive: true, includeItemTypes: 'BoxSet', sortBy: 'SortName', limit: 200 } });
+    const out: Collection[] = [];
+    const queue = [...(sets.Items ?? [])];
+    const worker = async (): Promise<void> => {
+      for (let s = queue.shift(); s; s = queue.shift()) {
+        const kids = await this.http<ItemsResult>('/Items', {
+          signal, query: { userId: this.uid, parentId: s.Id, sortBy: 'PremiereDate', fields: LIST_FIELDS, enableImageTypes: IMAGE_TYPES, imageTypeLimit: 1, limit: 100 },
+        }).catch(() => ({ Items: [] as BaseItemDto[] }));
+        const items = titles(kids.Items ?? []);
+        if (items.length) out.push({ id: s.Id, name: s.Name ?? '', items });
+      }
+    };
+    await Promise.all([worker(), worker(), worker(), worker()]);
+    return out.sort((a, b) => b.items.length - a.items.length || a.name.localeCompare(b.name));
+  }
+
+  /** Only called from the owner-only Remove dialog, behind a two-step confirm. */
+  async deleteFromJellyfin(id: string): Promise<void> {
+    await this.http(`/Items/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  }
+  // ── library/details: end ──
 
   /* ── user actions ── */
   async setPlayed(id: string, played: boolean): Promise<void> {

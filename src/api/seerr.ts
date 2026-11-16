@@ -7,7 +7,7 @@
  */
 import type { SeerrApi } from './backend';
 import { ApiError, createHttp, type Http } from './http';
-import type { QuotaLine, RequestState, SeerrQuota, SeerrRequest, SeerrResult, User } from './types';
+import type { IssueKind, QuotaLine, RequestState, SeerrQuota, SeerrRequest, SeerrResult, User } from './types';
 
 export const SEERR_BASE = '/seerr/api/v1';
 
@@ -145,6 +145,23 @@ export class SeerrClient implements SeerrApi {
       return null;
     }
   }
+
+  // ── library/details: begin ──
+  /** Seerr issue types: 1 video, 2 audio, 3 subtitles, 4 other. Needs Seerr's internal media id, found through the TMDB id. */
+  async reportIssue(input: { mediaType: 'movie' | 'tv'; tmdbId: number; kind: IssueKind; message: string }): Promise<boolean> {
+    if (!(await this.available())) return false;
+    try {
+      const d = await this.http<{ mediaInfo?: { id?: number } }>(`/${input.mediaType}/${input.tmdbId}`, { timeoutMs: 8000 });
+      const mediaId = d.mediaInfo?.id;
+      if (!mediaId) return false;
+      const issueType = { video: 1, audio: 2, subtitles: 3, other: 4 }[input.kind];
+      await this.http('/issue', { method: 'POST', body: { issueType, message: input.message.slice(0, 1000), mediaId } });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  // ── library/details: end ──
 
   private async detail(r: RequestRaw): Promise<{ title?: string; name?: string; releaseDate?: string; firstAirDate?: string; posterPath?: string } | undefined> {
     const tmdb = r.media?.tmdbId;

@@ -36,6 +36,18 @@ interface MediaBase {
   runtimeMin: number;
   /** ISO date the item was added to the library. */
   added?: string;
+  // ── library/details: begin ──
+  /** Detail calls only: scene markers (with a thumbnail tag when the server made one). */
+  chapters?: Chapter[];
+  /** Detail calls only: { Imdb: 'tt1', Tmdb: '603', Tvdb: '81189' } */
+  providerIds?: Record<string, string>;
+  /** Detail calls only: free-form tags */
+  tags?: string[];
+  /** Detail calls only: YouTube (or other) trailer links the server knows about */
+  remoteTrailers?: RemoteTrailer[];
+  /** Jellyfin's own type when it is not Movie/Series/Episode, e.g. 'Season' or 'BoxSet'. */
+  rawType?: string;
+  // ── library/details: end ──
 }
 
 export interface Title extends MediaBase {
@@ -62,6 +74,15 @@ export interface Title extends MediaBase {
   people?: Person[];
   /** Detail calls only: one entry per file/version */
   versions?: MediaVersion[];
+  // ── library/details: begin ──
+  /** Set when rawType is 'Season' */
+  seriesId?: string;
+  seasonNumber?: number;
+  /** Series only: all episodes in the library (watched or not) */
+  episodeCount?: number;
+  /** Series only: when an episode was last added (ISO) */
+  lastEpisodeAdded?: string;
+  // ── library/details: end ──
 }
 
 export interface Episode extends MediaBase {
@@ -78,9 +99,43 @@ export interface Episode extends MediaBase {
   missing: boolean;
   /** The parent series' artwork, for hero/backdrop use */
   seriesImageTags: ImageTags;
+  // ── library/details: begin ──
+  /** Detail calls only (cast incl. guest stars, files) */
+  people?: Person[];
+  versions?: MediaVersion[];
+  // ── library/details: end ──
 }
 
 export type MediaItem = Title | Episode;
+
+// ── library/details: begin ──
+export interface Chapter {
+  index: number;
+  name: string;
+  startTicks: number;
+  /** Present when the server generated a thumbnail */
+  imageTag?: string;
+}
+
+export interface RemoteTrailer {
+  url: string;
+  name?: string;
+}
+
+/** A Jellyfin box set (collection) with its films in watching order. */
+export interface Collection {
+  id: string;
+  name: string;
+  items: Title[];
+}
+
+export interface GenreCount {
+  name: string;
+  count: number;
+}
+
+export type IssueKind = 'video' | 'audio' | 'subtitles' | 'other';
+// ── library/details: end ──
 
 export interface Season {
   id: string;
@@ -204,6 +259,19 @@ export interface ItemsQuery {
   /** Only things with watch progress (Continue watching style) */
   resumable?: boolean;
   ids?: string[];
+  // ── library/details: begin ──
+  /** Official ratings to include, e.g. ['G','PG'] */
+  ratings?: string[];
+  /** Runtime window in minutes. Jellyfin cannot filter this itself: the real backend pages through and filters. */
+  minRuntimeMin?: number;
+  maxRuntimeMin?: number;
+  is4k?: boolean;
+  /** Series only */
+  seriesStatus?: 'Continuing' | 'Ended';
+  /** Name windows for the A to Z jump: `nameLessThan: 'C'` + limit 0 gives how many items come before C. */
+  nameLessThan?: string;
+  nameStartsWith?: string;
+  // ── library/details: end ──
 }
 
 export interface Paged<T> {
