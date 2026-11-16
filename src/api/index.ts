@@ -4,6 +4,7 @@ import type { Backend } from './backend';
 
 export type { Backend, SeerrApi, QuickConnectApi } from './backend';
 export { SignInError } from './backend';
+export type { SignInFailure, BackendMode } from './backend';
 export { ApiError } from './http';
 export { imageUrl, userImageUrl, personImageUrl, tmdbImage } from './images';
 export * from './types';

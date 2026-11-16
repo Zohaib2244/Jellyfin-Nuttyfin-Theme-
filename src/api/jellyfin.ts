@@ -175,7 +175,7 @@ export class JellyfinBackend implements Backend {
     if (!this.token) return;
     this.seerr.reset();
     this.clear();
-    if (location.hash !== '#/login') location.hash = '#/login';
+    if (!location.hash.startsWith('#/login')) location.hash = '#/login';
   }
 
   private get uid(): string {
