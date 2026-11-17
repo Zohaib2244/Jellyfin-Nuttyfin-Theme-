@@ -15,4 +15,4 @@
 
 - Home and Continue Watching use static artwork and loading placeholders: no continuously moving backdrops, poster collages, or blinking mascots on these two tabs. Preserve their layout while prioritising smooth scrolling and clicks.
 
-- NuttyFin uses its own acorn/play mark for the site identity and favicon. NutBot remains the assistant only. Login includes Remember me, with persistent or browser-session sign-in according to the checkbox.
+- NuttyFin must use a separate retro play-button identity, with no nut/acorn imagery and no NutBot mascot in the branding. Owner is choosing among variations. NutBot remains the assistant only. Login includes Remember me, with persistent or browser-session sign-in according to the checkbox.
