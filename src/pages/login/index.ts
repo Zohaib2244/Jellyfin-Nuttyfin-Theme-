@@ -1,5 +1,7 @@
 /** Login: opaque page, moving artwork, username + password, Quick Connect as the second way in. */
 import './login.css';
+import { session as authSession } from '../../api/auth';
+import { brandMark } from '../../ui/brand';
 import { imageUrl, SignInError, type SignInFailure } from '../../api';
 import { html, raw, setHtml } from '../../lib/html';
 import { store } from '../../lib/storage';
@@ -34,7 +36,7 @@ const page: Page = {
     const root = document.createElement('div');
     root.className = 'lg';
     setHtml(root, html`
-      <a class="lg-brand" href="#/login" aria-label="Nuttyfin">Nutty<em>fin</em></a>
+      <a class="lg-brand" href="#/login" aria-label="NuttyFin">${brandMark(40)}<span>Nutty<em>Fin</em></span></a>
       <div class="lg-art" id="lgArt" aria-hidden="true">${raw(artMarkup())}</div>
       <div class="lg-shade"></div>
       <section class="lg-content" aria-labelledby="lgH">
@@ -47,6 +49,7 @@ const page: Page = {
             <input id="lgUser" name="username" autocomplete="username" required placeholder="Your username" autocapitalize="none" spellcheck="false">
             <label for="lgPass">Password</label>
             <div class="lg-pw"><input id="lgPass" name="password" type="password" autocomplete="current-password" required placeholder="Your password"><button type="button" id="lgShow" aria-label="Show password" aria-pressed="false">Show</button></div>
+            <label class="lg-remember" for="lgRemember"><input id="lgRemember" type="checkbox" name="remember"><span><b>Remember me</b><small>Stay signed in on this device</small></span></label>
             <button class="lg-go" type="submit">Sign in</button>
             <p class="lg-notice" id="lgNotice" role="alert"></p>
           </form>
@@ -62,6 +65,9 @@ const page: Page = {
     const user = $<HTMLInputElement>('#lgUser');
     const pass = $<HTMLInputElement>('#lgPass');
     const notice = $('#lgNotice');
+    const remember = $<HTMLInputElement>('#lgRemember');
+    remember.checked = authSession.remembered();
+    remember.addEventListener('change', () => authSession.setRemembered(remember.checked));
     const go = form.querySelector<HTMLButtonElement>('.lg-go') as HTMLButtonElement;
     const next = ctx.query.get('next');
     const destination = next && next.startsWith('/') && !next.startsWith('/login') ? next : '/';
@@ -71,7 +77,7 @@ const page: Page = {
     else setTimeout(() => user.focus(), 0);
 
     const finish = (name: string) => {
-      store.set('lastUser', name); // remembered silently (no checkbox); the session itself is kept by the backend
+      if (remember.checked) store.set('lastUser', name); else store.remove('lastUser');
       pass.value = '';
       ctx.router.navigate(destination, { replace: true });
     };
@@ -98,6 +104,7 @@ const page: Page = {
       go.textContent = 'Signing in…';
       form.setAttribute('aria-busy', 'true');
       try {
+        authSession.setRemembered(remember.checked);
         await ctx.backend.signIn(name, pass.value);
         finish(name);
       } catch (err) {
@@ -123,6 +130,7 @@ const page: Page = {
       $('#lgQc').addEventListener('click', () => void startQc());
     };
     const startQc = async () => {
+      authSession.setRemembered(remember.checked);
       const run = ++qcRun;
       setHtml(qcSlot, html`<div class="lg-qc" role="status"><p>Getting a code…</p></div>`);
       try {

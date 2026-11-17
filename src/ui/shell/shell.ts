@@ -12,7 +12,7 @@ import { onPrefsChange, effectiveTheme, getBackgroundPref, initPrefs, toggleThem
 import type { NavKey, ShellHooks, TabsSpec } from '../../pages/types';
 import type { RouterShell } from '../../router';
 import { icon, mountIconSprite, pixelIcon, type IconName } from '../icons';
-import { nutbot } from '../nutbot';
+import { brandMark } from '../brand';
 import { mountAccountMenu, picMarkup, roleOf, type AccountMenu } from './accountmenu';
 import { createPageBg, type PageBg } from './pagebg';
 import { mountSearch, searchMarkup, type SearchController } from './search';
@@ -51,11 +51,11 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
     <div class="pagebg" id="pagebg" aria-hidden="true"></div>
     <button class="skip" type="button" id="skip">Skip to content</button>
     <aside class="rail" id="rail">
-      <a class="rbrand" href="#/" aria-label="Nuttyfin home">${nutbot(40, 'idle')}</a>
+      <a class="rbrand" href="#/" aria-label="Nuttyfin home">${brandMark(40)}</a>
       <nav class="nav" aria-label="Main">${navItems}</nav>
     </aside>
     <header class="top" id="top">
-      <a class="brand" href="#/" aria-label="Nuttyfin home">${nutbot(38, 'idle')}<span class="wm">Nutty<em>fin</em></span></a>
+      <a class="brand" href="#/" aria-label="Nuttyfin home">${brandMark(38)}<span class="wm">Nutty<em>Fin</em></span></a>
       <div class="toptabs" id="toptabs"></div>
       ${searchMarkup()}
       <button class="themesw" type="button" role="switch" id="themeSw" aria-checked="true" aria-label="Dark theme">${pixelIcon('moon', 'moon')}${pixelIcon('sun', 'sun')}</button>

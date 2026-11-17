@@ -3,8 +3,9 @@
  * still loads from /jf/Items/<id>/Images/...). Progress, favourites and requests are fake and live in memory.
  * Enabled with ?demo=1 or localStorage nutfin.demo. Any username/password signs in.
  */
+import { session } from './auth';
 import catalog from '../../design/catalog.json';
-import { store } from '../lib/storage';
+import { store, tabStore } from '../lib/storage';
 import { createDemoDesk, seedDemoDesk, type DemoDeskCtx } from './demo-desk'; // phase5-7
 import { createDemoHelper } from './demo-helper'; // phase5-7
 import type { Backend, QuickConnectApi, SeerrApi } from './backend';
@@ -248,7 +249,7 @@ const SORTERS: Record<NonNullable<ItemsQuery['sort']>, (a: Title, b: Title) => n
 
 export class DemoBackend implements Backend {
   readonly mode = 'demo' as const;
-  private user: User | null = store.get<User | null>('demoUser', null);
+  private user: User | null = tabStore.get<User | null>('demoUser', null) ?? store.get<User | null>('demoUser', null);
   private readonly listeners = new Set<(u: User | null) => void>();
   private qcPolls = 0;
 
@@ -275,7 +276,8 @@ export class DemoBackend implements Backend {
   private adopt(name: string): User {
     const user: User = { id: 'demo-user', name: name.trim() || 'Demo', isAdmin: true };
     this.user = user;
-    store.set('demoUser', user);
+    store.remove('demoUser'); tabStore.remove('demoUser');
+    (session.remembered() ? store : tabStore).set('demoUser', user);
     this.emit();
     return user;
   }
@@ -283,7 +285,7 @@ export class DemoBackend implements Backend {
 
   currentUser(): User | null { return this.user; }
   async signIn(username: string): Promise<User> { return this.adopt(username); }
-  async signOut(): Promise<void> { this.user = null; store.remove('demoUser'); this.emit(); }
+  async signOut(): Promise<void> { this.user = null; store.remove('demoUser'); tabStore.remove('demoUser'); this.emit(); }
   onAuthChange(cb: (u: User | null) => void): () => void { this.listeners.add(cb); return () => { this.listeners.delete(cb); }; }
 
   async views(): Promise<LibraryView[]> {

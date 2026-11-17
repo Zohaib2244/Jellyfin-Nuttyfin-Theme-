@@ -5,7 +5,8 @@ Deployed by explicit owner request, replacing the default page at the existing J
 - LAN: http://jellyfin.avns.nut/
 - Public: https://jellyfin.avns.site/
 - Original Jellyfin interface: `/web/` on those same hosts; direct port 8096 is unchanged.
-- Frontend release: `/opt/docker/infra/caddy/data/nuttyfin/releases/20261116-194009-d19e2fe`.
+- Frontend release: `/opt/docker/infra/caddy/data/nuttyfin/releases/20261117-101629-brand-remember`.
+- Previous frontend release: `/opt/docker/infra/caddy/data/nuttyfin/releases/20261116-194009-d19e2fe`.
 - Current release link: `/opt/docker/infra/caddy/data/nuttyfin/current` (container path `/data/nuttyfin/current`).
 - Helper: `/opt/nuttyfin/helper`, enabled system service `nuttyfin-helper.service`, listening on `192.168.1.24:8120`.
 - Helper credentials: `/etc/nuttyfin-helper.env` (root-owned, group-readable by the service user); secrets are not in Git.
@@ -40,3 +41,9 @@ docker exec caddy caddy reload --config /etc/caddyfile --adapter caddyfile
 ```
 
 The original Jellyfin web interface becomes the default again. The helper can be disabled independently with `sudo systemctl disable --now nuttyfin-helper.service`. Neither rollback step deletes media or changes Jellyfin's stored settings.
+
+## Frontend update — 17 November 2026
+
+Added NuttyFin's acorn/play identity to navigation, login and the favicon. Login now has Remember me: checked stores the sign-in token in persistent browser storage; unchecked uses browser-session storage. Passwords are never saved. Existing remembered sign-ins remain valid. Quick Connect follows the same preference.
+
+Verified the login and brand at desktop and phone widths, plus checked and unchecked password sign-ins against the real Jellyfin server, page reloads and a second tab. Demo-mode lifecycle checks and six new automated storage regressions pass. The static release update retains old hashed assets and requires no service restart or Caddy reload.

@@ -14,3 +14,5 @@
 - Tiles must never look empty: give them enough real content (or richer rows) to fill their space at every width.
 
 - Home and Continue Watching use static artwork and loading placeholders: no continuously moving backdrops, poster collages, or blinking mascots on these two tabs. Preserve their layout while prioritising smooth scrolling and clicks.
+
+- NuttyFin uses its own acorn/play mark for the site identity and favicon. NutBot remains the assistant only. Login includes Remember me, with persistent or browser-session sign-in according to the checkbox.

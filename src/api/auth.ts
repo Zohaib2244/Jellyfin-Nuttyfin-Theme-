@@ -1,5 +1,5 @@
 /** Jellyfin auth header, device identity and the stored session. Pure builders are unit-tested. */
-import { store } from '../lib/storage';
+import { store, tabStore } from '../lib/storage';
 
 export const CLIENT_NAME = 'Nuttyfin';
 export const CLIENT_VERSION = '0.1.0';
@@ -72,9 +72,14 @@ export interface StoredSession {
 
 export const session = {
   load(): StoredSession | null {
-    const s = store.get<StoredSession | null>('session', null);
+    const s = tabStore.get<StoredSession | null>('session', null) ?? store.get<StoredSession | null>('session', null);
     return s && typeof s.token === 'string' && typeof s.userId === 'string' ? s : null;
   },
-  save(s: StoredSession): void { store.set('session', s); },
-  clear(): void { store.remove('session'); },
+  remembered(): boolean { return store.get<boolean>('rememberMe', true); },
+  setRemembered(value: boolean): void { store.set('rememberMe', value); },
+  save(s: StoredSession): void {
+    store.remove('session'); tabStore.remove('session');
+    (store.get<boolean>('rememberMe', true) ? store : tabStore).set('session', s);
+  },
+  clear(): void { store.remove('session'); tabStore.remove('session'); },
 };
