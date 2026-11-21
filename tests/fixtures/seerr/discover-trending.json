@@ -1,0 +1,143 @@
+{
+  "page": 1,
+  "totalPages": 500,
+  "totalResults": 10000,
+  "results": [
+    {
+      "id": 300523,
+      "firstAirDate": "2026-11-20",
+      "genreIds": [
+        80,
+        9648
+      ],
+      "mediaType": "tv",
+      "name": "The Blue Road",
+      "originCountry": [
+        "KR"
+      ],
+      "originalLanguage": "ko",
+      "originalName": "푸른길",
+      "overview": "Two detectives join forces when brutal murders and cryptic messages surface across borders — but the deadly truth lurks dangerously close.",
+      "popularity": 41.2699,
+      "voteAverage": 7.8,
+      "voteCount": 5,
+      "backdropPath": "/7ojpD6ARKYhRxnsjzMIrorOfj4T.jpg",
+      "posterPath": "/cVbilrgtgKi7gN74KK4voyV7iDR.jpg"
+    },
+    {
+      "id": 1300968,
+      "mediaType": "movie",
+      "adult": false,
+      "genreIds": [
+        878,
+        28,
+        12
+      ],
+      "originalLanguage": "en",
+      "originalTitle": "The Hunger Games: Sunrise on the Reaping",
+      "overview": "Return to the world of Panem 24 years before Katniss Everdeen volunteers in her sister's place, commencing on the morning of the reaping of the 50th Hunger Games, also known as the Second Quarter Quell.",
+      "popularity": 292.6918,
+      "releaseDate": "2026-11-18",
+      "title": "The Hunger Games: Sunrise on the Reaping",
+      "video": false,
+      "voteAverage": 7.6,
+      "voteCount": 140,
+      "backdropPath": "/aqFZcr2dxSZ2UwWSo1WC6C0rwDf.jpg",
+      "posterPath": "/jNcZH8yplxttRlf0wwqfGGMKHxX.jpg"
+    },
+    {
+      "id": 1368337,
+      "mediaType": "movie",
+      "adult": false,
+      "genreIds": [
+        12,
+        28,
+        14
+      ],
+      "originalLanguage": "en",
+      "originalTitle": "The Odyssey",
+      "overview": "Odysseus, the legendary King of Ithaca, embarks on a long and perilous journey home following the Trojan War. Throughout his voyage, he is forced to confront the whims of gods, mythological monsters, and trials that stretch both his cunning and his humanity to the breaking point.",
+      "popularity": 481.7218,
+      "releaseDate": "2026-07-15",
+      "title": "The Odyssey",
+      "video": false,
+      "voteAverage": 8,
+      "voteCount": 5247,
+      "backdropPath": "/dZI4Ek4qc2Fib2G1zFkGhKKuc6j.jpg",
+      "posterPath": "/5rhTDKUhPYvpdQIijFIs5VoWsON.jpg",
+      "mediaInfo": {
+        "downloadStatus": [],
+        "downloadStatus4k": [],
+        "id": 247,
+        "mediaType": "movie",
+        "tmdbId": 1368337,
+        "tvdbId": null,
+        "imdbId": "tt33764258",
+        "status": 5,
+        "status4k": 1,
+        "createdAt": "2026-09-06T07:34:37.000Z",
+        "updatedAt": "2026-11-08T04:25:00.000Z",
+        "lastSeasonChange": "2026-09-06T07:34:37.000Z",
+        "mediaAddedAt": "2026-11-08T04:21:54.130Z",
+        "serviceId": 0,
+        "serviceId4k": null,
+        "externalServiceId": 88,
+        "externalServiceId4k": null,
+        "externalServiceSlug": "1368337",
+        "externalServiceSlug4k": null,
+        "ratingKey": null,
+        "ratingKey4k": null,
+        "jellyfinMediaId": "jf-item-id",
+        "jellyfinMediaId4k": null,
+        "watchlists": []
+      }
+    },
+    {
+      "id": 1368337,
+      "mediaType": "movie",
+      "adult": false,
+      "genreIds": [
+        12,
+        28,
+        14
+      ],
+      "originalLanguage": "en",
+      "originalTitle": "The Odyssey",
+      "overview": "Odysseus, the legendary King of Ithaca, embarks on a long and perilous journey home following the Trojan War. Throughout his voyage, he is forced to confront the whims of gods, mythological monsters, and trials that stretch both his cunning and his humanity to the breaking point.",
+      "popularity": 481.7218,
+      "releaseDate": "2026-07-15",
+      "title": "The Odyssey",
+      "video": false,
+      "voteAverage": 8,
+      "voteCount": 5247,
+      "backdropPath": "/dZI4Ek4qc2Fib2G1zFkGhKKuc6j.jpg",
+      "posterPath": "/5rhTDKUhPYvpdQIijFIs5VoWsON.jpg",
+      "mediaInfo": {
+        "downloadStatus": [],
+        "downloadStatus4k": [],
+        "id": 247,
+        "mediaType": "movie",
+        "tmdbId": 1368337,
+        "tvdbId": null,
+        "imdbId": "tt33764258",
+        "status": 5,
+        "status4k": 1,
+        "createdAt": "2026-09-06T07:34:37.000Z",
+        "updatedAt": "2026-11-08T04:25:00.000Z",
+        "lastSeasonChange": "2026-09-06T07:34:37.000Z",
+        "mediaAddedAt": "2026-11-08T04:21:54.130Z",
+        "serviceId": 0,
+        "serviceId4k": null,
+        "externalServiceId": 88,
+        "externalServiceId4k": null,
+        "externalServiceSlug": "1368337",
+        "externalServiceSlug4k": null,
+        "ratingKey": null,
+        "ratingKey4k": null,
+        "jellyfinMediaId": "jf-item-id",
+        "jellyfinMediaId4k": null,
+        "watchlists": []
+      }
+    }
+  ]
+}

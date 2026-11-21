@@ -21,6 +21,6 @@ export const routes: readonly RouteDef[] = [
   { name: 'movies', pattern: '/movies', nav: 'movies', load: () => import('./pages/library/movies') },
   { name: 'shows', pattern: '/shows', nav: 'shows', load: () => import('./pages/library/shows') },
   { name: 'title', pattern: '/title/:id', load: () => import('./pages/details') },
-  { name: 'requests', pattern: '/requests', nav: 'requests', load: () => import('./pages/requests') },
+  { name: 'requests', pattern: '/requests/:tab?', nav: 'requests', load: () => import('./pages/requests') },
   { name: 'watch', pattern: '/watch/:id', chrome: 'none', load: () => import('./pages/watch') },
 ];

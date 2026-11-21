@@ -172,6 +172,12 @@ export class SeerrClient implements SeerrApi {
   approveRequest(id: number): Promise<void> { return this.desk.approveRequest(id); }
   declineRequest(id: number): Promise<void> { return this.desk.declineRequest(id); }
   issues(...a: Parameters<SeerrApi['issues']>): ReturnType<SeerrApi['issues']> { return this.desk.issues(...a); }
+  allRequests(...a: Parameters<SeerrApi['allRequests']>): ReturnType<SeerrApi['allRequests']> { return this.desk.allRequests(...a); }
+  titleFacts(...a: Parameters<SeerrApi['titleFacts']>): ReturnType<SeerrApi['titleFacts']> { return this.desk.titleFacts(...a); }
+  cachedFacts(...a: Parameters<SeerrApi['cachedFacts']>): ReturnType<SeerrApi['cachedFacts']> { return this.desk.cachedFacts(...a); }
+  discoverRail(...a: Parameters<SeerrApi['discoverRail']>): ReturnType<SeerrApi['discoverRail']> { return this.desk.discoverRail(...a); }
+  genres(...a: Parameters<SeerrApi['genres']>): ReturnType<SeerrApi['genres']> { return this.desk.genres(...a); }
+  discoverGenre(...a: Parameters<SeerrApi['discoverGenre']>): ReturnType<SeerrApi['discoverGenre']> { return this.desk.discoverGenre(...a); }
   // ── phase5-7: end ──
 
   private async rowDetail(r: RequestRaw): Promise<{ title?: string; name?: string; releaseDate?: string; firstAirDate?: string; posterPath?: string } | undefined> {

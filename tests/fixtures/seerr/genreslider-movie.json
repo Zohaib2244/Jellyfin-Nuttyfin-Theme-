@@ -1,0 +1,26 @@
+[
+  {
+    "id": 28,
+    "name": "Action",
+    "backdrops": [
+      "/dZI4Ek4qc2Fib2G1zFkGhKKuc6j.jpg",
+      "/cKvDv2LpwVEqbdXWoQl4XgGN6le.jpg"
+    ]
+  },
+  {
+    "id": 12,
+    "name": "Adventure",
+    "backdrops": [
+      "/dZI4Ek4qc2Fib2G1zFkGhKKuc6j.jpg",
+      "/yE766yhgg98tKwTKd8CyNvAtmn6.jpg"
+    ]
+  },
+  {
+    "id": 16,
+    "name": "Animation",
+    "backdrops": [
+      "/sl5NJ1vtyhP9Vr88bB4blULsJYp.jpg",
+      "/56Bepb58k71UUTVwKN1SxHmfzPK.jpg"
+    ]
+  }
+]

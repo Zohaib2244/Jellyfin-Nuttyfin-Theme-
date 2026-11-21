@@ -6,7 +6,8 @@
  */
 import { ApiError } from './http';
 import type {
-  DeskRequestInput, RequestFilter, RequestsPage, SeasonInfo, SeerrCapabilities, SeerrDeskApi, SeerrDetail, SeerrIssue,
+  DeskRequest, DeskRequestInput, DiscoverItem, DiscoverPage, DiscoverRail, GenreTile, RequestFilter, RequestScope, RequestsPage, SeasonInfo, SeerrCapabilities,
+  SeerrDeskApi, SeerrDetail, SeerrIssue, TitleFacts,
 } from './desk-types';
 import { matchesFilter, permsFrom } from './seerr-desk';
 import type { IssueKind, RequestState, SeerrQuota, SeerrRequest, SeerrResult, User } from './types';
@@ -34,6 +35,37 @@ const TV_SEASONS: Record<number, Array<RequestState | undefined>> = {
   94997: ['approved', 'approved', undefined],
 };
 
+const dayFromNow = (d: number): string => new Date(NOW + d * 864e5).toISOString().slice(0, 10);
+
+/** Release dates of the demo titles, so every stage of the request journey shows up. */
+const FACTS: Record<number, Partial<TitleFacts>> = {
+  1241982: { releaseDate: dayFromNow(104) }, // Moana 3: not out yet
+  1084244: { releaseDate: dayFromNow(210) }, // Toy Story 5
+  1084242: { releaseDate: dayFromNow(-16), homeRelease: dayFromNow(60) }, // Zootopia 2: in cinemas, home release later
+  603: { releaseDate: '1999-03-31', homeRelease: '1999-09-21' },
+  1396: { releaseDate: '2008-01-20', seasonAirDates: { 1: '2008-01-20', 2: '2009-03-08', 3: '2010-03-21', 4: '2011-07-17', 5: '2012-07-15' } },
+  94997: { releaseDate: '2022-08-21', seasonAirDates: { 1: '2022-08-21', 2: '2024-06-16', 3: dayFromNow(190) }, nextAirDate: dayFromNow(190) },
+  95396: { releaseDate: '2022-02-18', seasonAirDates: { 1: '2022-02-18', 2: '2025-01-17' } },
+  125988: { releaseDate: '2023-05-05', seasonAirDates: { 1: '2023-05-05', 2: '2024-11-15' }, seasonsReady: [1] },
+  83867: { releaseDate: '2022-09-21' },
+};
+/** Fake genre tiles (no backdrops in the demo: the tile shows its colour). */
+const GENRES: Record<'movie' | 'tv', GenreTile[]> = {
+  movie: [{ id: 28, name: 'Action' }, { id: 12, name: 'Adventure' }, { id: 16, name: 'Animation' }, { id: 35, name: 'Comedy' }, { id: 18, name: 'Drama' }, { id: 10751, name: 'Family' }, { id: 14, name: 'Fantasy' }, { id: 878, name: 'Science Fiction' }],
+  tv: [{ id: 10759, name: 'Action & Adventure' }, { id: 16, name: 'Animation' }, { id: 35, name: 'Comedy' }, { id: 18, name: 'Drama' }, { id: 10762, name: 'Kids' }, { id: 10765, name: 'Sci-Fi & Fantasy' }],
+};
+const CAST = ['Alex Morgan', 'Priya Shah', 'Tom Becker', 'Lena Ortiz', 'Sam Okafor', 'Jo Kim'];
+
+/** Seerr's raw numbers for a demo request (the real client gets them from Seerr). */
+function toDesk(r: SeerrRequest): DeskRequest {
+  const requestStatus = r.state === 'requested' ? 1 : r.state === 'declined' ? 3 : r.state === 'available' && !r.partial ? 5 : 2;
+  const mediaStatus = r.state === 'available' ? (r.partial ? 4 : 5) : r.state === 'requested' ? 2 : r.state === 'declined' ? 1 : 3;
+  const downloads = r.state === 'downloading'
+    ? [{ percent: r.progress ?? 30, eta: new Date(NOW + (100 - (r.progress ?? 30)) * 90e3).toISOString(), ...(r.mediaType === 'tv' ? { label: 'S1E4' } : {}) }]
+    : [];
+  return { ...r, requestStatus, mediaStatus, downloads, updatedAt: r.state === 'requested' ? r.createdAt : new Date(new Date(r.createdAt).getTime() + 3600e3).toISOString() };
+}
+
 /** Extra people, requests and search results so every list state can be seen. Called once by the demo backend. */
 export function seedDemoDesk(ctx: DemoDeskCtx): void {
   const lib = (n: string): string | undefined => ctx.libraryId(n);
@@ -49,7 +81,14 @@ export function seedDemoDesk(ctx: DemoDeskCtx): void {
     { id: 25, tmdbId: 125988, mediaType: 'tv', title: 'Silo', year: 2023, state: 'available', ...by(ME, 'Demo'), createdAt: ago(900), seasons: [1, 2], jellyfinId: lib('Silo'), partial: true },
     { id: 26, tmdbId: 872585, mediaType: 'movie', title: 'Oppenheimer', year: 2023, state: 'available', ...by(2, 'Mia'), createdAt: ago(1300), jellyfinId: lib('Oppenheimer') },
   ];
-  ctx.requests.push(...more);
+  ctx.requests.push(...more,
+    { id: 27, tmdbId: 1084244, mediaType: 'movie', title: 'Toy Story 5', year: 2027, state: 'approved', ...by(2, 'Mia'), createdAt: ago(500) },
+    { id: 28, tmdbId: 1084242, mediaType: 'movie', title: 'Zootopia 2', year: 2026, state: 'approved', ...by(ME, 'Demo'), createdAt: ago(200) },
+    { id: 29, tmdbId: 1061474, mediaType: 'movie', title: 'Superman', year: 2025, state: 'requested', ...by(3, 'Sam'), createdAt: ago(9) },
+  );
+  // Moana 3 is not out until next year: approved and waiting, not downloading
+  const moana = ctx.requests.find(r => r.tmdbId === 1241982);
+  if (moana) { moana.state = 'approved'; moana.progress = undefined; }
   ctx.search.push(
     { tmdbId: 402431, mediaType: 'movie', title: 'Wicked', year: 2024, state: 'requested', overview: 'Elphaba and Glinda become unlikely friends at Shiz University.' },
     { tmdbId: 95396, mediaType: 'tv', title: 'Severance', year: 2022, state: 'downloading', overview: 'Employees whose memories are split between work and home.' },
@@ -61,6 +100,10 @@ export function seedDemoDesk(ctx: DemoDeskCtx): void {
     { tmdbId: 912649, mediaType: 'movie', title: 'Venom: The Last Dance', year: 2024, overview: 'Eddie and Venom are on the run.' },
     { tmdbId: 119051, mediaType: 'tv', title: 'Wednesday', year: 2022, overview: 'Wednesday Addams investigates a murder spree at Nevermore Academy.' },
     { tmdbId: 100088, mediaType: 'tv', title: 'The Last of Us', year: 2023, overview: 'Joel and Ellie cross a post-pandemic America.' },
+    { tmdbId: 1084244, mediaType: 'movie', title: 'Toy Story 5', year: 2027, state: 'downloading', overview: 'The toys meet a new kind of gadget.' },
+    { tmdbId: 1084242, mediaType: 'movie', title: 'Zootopia 2', year: 2026, state: 'downloading', overview: 'Judy and Nick take on a new case.' },
+    { tmdbId: 1061474, mediaType: 'movie', title: 'Superman', year: 2025, state: 'requested', overview: 'A young hero tries to fit in.' },
+    { tmdbId: 1241982, mediaType: 'movie', title: 'Moana 3', year: 2027, state: 'downloading', overview: 'Moana sets sail again.' },
   );
   // The Boys is partly in the library
   const boys = ctx.search.find(r => r.tmdbId === 76479);
@@ -104,7 +147,32 @@ export function createDemoDesk(ctx: DemoDeskCtx): DemoDesk {
     return {
       tmdbId, mediaType, title: hit.title, year: hit.year, overview: ('overview' in hit ? hit.overview : undefined) ?? 'A good one for the whole house.', genres: ['Drama', 'Adventure'],
       rating: Math.round(74 + (tmdbId % 17)) / 10, runtimeMin: mediaType === 'movie' ? 100 + (tmdbId % 50) : 45, state: st.state, partial: st.partial, jellyfinId: st.jellyfinId, seasons, myRequestId: mine?.id,
+      cast: CAST.map((name, i) => ({ name, character: ['The hero', 'The friend', 'The boss', 'The rival', 'The pilot', 'The kid'][i] })),
+      // a real, harmless trailer on a few titles so the Trailer button can be tried; none on the rest (button hides)
+      trailer: tmdbId % 2 === 1 || tmdbId === 157336 ? { key: 'zSWdZVtXT7E', name: 'Official Trailer' } : undefined,
+      seasonCount: mediaType === 'tv' ? seasons.length : undefined, facts: factsOf(mediaType, tmdbId) ?? undefined,
+      mediaStatus: st.state === 'available' ? (st.partial ? 4 : 5) : st.state ? 3 : 1,
+      downloads: st.state === 'downloading' ? [{ percent: 64, eta: new Date(Date.now() + 40 * 60e3).toISOString() }] : [],
     };
+  };
+
+  const factsOf = (mediaType: 'movie' | 'tv', tmdbId: number): TitleFacts | null => {
+    const hit = ctx.search.find(r => r.tmdbId === tmdbId && r.mediaType === mediaType) ?? ctx.requests.find(r => r.tmdbId === tmdbId && r.mediaType === mediaType);
+    if (!hit) return null;
+    return { tmdbId, mediaType, title: hit.title, year: hit.year, releaseDate: hit.year ? `${hit.year}-06-01` : undefined, ...FACTS[tmdbId] };
+  };
+  /** Status in a rail comes from the shared demo arrays, like a real Seerr mediaInfo would. */
+  const asItem = (r: SeerrResult): DiscoverItem => {
+    const open = ctx.requests.find(x => x.tmdbId === r.tmdbId && x.mediaType === r.mediaType && x.state !== 'declined');
+    return { ...r, state: r.state ?? (open ? (open.state === 'available' ? 'available' : open.state === 'requested' ? 'requested' : 'downloading') : undefined), rating: Math.round(60 + (r.tmdbId % 30)) / 10 };
+  };
+  const pageOf = (list: SeerrResult[]): DiscoverPage => ({ items: list.map(asItem), page: 1, totalPages: 1 });
+  const RAILS: Record<DiscoverRail, (r: SeerrResult, i: number) => boolean> = {
+    trending: (_r, i) => i % 2 === 0,
+    movies: r => r.mediaType === 'movie',
+    'movies-upcoming': r => r.mediaType === 'movie' && (r.year ?? 0) >= 2024,
+    tv: r => r.mediaType === 'tv',
+    'tv-upcoming': r => r.mediaType === 'tv' && (r.year ?? 0) >= 2022,
   };
 
   const desk: DemoDesk = {
@@ -124,9 +192,24 @@ export function createDemoDesk(ctx: DemoDeskCtx): DemoDesk {
     requestsPage: async (o: { scope: 'mine' | 'all'; filter: RequestFilter; take: number; skip: number }): Promise<RequestsPage> => {
       await sleep(140);
       const list = ctx.requests.filter(r => (o.scope === 'all' || isMine(r)) && matchesFilter(r, o.filter)).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-      return { items: list.slice(o.skip, o.skip + o.take), total: list.length };
+      return { items: list.slice(o.skip, o.skip + o.take).map(toDesk), total: list.length };
     },
-    createRequest: async (input: DeskRequestInput): Promise<SeerrRequest> => {
+    allRequests: async (o: { scope: RequestScope; max?: number }): Promise<RequestsPage> => {
+      await sleep(140);
+      // a member's Seerr only ever answers with their own requests, whatever the page asks for
+      const mineOnly = o.scope === 'mine' || isMember();
+      const list = ctx.requests.filter(r => !mineOnly || isMine(r)).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      return { items: list.slice(0, o.max ?? 400).map(toDesk), total: list.length };
+    },
+    titleFacts: async (mediaType: 'movie' | 'tv', tmdbId: number): Promise<TitleFacts | null> => { await sleep(60); return factsOf(mediaType, tmdbId); },
+    cachedFacts: () => null,
+    discoverRail: async (rail: DiscoverRail): Promise<DiscoverPage> => { await sleep(150); return pageOf(ctx.search.filter(RAILS[rail])); },
+    genres: async (mediaType: 'movie' | 'tv'): Promise<GenreTile[]> => { await sleep(90); return GENRES[mediaType]; },
+    discoverGenre: async (mediaType: 'movie' | 'tv', genreId: number): Promise<DiscoverPage> => {
+      await sleep(150);
+      return pageOf(ctx.search.filter((r, i) => r.mediaType === mediaType && (i + genreId) % 3 !== 0));
+    },
+    createRequest: async (input: DeskRequestInput): Promise<DeskRequest> => {
       await sleep(450);
       const hit = ctx.search.find(r => r.tmdbId === input.tmdbId);
       if (isMember() && input.tmdbId === 346698) throw new ApiError(403, 'forbidden', 'forbidden', { message: 'You do not have permission to make this request.' });
@@ -149,7 +232,7 @@ export function createDemoDesk(ctx: DemoDeskCtx): DemoDesk {
       };
       ctx.requests.unshift(req);
       if (hit) hit.state = req.state;
-      return req;
+      return toDesk(req);
     },
     cancelRequest: async (id: number): Promise<void> => {
       await sleep(250);

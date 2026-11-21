@@ -5,13 +5,25 @@
  * Shapes verified against Seerr 3.5.1 (tests/fixtures/seerr/*.json).
  */
 import type {
-  DeskRequestInput, QualityProfile, RequestFailureInfo, RequestFilter, RequestsPage, SeasonInfo, SeerrCapabilities, SeerrDeskApi, SeerrDetail, SeerrIssue,
-  SeerrPerms,
+  CastMember, DeskRequest, DeskRequestInput, DiscoverItem, DiscoverPage, DiscoverRail, DownloadInfo, GenreTile, QualityProfile, RequestFailureInfo, RequestFilter,
+  RequestScope, RequestsPage, SeasonInfo, SeerrCapabilities, SeerrDeskApi, SeerrDetail, SeerrIssue, SeerrPerms, TitleFacts,
 } from './desk-types';
 import { ApiError, type Http } from './http';
-import { downloadPercent, mediaState, requestState } from './seerr';
+import { downloadPercent, mediaState } from './seerr';
 import { limitConcurrency } from '../lib/concurrency';
 import type { IssueKind, RequestState, SeerrRequest, SeerrResult } from './types';
+
+const FACTS_TTL_MS = 60 * 60 * 1000;
+const FACTS_KEY = 'nutfin.seerrFacts.v2:';
+const RAIL_PATH: Record<DiscoverRail, string> = {
+  trending: '/discover/trending', movies: '/discover/movies', 'movies-upcoming': '/discover/movies/upcoming', tv: '/discover/tv', 'tv-upcoming': '/discover/tv/upcoming',
+};
+const RAIL_TYPE: Partial<Record<DiscoverRail, 'movie' | 'tv'>> = { movies: 'movie', 'movies-upcoming': 'movie', tv: 'tv', 'tv-upcoming': 'tv' };
+
+/** sessionStorage, or null where it is missing or blocked (tests, private windows). */
+function session(): Storage | null {
+  try { return typeof sessionStorage === 'undefined' ? null : sessionStorage; } catch { return null; }
+}
 
 /** Seerr's permission bit flags (server/lib/permissions.ts). */
 export const PERM = {
@@ -38,28 +50,38 @@ export function permsFrom(mask: number): SeerrPerms {
 }
 
 /* ── raw shapes (only what is read) ── */
+interface RawDownload {
+  size?: number; sizeLeft?: number; estimatedCompletionTime?: string | null; timeLeft?: string;
+  episode?: { seasonNumber?: number; episodeNumber?: number } | null;
+}
 interface RawMedia {
   id?: number; status?: number; status4k?: number; tmdbId?: number; mediaType?: string;
   jellyfinMediaId?: string | null; jellyfinMediaId4k?: string | null;
-  downloadStatus?: Array<{ size?: number; sizeLeft?: number }>; downloadStatus4k?: Array<{ size?: number; sizeLeft?: number }>;
+  downloadStatus?: RawDownload[]; downloadStatus4k?: RawDownload[];
   seasons?: Array<{ seasonNumber: number; status?: number }>;
   requests?: Array<{ id: number; status: number; is4k?: boolean; requestedBy?: { id?: number }; seasons?: Array<{ seasonNumber: number; status?: number }> }>;
 }
 interface RawUser { id?: number; displayName?: string; jellyfinUsername?: string; username?: string }
 interface RawRequest {
-  id: number; status: number; createdAt?: string; type?: string; is4k?: boolean;
+  id: number; status: number; createdAt?: string; updatedAt?: string; type?: string; is4k?: boolean;
   seasons?: Array<{ seasonNumber: number }>; media?: RawMedia; requestedBy?: RawUser;
 }
 interface RawDetail {
   id?: number; title?: string; name?: string; releaseDate?: string; firstAirDate?: string; overview?: string; tagline?: string;
   posterPath?: string; backdropPath?: string; voteAverage?: number; runtime?: number; episodeRunTime?: number[];
   genres?: Array<{ name: string }>; mediaInfo?: RawMedia;
-  seasons?: Array<{ seasonNumber: number; name?: string; episodeCount?: number; airDate?: string }>;
+  seasons?: Array<{ seasonNumber: number; name?: string; episodeCount?: number; airDate?: string | null }>;
+  releases?: { results?: Array<{ iso_3166_1?: string; release_dates?: Array<{ release_date?: string; type?: number }> }> };
+  nextEpisodeToAir?: { airDate?: string | null } | null;
+  numberOfSeasons?: number;
+  relatedVideos?: Array<{ site?: string; key?: string; name?: string; type?: string }>;
+  credits?: { cast?: Array<{ name?: string; character?: string; profilePath?: string | null; order?: number }> };
 }
 interface RawHit {
-  id: number; mediaType: string; title?: string; name?: string; releaseDate?: string; firstAirDate?: string; posterPath?: string; overview?: string;
-  mediaInfo?: RawMedia;
+  id: number; mediaType?: string; title?: string; name?: string; releaseDate?: string; firstAirDate?: string; posterPath?: string; overview?: string;
+  backdropPath?: string; voteAverage?: number; mediaInfo?: RawMedia;
 }
+interface RawPage { page?: number; totalPages?: number; results?: RawHit[] }
 interface RawIssue {
   id: number; issueType: number; status: number; createdAt?: string;
   media?: { tmdbId?: number; mediaType?: string; jellyfinMediaId?: string | null };
@@ -78,6 +100,63 @@ export function hitToResult(h: RawHit): SeerrResult | null {
     overview: h.overview || undefined, posterPath: h.posterPath || undefined, state: mediaState(st),
     partial: st === 4 ? true : undefined, jellyfinId: h.mediaInfo?.jellyfinMediaId || undefined,
   };
+}
+
+/** A Discover poster: the result card plus backdrop and rating. `fallbackType` is for endpoints whose hits have no mediaType. */
+export function hitToItem(h: RawHit, fallbackType?: 'movie' | 'tv'): DiscoverItem | null {
+  const r = hitToResult({ ...h, mediaType: h.mediaType ?? fallbackType });
+  if (!r || !r.title) return null;
+  return { ...r, backdropPath: h.backdropPath || undefined, rating: h.voteAverage ? Math.round(h.voteAverage * 10) / 10 : undefined };
+}
+
+export function mapPage(r: RawPage | undefined, fallbackType?: 'movie' | 'tv'): DiscoverPage {
+  const items = (r?.results ?? []).map(h => hitToItem(h, fallbackType)).filter((x): x is DiscoverItem => !!x);
+  return { items, page: r?.page ?? 1, totalPages: r?.totalPages ?? 1 };
+}
+
+/** Radarr/Sonarr queue entries as Seerr reports them. Empty when nothing is really downloading. */
+export function downloadsOf(list: RawDownload[] | undefined): DownloadInfo[] {
+  return (list ?? []).map(d => {
+    const pct = d.size && d.size > 0 ? Math.max(0, Math.min(100, Math.round(((d.size - (d.sizeLeft ?? 0)) / d.size) * 100))) : undefined;
+    const ep = d.episode?.seasonNumber != null && d.episode.episodeNumber != null ? `S${d.episode.seasonNumber}E${d.episode.episodeNumber}` : undefined;
+    return { percent: pct, eta: d.estimatedCompletionTime || undefined, label: ep };
+  });
+}
+
+const day = (d?: string | null): string | undefined => (d && /^\d{4}-\d{2}-\d{2}/.test(d) ? d.slice(0, 10) : undefined);
+
+/** Release facts from a Seerr movie/tv details answer. Home release = earliest digital (4) or disc (5) date anywhere. */
+export function factsFrom(mediaType: 'movie' | 'tv', tmdbId: number, d: RawDetail): TitleFacts {
+  let home: string | undefined;
+  for (const c of d.releases?.results ?? []) for (const r of c.release_dates ?? []) {
+    const at = day(r.release_date);
+    if (at && (r.type === 4 || r.type === 5) && (!home || at < home)) home = at;
+  }
+  const airs: Record<string, string> = {};
+  for (const s of d.seasons ?? []) { const a = day(s.airDate); if (a) airs[String(s.seasonNumber)] = a; }
+  const ready = (d.mediaInfo?.seasons ?? []).filter(s => s.status === 5).map(s => s.seasonNumber);
+  const f: TitleFacts = {
+    tmdbId, mediaType, title: d.title ?? d.name ?? '', year: yearOf(d.releaseDate ?? d.firstAirDate),
+    posterPath: d.posterPath || undefined, backdropPath: d.backdropPath || undefined,
+    releaseDate: day(mediaType === 'movie' ? d.releaseDate : d.firstAirDate),
+  };
+  if (home) f.homeRelease = home;
+  if (mediaType === 'tv') {
+    const next = day(d.nextEpisodeToAir?.airDate);
+    if (next) f.nextAirDate = next;
+    if (Object.keys(airs).length) f.seasonAirDates = airs;
+    if (ready.length) f.seasonsReady = ready;
+    const partly = (d.mediaInfo?.seasons ?? []).filter(s => s.status === 4).map(s => s.seasonNumber);
+    if (partly.length) f.seasonsPartly = partly;
+  }
+  return f;
+}
+
+/** The trailer to show: an official YouTube "Trailer" first, then any trailer, then a teaser. */
+export function pickTrailer(videos: RawDetail['relatedVideos']): { key: string; name: string } | undefined {
+  const yt = (videos ?? []).filter(v => v.site === 'YouTube' && v.key && /^[\w-]{6,20}$/.test(v.key));
+  const v = yt.find(x => x.type === 'Trailer' && /official/i.test(x.name ?? '')) ?? yt.find(x => x.type === 'Trailer') ?? yt.find(x => x.type === 'Teaser');
+  return v?.key ? { key: v.key, name: v.name ?? 'Trailer' } : undefined;
 }
 
 /** Season state words: 5 available, 4 partly, 3 downloading, 2 asked. */
@@ -109,18 +188,26 @@ export function mapDetail(mediaType: 'movie' | 'tv', tmdbId: number, d: RawDetai
     posterPath: d.posterPath || undefined, backdropPath: d.backdropPath || undefined, rating: d.voteAverage ? Math.round(d.voteAverage * 10) / 10 : undefined,
     runtimeMin: d.runtime ?? d.episodeRunTime?.[0] ?? undefined, genres: (d.genres ?? []).map(g => g.name),
     state: mediaState(m?.status), partial: m?.status === 4, jellyfinId: m?.jellyfinMediaId || undefined, seasons, myRequestId: mine?.id,
+    cast: (d.credits?.cast ?? []).filter(c => c.name).slice(0, 8).map((c): CastMember => ({ name: c.name as string, character: c.character || undefined, profilePath: c.profilePath || undefined })),
+    trailer: pickTrailer(d.relatedVideos), seasonCount: mediaType === 'tv' ? (d.numberOfSeasons ?? seasons.filter(s => s.number > 0).length) : undefined,
+    facts: factsFrom(mediaType, tmdbId, d), mediaStatus: m?.status, downloads: downloadsOf(m?.downloadStatus),
   };
 }
 
-/** A request row. `title` is filled by the caller (the list endpoint only has TMDB ids). */
-export function mapRequest(r: RawRequest, d?: { title?: string; name?: string; releaseDate?: string; firstAirDate?: string; posterPath?: string }): SeerrRequest {
+/** A request row. `title` is filled by the caller (the list endpoint only has TMDB ids).
+ *  "downloading" only when Radarr/Sonarr really report a download: Seerr's media status 3 ("processing") also covers
+ *  "approved, sent to Radarr, nothing to grab yet" (an unreleased film), which is waiting, not downloading. */
+export function mapRequest(r: RawRequest, d?: { title?: string; name?: string; releaseDate?: string; firstAirDate?: string; posterPath?: string }): DeskRequest {
   const tv = r.type === 'tv' || r.media?.mediaType === 'tv';
   const media = r.media;
   const mStatus = r.is4k ? media?.status4k : media?.status;
-  const done = r.status === 5 || mStatus === 5;
-  const state: RequestState = r.status === 3 ? 'declined' : done ? 'available' : r.status === 4 ? 'approved' : requestState(r.status, mStatus);
-  const pct = downloadPercent(r.is4k ? media?.downloadStatus4k : media?.downloadStatus);
+  const raw = r.is4k ? media?.downloadStatus4k : media?.downloadStatus;
+  const downloads = downloadsOf(raw);
+  const done = r.status === 5 || mStatus === 5 || mStatus === 4;
+  const state: RequestState = r.status === 3 ? 'declined' : done ? 'available' : r.status === 1 ? 'requested' : downloads.length ? 'downloading' : 'approved';
+  const pct = downloadPercent(raw);
   return {
+    requestStatus: r.status, mediaStatus: mStatus, downloads, updatedAt: r.updatedAt || undefined,
     id: r.id, tmdbId: media?.tmdbId ?? 0, mediaType: tv ? 'tv' : 'movie', title: d?.title ?? d?.name ?? '', year: yearOf(d?.releaseDate ?? d?.firstAirDate),
     posterPath: d?.posterPath || undefined, state, requestedBy: nameOf(r.requestedBy), requestedById: r.requestedBy?.id, createdAt: r.createdAt ?? '',
     seasons: r.seasons?.map(s => s.seasonNumber), progress: state === 'downloading' ? pct : undefined,
@@ -160,12 +247,54 @@ interface TitleBits { title?: string; name?: string; releaseDate?: string; first
 
 export class SeerrDesk implements SeerrDeskApi {
   private caps: Promise<SeerrCapabilities | null> | null = null;
-  private readonly titles = new Map<string, Promise<TitleBits | undefined>>();
+  private readonly facts = new Map<string, { at: number; p: Promise<TitleFacts | null> }>();
   private readonly metadata = limitConcurrency(4);
 
   constructor(private readonly http: Http, private readonly session: () => Session, private readonly available: () => Promise<boolean>) {}
 
-  reset(): void { this.caps = null; this.titles.clear(); }
+  reset(): void {
+    this.caps = null;
+    this.facts.clear();
+    const ss = session();
+    try { if (ss) for (let i = ss.length - 1; i >= 0; i--) { const k = ss.key(i); if (k?.startsWith(FACTS_KEY)) ss.removeItem(k); } } catch { /* storage blocked */ }
+  }
+
+  private remember(f: TitleFacts): void {
+    const key = `${f.mediaType}:${f.tmdbId}`;
+    this.facts.set(key, { at: Date.now(), p: Promise.resolve(f) });
+    try { session()?.setItem(FACTS_KEY + key, JSON.stringify({ at: Date.now(), f })); } catch { /* full or blocked: memory only */ }
+  }
+
+  cachedFacts(mediaType: 'movie' | 'tv', tmdbId: number): TitleFacts | null {
+    const key = `${mediaType}:${tmdbId}`;
+    try {
+      const raw = session()?.getItem(FACTS_KEY + key);
+      if (raw) {
+        const v = JSON.parse(raw) as { at?: number; f?: TitleFacts };
+        if (v.f && typeof v.at === 'number' && Date.now() - v.at < FACTS_TTL_MS) return v.f;
+      }
+    } catch { /* ignore a broken entry */ }
+    return null;
+  }
+
+  /** One /movie|/tv lookup per title per hour, shared by Home, the request rows, issues and the details sheet. */
+  titleFacts(mediaType: 'movie' | 'tv', tmdbId: number, signal?: AbortSignal): Promise<TitleFacts | null> {
+    const key = `${mediaType}:${tmdbId}`;
+    const hit = this.facts.get(key);
+    if (hit && Date.now() - hit.at < FACTS_TTL_MS) return hit.p;
+    const stored = this.cachedFacts(mediaType, tmdbId);
+    if (stored) { const p = Promise.resolve(stored); this.facts.set(key, { at: Date.now(), p }); return p; }
+    const p = this.metadata(async () => {
+      if (signal?.aborted) return null; // the row scrolled away with the page: do not spend a lookup on it
+      const d = await this.http<RawDetail>(`/${mediaType}/${tmdbId}`, { timeoutMs: 8000 });
+      const f = factsFrom(mediaType, tmdbId, d);
+      this.remember(f);
+      return f;
+    }).catch(() => null);
+    this.facts.set(key, { at: Date.now(), p });
+    void p.then(f => { if (!f && this.facts.get(key)?.p === p) this.facts.delete(key); });
+    return p;
+  }
 
   capabilities(): Promise<SeerrCapabilities | null> {
     this.caps ??= this.loadCaps();
@@ -205,7 +334,9 @@ export class SeerrDesk implements SeerrDeskApi {
     if (!(await this.available())) return null;
     try {
       const d = await this.http<RawDetail>(`/${mediaType}/${tmdbId}`, { signal, timeoutMs: 10_000 });
-      return mapDetail(mediaType, tmdbId, d, this.session().userId);
+      const out = mapDetail(mediaType, tmdbId, d, this.session().userId);
+      if (out.facts) this.remember(out.facts);
+      return out;
     } catch (e) {
       if (signal?.aborted) throw e;
       return null;
@@ -223,15 +354,71 @@ export class SeerrDesk implements SeerrDeskApi {
     }
   }
 
-  /** TMDB title + poster for a media row. Cached for the session; failures leave the title blank. */
-  titleOf(mediaType: 'movie' | 'tv', tmdbId: number): Promise<TitleBits | undefined> {
-    const key = `${mediaType}:${tmdbId}`;
-    let p = this.titles.get(key);
-    if (!p) {
-      p = this.metadata(() => this.http<TitleBits>(`/${mediaType}/${tmdbId}`, { timeoutMs: 8000 })).catch(() => { this.titles.delete(key); return undefined; });
-      this.titles.set(key, p);
+  async discoverRail(rail: DiscoverRail, page = 1, signal?: AbortSignal): Promise<DiscoverPage> {
+    if (!(await this.available())) return { items: [], page: 1, totalPages: 1 };
+    try {
+      return mapPage(await this.http<RawPage>(RAIL_PATH[rail], { query: { page }, signal, timeoutMs: 10_000 }), RAIL_TYPE[rail]);
+    } catch (e) {
+      if (signal?.aborted) throw e;
+      return { items: [], page: 1, totalPages: 1 };
     }
-    return p;
+  }
+
+  async genres(mediaType: 'movie' | 'tv', signal?: AbortSignal): Promise<GenreTile[]> {
+    if (!(await this.available())) return [];
+    try {
+      const r = await this.http<Array<{ id: number; name?: string; backdrops?: string[] }>>(`/discover/genreslider/${mediaType}`, { signal, timeoutMs: 10_000 });
+      return (Array.isArray(r) ? r : []).filter(g => g.name).map(g => ({ id: g.id, name: g.name as string, backdrop: g.backdrops?.[0] || undefined }));
+    } catch (e) {
+      if (signal?.aborted) throw e;
+      return [];
+    }
+  }
+
+  async discoverGenre(mediaType: 'movie' | 'tv', genreId: number, page = 1, signal?: AbortSignal): Promise<DiscoverPage> {
+    if (!(await this.available())) return { items: [], page: 1, totalPages: 1 };
+    try {
+      return mapPage(await this.http<RawPage>(mediaType === 'movie' ? '/discover/movies' : '/discover/tv', { query: { page, genre: genreId }, signal, timeoutMs: 10_000 }), mediaType);
+    } catch (e) {
+      if (signal?.aborted) throw e;
+      return { items: [], page: 1, totalPages: 1 };
+    }
+  }
+
+  /** TMDB title + poster for a media row, through the facts cache. Failures leave the title blank. */
+  async titleOf(mediaType: 'movie' | 'tv', tmdbId: number): Promise<TitleBits | undefined> {
+    const f = await this.titleFacts(mediaType, tmdbId);
+    return f ? { title: f.title, releaseDate: f.releaseDate, posterPath: f.posterPath } : undefined;
+  }
+
+  /** Rows with whatever the facts cache already knows (no network per row). */
+  private withCachedFacts(x: RawRequest): DeskRequest {
+    const type = x.type === 'tv' || x.media?.mediaType === 'tv' ? 'tv' : 'movie';
+    const f = x.media?.tmdbId ? this.cachedFacts(type, x.media.tmdbId) : null;
+    return mapRequest(x, f ? { title: f.title, releaseDate: f.releaseDate, posterPath: f.posterPath } : undefined);
+  }
+
+  async allRequests(o: { scope: RequestScope; max?: number }): Promise<RequestsPage> {
+    if (!(await this.available())) return { items: [], total: 0 };
+    const { userId } = this.session();
+    const max = o.max ?? 400;
+    const take = 100;
+    const raws: RawRequest[] = [];
+    let total = 0;
+    try {
+      for (let skip = 0; skip < max; skip += take) {
+        const r = await this.http<{ pageInfo?: { results?: number }; results?: RawRequest[] }>('/request', {
+          query: { take, skip, filter: 'all', sort: 'added', requestedBy: o.scope === 'mine' && userId != null ? userId : undefined },
+        });
+        const got = r.results ?? [];
+        raws.push(...got);
+        total = r.pageInfo?.results ?? raws.length;
+        if (got.length < take || raws.length >= total) break;
+      }
+    } catch {
+      if (!raws.length) return { items: [], total: 0 };
+    }
+    return { items: raws.slice(0, max).map(x => this.withCachedFacts(x)), total };
   }
 
   async requestsPage(o: { scope: 'mine' | 'all'; filter: RequestFilter; take: number; skip: number }): Promise<RequestsPage> {

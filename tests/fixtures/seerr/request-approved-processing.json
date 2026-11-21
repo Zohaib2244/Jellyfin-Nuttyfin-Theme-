@@ -1,0 +1,66 @@
+{
+  "pageInfo": {
+    "pages": 1,
+    "pageSize": 1,
+    "results": 1,
+    "page": 1
+  },
+  "results": [
+    {
+      "id": 160,
+      "status": 2,
+      "createdAt": "2026-11-01T12:15:35.000Z",
+      "updatedAt": "2026-11-01T12:15:35.000Z",
+      "type": "movie",
+      "is4k": false,
+      "serverId": 0,
+      "profileId": 4,
+      "rootFolder": "/media/Movies",
+      "languageProfileId": null,
+      "tags": [],
+      "isAutoRequest": false,
+      "ignoreQuota": false,
+      "media": {
+        "downloadStatus": [],
+        "downloadStatus4k": [],
+        "id": 289,
+        "mediaType": "movie",
+        "tmdbId": 1381071,
+        "tvdbId": null,
+        "imdbId": null,
+        "status": 3,
+        "status4k": 1,
+        "createdAt": "2026-11-01T12:15:35.000Z",
+        "updatedAt": "2026-11-01T12:15:36.000Z",
+        "lastSeasonChange": "2026-11-01T12:15:35.000Z",
+        "mediaAddedAt": "2026-11-01T12:15:35.000Z",
+        "serviceId": 0,
+        "serviceId4k": null,
+        "externalServiceId": 126,
+        "externalServiceId4k": null,
+        "externalServiceSlug": "1381071",
+        "externalServiceSlug4k": null,
+        "ratingKey": null,
+        "ratingKey4k": null,
+        "jellyfinMediaId": null,
+        "jellyfinMediaId4k": null
+      },
+      "seasons": [],
+      "modifiedBy": {
+        "id": 1,
+        "displayName": "Owner",
+        "jellyfinUsername": "Owner",
+        "permissions": 2
+      },
+      "requestedBy": {
+        "id": 1,
+        "displayName": "Member 2",
+        "jellyfinUsername": "Member 2",
+        "permissions": 2
+      },
+      "seasonCount": 0,
+      "profileName": "HD-1080p",
+      "canRemove": true
+    }
+  ]
+}

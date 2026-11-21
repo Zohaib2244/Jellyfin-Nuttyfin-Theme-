@@ -1,0 +1,77 @@
+{
+  "page": 1,
+  "totalPages": 154,
+  "totalResults": 3061,
+  "results": [
+    {
+      "id": 1003596,
+      "mediaType": "movie",
+      "adult": false,
+      "genreIds": [
+        878,
+        28,
+        12
+      ],
+      "originalLanguage": "en",
+      "originalTitle": "Avengers: Doomsday",
+      "overview": "Beloved heroes from three distinct universes are set on a deadly collision course and face an existential threat unlike anything they've ever encountered.",
+      "popularity": 173.0649,
+      "releaseDate": "2026-12-16",
+      "title": "Avengers: Doomsday",
+      "video": false,
+      "voteAverage": 0,
+      "voteCount": 0,
+      "backdropPath": "/g3gpP5YDbA85DsA0bt5mgGQIe5q.jpg",
+      "posterPath": "/zHTxblqPcqRpA93ex2Hj0RdpVBs.jpg",
+      "mediaInfo": {
+        "downloadStatus": [],
+        "downloadStatus4k": [],
+        "id": 252,
+        "mediaType": "movie",
+        "tmdbId": 1003596,
+        "tvdbId": null,
+        "imdbId": null,
+        "status": 3,
+        "status4k": 1,
+        "createdAt": "2026-09-06T07:35:38.000Z",
+        "updatedAt": "2026-09-06T07:35:38.000Z",
+        "lastSeasonChange": "2026-09-06T07:35:38.000Z",
+        "mediaAddedAt": "2026-09-06T07:35:38.000Z",
+        "serviceId": 0,
+        "serviceId4k": null,
+        "externalServiceId": 93,
+        "externalServiceId4k": null,
+        "externalServiceSlug": "1003596",
+        "externalServiceSlug4k": null,
+        "ratingKey": null,
+        "ratingKey4k": null,
+        "jellyfinMediaId": null,
+        "jellyfinMediaId4k": null,
+        "watchlists": []
+      }
+    },
+    {
+      "id": 1538497,
+      "mediaType": "movie",
+      "adult": false,
+      "genreIds": [
+        12,
+        16,
+        10751,
+        14,
+        35
+      ],
+      "originalLanguage": "en",
+      "originalTitle": "Hexed",
+      "overview": "An impulsive and unconventional teenage girl named Billie discovers secret magical abilities which, once unleashed, hurtle her into a spectacle-filled journey out of suburbia and into a vast witch realm called Hexe. Forced to team up with her cautious mother, Alice, they uncover family mysteries that could change the world of witches forever.",
+      "popularity": 42.0064,
+      "releaseDate": "2026-11-25",
+      "title": "Hexed",
+      "video": false,
+      "voteAverage": 0,
+      "voteCount": 0,
+      "backdropPath": "/pYIJeLvfbVamFGO6hOERGVP2gTf.jpg",
+      "posterPath": "/yykeYKbDBM9eUMJUucaaDo2mi1p.jpg"
+    }
+  ]
+}

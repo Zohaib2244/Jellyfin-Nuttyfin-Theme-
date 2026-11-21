@@ -1,0 +1,52 @@
+{
+  "page": 1,
+  "totalPages": 1001,
+  "totalResults": 20001,
+  "results": [
+    {
+      "id": 791523,
+      "mediaType": "movie",
+      "adult": false,
+      "genreIds": [
+        16,
+        12,
+        18,
+        14
+      ],
+      "originalLanguage": "en",
+      "originalTitle": "Wildwood",
+      "overview": "Prue and her classmate Curtis are drawn into a magical forest filled with enchanted creatures, loyal allies, and formidable adversaries as they embark on a desperate quest to rescue Prue's abducted baby brother from a murder of crows led by a mysterious woman named Alexandra.",
+      "popularity": 75.0984,
+      "releaseDate": "2026-10-19",
+      "title": "Wildwood",
+      "video": false,
+      "voteAverage": 8.4,
+      "voteCount": 308,
+      "backdropPath": "/sl5NJ1vtyhP9Vr88bB4blULsJYp.jpg",
+      "posterPath": "/snFM00mpNAfUzUtkdEW0uDEvXA0.jpg"
+    },
+    {
+      "id": 1117898,
+      "mediaType": "movie",
+      "adult": false,
+      "genreIds": [
+        16,
+        14,
+        12,
+        10751,
+        35
+      ],
+      "originalLanguage": "en",
+      "originalTitle": "The Cat in the Hat",
+      "overview": "Assigned his toughest mission yet, the Cat must cheer up siblings Gabby and Sebastian as they adjust to life in a new town. Known for pushing boundaries, this agent of chaos must prove himself or risk losing his magical hat forever.",
+      "popularity": 55.6404,
+      "releaseDate": "2026-10-31",
+      "title": "The Cat in the Hat",
+      "video": false,
+      "voteAverage": 6.8,
+      "voteCount": 30,
+      "backdropPath": "/56Bepb58k71UUTVwKN1SxHmfzPK.jpg",
+      "posterPath": "/mWN6knIVJ2o7eGwSm7mOgSCwNUc.jpg"
+    }
+  ]
+}

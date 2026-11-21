@@ -1,0 +1,188 @@
+{
+  "id": 1381071,
+  "genres": [
+    {
+      "id": 878,
+      "name": "Science Fiction"
+    },
+    {
+      "id": 27,
+      "name": "Horror"
+    },
+    {
+      "id": 28,
+      "name": "Action"
+    }
+  ],
+  "relatedVideos": [
+    {
+      "site": "YouTube",
+      "key": "mZPUe7ojw_Q",
+      "name": "Exclusive Interview [Subtitled]",
+      "size": 1080,
+      "type": "Featurette",
+      "url": "https://www.youtube.com/watch?v=mZPUe7ojw_Q"
+    },
+    {
+      "site": "YouTube",
+      "key": "VWT2qLznfdM",
+      "name": "Official IMAX Countdown",
+      "size": 1080,
+      "type": "Featurette",
+      "url": "https://www.youtube.com/watch?v=VWT2qLznfdM"
+    },
+    {
+      "site": "YouTube",
+      "key": "Pu0pH5BuCPM",
+      "name": "Official Trailer 3 [Subtitled]",
+      "size": 1080,
+      "type": "Trailer",
+      "url": "https://www.youtube.com/watch?v=Pu0pH5BuCPM"
+    },
+    {
+      "site": "YouTube",
+      "key": "_zqPNtmoD40",
+      "name": "Godzilla just got bigger.",
+      "size": 1080,
+      "type": "Featurette",
+      "url": "https://www.youtube.com/watch?v=_zqPNtmoD40"
+    }
+  ],
+  "releaseDate": "2026-11-03",
+  "releases": {
+    "results": [
+      {
+        "iso_3166_1": "DE",
+        "release_dates": [
+          {
+            "certification": "12",
+            "descriptors": [
+              "Violence",
+              "Injury"
+            ],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-11-05T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "GB",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "BFI London Film Festival",
+            "release_date": "2026-10-14T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "IMAX",
+            "release_date": "2026-11-05T00:00:00.000Z",
+            "type": 2
+          },
+          {
+            "certification": "15",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-11-06T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "US",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "New York Film Festival",
+            "release_date": "2026-09-26T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "R",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "IMAX",
+            "release_date": "2026-11-03T00:00:00.000Z",
+            "type": 2
+          },
+          {
+            "certification": "R",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-11-06T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      }
+    ]
+  },
+  "status": "Released",
+  "title": "Godzilla Minus Zero",
+  "voteAverage": 7.691,
+  "backdropPath": "/oqrYIDH4tvfEzPe1yqT4jzmAWHQ.jpg",
+  "overview": "War reduced Japan to zero, and Godzilla plunged it into minus. Two years have passed since then, and the country has faced agonizing struggles to achieve recovery and finally reclaim its daily life. Just as humanity managed to cling to a hard-won peace, a new threat strikes, crushing hope in an instant. There is no third time. Everything ends here.",
+  "posterPath": "/hSmIJluOJmTWvJs4d7kHRxjc8s8.jpg",
+  "runtime": 135,
+  "tagline": "There is no third time. Everything ends here.",
+  "credits": {
+    "cast": [
+      {
+        "name": "Ryunosuke Kamiki",
+        "character": "Kōichi Shikishima",
+        "profilePath": "/ut7ewXjdgUmgkhJ1EtbOo9tbc7s.jpg",
+        "order": 0
+      },
+      {
+        "name": "Minami Hamabe",
+        "character": "Noriko Shikishima",
+        "profilePath": "/eQN8N2chINckvQDiNqzDXI0v9vN.jpg",
+        "order": 1
+      },
+      {
+        "name": "Min Tanaka",
+        "character": "Kanji Murakami",
+        "profilePath": "/bXmBnejA48Da7LzLdJqTKSVPCwd.jpg",
+        "order": 2
+      }
+    ]
+  },
+  "mediaInfo": {
+    "downloadStatus": [],
+    "downloadStatus4k": [],
+    "id": 289,
+    "mediaType": "movie",
+    "tmdbId": 1381071,
+    "tvdbId": null,
+    "imdbId": null,
+    "status": 3,
+    "status4k": 1,
+    "createdAt": "2026-11-01T12:15:35.000Z",
+    "updatedAt": "2026-11-01T12:15:36.000Z",
+    "lastSeasonChange": "2026-11-01T12:15:35.000Z",
+    "mediaAddedAt": "2026-11-01T12:15:35.000Z",
+    "serviceId": 0,
+    "serviceId4k": null,
+    "externalServiceId": 126,
+    "externalServiceId4k": null,
+    "externalServiceSlug": "1381071",
+    "externalServiceSlug4k": null,
+    "ratingKey": null,
+    "ratingKey4k": null,
+    "jellyfinMediaId": null,
+    "jellyfinMediaId4k": null,
+    "requests": [],
+    "issues": [],
+    "seasons": []
+  }
+}

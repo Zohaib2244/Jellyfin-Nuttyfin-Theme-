@@ -33,10 +33,11 @@ describe('request list from the real server shape', () => {
     expect(r).toMatchObject({ mediaType: 'tv', state: 'available', title: 'Show', year: 2026, seasons: [1], jellyfinId: 'jf-item-id', posterPath: '/p.jpg' });
     expect(r.requestedById).toBeTypeOf('number');
   });
-  it('an approved movie whose media is processing shows as downloading (no percent without sizes)', () => {
+  it('an approved movie whose media is "processing" with an empty download queue is approved, NOT downloading (owner bug 21 Nov)', () => {
     const raw = list.results.find(x => x.type === 'movie' && x.media.status === 3) as never;
     const r = mapRequest(raw, { title: 'Film' });
-    expect(r.state).toBe('downloading');
+    expect(r.state).toBe('approved');
+    expect(r).toMatchObject({ requestStatus: 2, mediaStatus: 3, downloads: [] });
     expect(r.progress).toBeUndefined();
   });
   it('download percent comes from size and sizeLeft', () => {

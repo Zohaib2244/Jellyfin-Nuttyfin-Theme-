@@ -2,7 +2,7 @@
  * Types for the full Requests page ("the desk") and the helper service (phase 5-7). Kept out of types.ts so the
  * shared file only gets a handful of marked additions.
  */
-import type { IssueKind, RequestState, SeerrRequest } from './types';
+import type { IssueKind, RequestState, SeerrRequest, SeerrResult } from './types';
 
 /* ── Seerr desk ── */
 export interface SeerrPerms {
@@ -68,13 +68,80 @@ export interface SeerrDetail {
   seasons: SeasonInfo[];
   /** Open request of the signed-in person for this title, if any (so it can be cancelled) */
   myRequestId?: number;
+  /** A few cast members, top billed first */
+  cast?: CastMember[];
+  /** YouTube trailer (Seerr relatedVideos), when there is one */
+  trailer?: { key: string; name: string };
+  /** TV: number of seasons */
+  seasonCount?: number;
+  /** Release / air dates (also cached for the request rows) */
+  facts?: TitleFacts;
+  /** Seerr media status (1 unknown, 2 pending, 3 processing, 4 partly, 5 available, 6 blocklisted, 7 deleted) */
+  mediaStatus?: number;
+  /** Live download info from Radarr/Sonarr (empty when nothing is downloading) */
+  downloads?: DownloadInfo[];
 }
+
+export interface CastMember { name: string; character?: string; profilePath?: string }
+
+/** One entry of Seerr's media.downloadStatus (Radarr/Sonarr queue). */
+export interface DownloadInfo {
+  /** 0-100, when sizes are known */
+  percent?: number;
+  /** ISO time the downloader expects to finish */
+  eta?: string;
+  /** "S1E3" for an episode */
+  label?: string;
+}
+
+/** The small, cacheable facts a request row needs (title, artwork, dates). */
+export interface TitleFacts {
+  tmdbId: number;
+  mediaType: 'movie' | 'tv';
+  title: string;
+  year?: number;
+  posterPath?: string;
+  backdropPath?: string;
+  /** film: first cinema (or primary) release; show: first air date. YYYY-MM-DD */
+  releaseDate?: string;
+  /** film: earliest digital or disc release anywhere. YYYY-MM-DD */
+  homeRelease?: string;
+  /** show: next episode air date. YYYY-MM-DD */
+  nextAirDate?: string;
+  /** show: air date per season number */
+  seasonAirDates?: Record<string, string>;
+  /** show: season numbers Seerr says are in the library (fully) */
+  seasonsReady?: number[];
+  /** show: season numbers that are only partly in the library */
+  seasonsPartly?: number[];
+}
+
+/** A request with everything the status stepper needs (raw Seerr numbers kept on purpose: the page derives the stage). */
+export interface DeskRequest extends SeerrRequest {
+  /** 1 pending, 2 approved, 3 declined, 4 failed, 5 completed */
+  requestStatus: number;
+  /** Seerr media status, see SeerrDetail.mediaStatus */
+  mediaStatus?: number;
+  downloads: DownloadInfo[];
+  /** last change of the request (approval / decline time for decided ones) */
+  updatedAt?: string;
+}
+
+/** A poster in a Discover rail or genre grid. */
+export interface DiscoverItem extends SeerrResult {
+  backdropPath?: string;
+  /** 0-10 */
+  rating?: number;
+}
+export interface DiscoverPage { items: DiscoverItem[]; page: number; totalPages: number }
+export type DiscoverRail = 'trending' | 'movies' | 'movies-upcoming' | 'tv' | 'tv-upcoming';
+export interface GenreTile { id: number; name: string; backdrop?: string }
 
 export type RequestScope = 'mine' | 'all';
 /** What the filter chips mean: waiting = not approved yet, onway = approved/downloading, ready = in the library. */
 export type RequestFilter = 'all' | 'waiting' | 'onway' | 'ready' | 'declined';
 
-export interface RequestsPage { items: SeerrRequest[]; total: number }
+export interface RequestsPage { items: DeskRequest[]; total: number }
 
 export type IssueStatus = 'open' | 'resolved';
 export interface SeerrIssue {
@@ -115,6 +182,19 @@ export interface SeerrDeskApi {
   discover(signal?: AbortSignal): Promise<import('./types').SeerrResult[]>;
   /** A page of requests with server-side paging. */
   requestsPage(opts: { scope: RequestScope; filter: RequestFilter; take: number; skip: number }): Promise<RequestsPage>;
+  /** Every request (or only mine), newest first, WITHOUT per-row title lookups (titles come from the facts cache
+   *  when known; use titleFacts for the rest as rows scroll into view). Pages through up to `max` rows. */
+  allRequests(opts: { scope: RequestScope; max?: number }): Promise<RequestsPage>;
+  /** Title, artwork and dates for one film/show; cached (memory + sessionStorage, about an hour). null when unknown. */
+  titleFacts(mediaType: 'movie' | 'tv', tmdbId: number, signal?: AbortSignal): Promise<TitleFacts | null>;
+  /** Synchronous peek into the facts cache. */
+  cachedFacts(mediaType: 'movie' | 'tv', tmdbId: number): TitleFacts | null;
+  /** One Discover rail (Seerr /discover/...). Empty page when Seerr is unavailable. */
+  discoverRail(rail: DiscoverRail, page?: number, signal?: AbortSignal): Promise<DiscoverPage>;
+  /** Genre tiles with a backdrop (Seerr /discover/genreslider/movie|tv). */
+  genres(mediaType: 'movie' | 'tv', signal?: AbortSignal): Promise<GenreTile[]>;
+  /** Films or shows of one genre (Seerr /discover/movies|tv?genre=). */
+  discoverGenre(mediaType: 'movie' | 'tv', genreId: number, page?: number, signal?: AbortSignal): Promise<DiscoverPage>;
   /** Throws ApiError (use explainRequestError). */
   createRequest(input: DeskRequestInput): Promise<SeerrRequest>;
   /** Cancel (own pending, or anyone's with the manage permission). Throws ApiError. */
