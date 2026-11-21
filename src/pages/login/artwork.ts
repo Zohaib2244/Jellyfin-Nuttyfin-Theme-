@@ -1,3 +1,5 @@
+import { imageUrl } from '../../api';
+
 /** Poster ids from the owner's library for the moving artwork on the login page (images are anonymous GETs). */
 export const ARTWORK: readonly string[] = [
   "ed0f2597c9484bf002558af2b22de5d5",
@@ -57,3 +59,6 @@ export const ARTWORK: readonly string[] = [
   "abb18b9e2fe78cd236edaa96033c58d3",
   "12c9d591067af9de756c1e5579dd7054",
 ];
+
+/** Small, cheap poster URL shared by the login wall and the signed-in page background (same URL = browser cache hit). */
+export const artworkUrl = (id: string): string => imageUrl(id, 'Primary', { maxWidth: 180, quality: 50 });

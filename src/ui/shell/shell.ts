@@ -17,6 +17,8 @@ import { mountAccountMenu, picMarkup, roleOf, type AccountMenu } from './account
 import { createPageBg, type PageBg } from './pagebg';
 import { mountSearch, searchMarkup, type SearchController } from './search';
 import { renderTabs, type TabsController } from './tabs';
+import { ARTWORK, artworkUrl } from '../../pages/login/artwork';
+import { nutbot } from '../nutbot';
 
 export interface Shell extends RouterShell {
   readonly view: HTMLElement;
@@ -53,6 +55,7 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
     <aside class="rail" id="rail">
       <a class="rbrand" href="#/" aria-label="Nuttyfin home">${brandMark(40)}</a>
       <nav class="nav" aria-label="Main">${navItems}</nav>
+      <p class="rclock" id="rclock" aria-label="Time"></p>
     </aside>
     <header class="top" id="top">
       <a class="brand" href="#/" aria-label="Nuttyfin home">${brandMark(38)}<span class="wm">Nutty<em>Fin</em></span></a>
@@ -62,6 +65,7 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
       <div class="acct"><button class="avatar" type="button" id="avatarBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="acct-menu" hidden></button></div>
     </header>
     <main id="app"><div id="view"></div></main>
+    <button class="nbfab" type="button" id="nbFab" aria-label="Talk to NutBot" title="Talk to NutBot" hidden>${nutbot(38, 'happy')}</button>
     <div class="toasts" id="toasts" role="status" aria-live="polite"></div>`;
   body.insertAdjacentHTML('beforeend', shellHtml.value);
 
@@ -75,6 +79,28 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
 
   /* page background */
   const pagebg = createPageBg(q('#pagebg'), getBackgroundPref());
+  // the poster wall: the same small posters as the sign-in page (already cached), in a different order each day
+  const day = Math.floor(Date.now() / 86_400_000);
+  pagebg.setWallImages(ARTWORK.map((id, i) => ({ id, k: (i * 7919 + day * 104_729) % 977 })).sort((a, b) => a.k - b.k).map(x => artworkUrl(x.id)));
+
+  /* clock in the rail (desktop): day and time, quietly */
+  const rclock = q('#rclock');
+  const paintClock = () => {
+    const d = new Date();
+    const t = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    const m = /^(.*?)\s?([ap]\.?m\.?)$/i.exec(t);
+    rclock.innerHTML = `<b>${esc(m ? m[1] ?? t : t)}${m ? `<small>${esc(m[2] ?? '')}</small>` : ''}</b><span>${esc(d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }))}</span>`;
+    rclock.setAttribute('aria-label', d.toLocaleString([], { weekday: 'long', hour: 'numeric', minute: '2-digit' }));
+  };
+  paintClock();
+  window.setInterval(paintClock, 20_000);
+
+  /* NutBot, reachable from every page */
+  const nbFab = q<HTMLButtonElement>('#nbFab');
+  let currentUser: User | null = null;
+  nbFab.addEventListener('click', () => {
+    void import('../../pages/home/nutbot/launcher').then(m => m.openNutBot(backend, currentUser, nbFab));
+  });
 
   /* theme switch */
   const paintTheme = () => {
@@ -142,6 +168,9 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
     setChrome(mode) { body.dataset.shell = mode; },
     resetSlots() { setTabs(null); search.close(); account.close(); },
     setUser(u) {
+      if (currentUser && (!u || u.id !== currentUser.id)) void import('../../pages/home/nutbot/launcher').then(m => m.closeNutBot());
+      currentUser = u;
+      nbFab.hidden = !u;
       account.setUser(u);
       avatarBtn.hidden = !u;
       if (u) {

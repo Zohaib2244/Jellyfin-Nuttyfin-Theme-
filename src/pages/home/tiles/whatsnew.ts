@@ -9,7 +9,7 @@ import { loadInto, skArt, tileHead, type TileDef } from '../tile';
 const HEAD = tileHead('new', 'spark', 'New this week');
 
 export const whatsNewTile: TileDef = {
-  id: 'new', tab: 'home', title: 'New this week', icon: 'spark', place: [1, 6, 7, 4], minH: 380,
+  id: 'new', tab: 'home', title: 'New this week', icon: 'spark', place: [1, 6, 7, 7], minH: 380,
   mount(host, ctx) {
     loadInto<{ list: Title[]; week: boolean }>(host, ctx, {
       head: HEAD,
@@ -41,6 +41,7 @@ function view(list: Title[], week: boolean, now: Date): SafeHtml {
         ${tileHead('new', 'spark', week ? 'New this week' : 'New lately')}
         <div class="lead"><div class="big">${n}</div><div class="sub">new ${n === 1 ? 'film or show' : 'films and shows'}</div>
           <p class="newest">Newest: ${newest}.</p></div>
+        <ul class="nwl">${list.slice(0, 5).map(t => html`<li><a href="#${detailsPath(t)}"><span class="ph" ${ph(t.id, t.name)}>${img(posterUrl(t, 120))}</span><span><b>${t.name}</b><small>${[t.kind === 'series' ? 'Show' : 'Film', t.added ? relativeTime(t.added, now) : ''].filter(Boolean).join(' · ')}</small></span></a></li>`)}</ul>
         <button class="btn sm" type="button" data-tab-link="new">See what's new ${icon('next')}</button>
       </div>
       <div class="coll" role="group" aria-label="${week ? 'New this week' : 'New lately'}">

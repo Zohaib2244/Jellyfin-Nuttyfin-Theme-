@@ -10,9 +10,9 @@ import { nutbot } from '../../ui/nutbot';
 import type { RouterApi, ShellHooks } from '../types';
 import type { HomeData } from './data';
 
-export type HomeTab = 'home' | 'continue' | 'explore' | 'new' | 'requests';
+export type HomeTab = 'home' | 'continue' | 'explore' | 'new';
 
-export const TAB_LABEL: Record<HomeTab, string> = { home: 'Home', continue: 'Continue Watching', explore: 'Explore', new: 'Newly Added', requests: 'Requests' };
+export const TAB_LABEL: Record<HomeTab, string> = { home: 'Home', continue: 'Continue Watching', explore: 'Explore', new: 'Newly Added' };
 
 export interface HomeCtx {
   backend: Backend;

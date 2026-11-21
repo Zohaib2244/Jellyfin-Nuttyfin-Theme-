@@ -18,3 +18,14 @@
 - NuttyFin must use a separate retro play-button identity, with no nut/acorn imagery and no NutBot mascot in the branding. Owner is choosing among variations. NutBot remains the assistant only. Login includes Remember me, with persistent or browser-session sign-in according to the checkbox.
 
 - Keep the current bento-board identity when simplifying Home. Avoid replacing it with a generic streaming hero/shelf theme; show layout prototypes for selection before implementation.
+
+## Owner update — 21 November 2026 (replaces earlier lines where they conflict)
+- Home: the Keep watching hero (with its "Up next for you" rail) is the ONLY full-width tile, on top. Below it: New this week on the left; compact Continue watching above Next episode on the right.
+- No Arrange button / layout editing. No date row on Home: the clock sits at the bottom of the left rail.
+- Next episode tile: show name, S·E · episode title · runtime, Play + Details. No description. Use the show's backdrop (episode stills often have the title burnt in).
+- NutBot is not a Home tile any more: a floating "Ask NutBot" button (bottom-right, every signed-in page except the player) opens the chat.
+- Requests is no longer a Home tab; it is only the Requests page in the left rail. Home tabs: Home, Continue Watching, Explore, Newly Added.
+- Page background: one still, tilted, very faint poster wall (an optimised variant of the New this week collage). No background picker; Page look keeps only Light/Dark/Auto. The "no moving collages" rule still holds: the wall never moves.
+- Account menu holds Settings links to Jellyfin's own pages (profile, playback, subtitles, Quick Connect, all settings; owner: server dashboard and Seerr settings).
+- Sign-in page: no Pause button; the poster wall shows at once and each poster fades in as it loads (small, cached images).
+- Details: full-bleed, tall banner; hero holds only title/logo, one meta line, Play/Resume and a few icon buttons; overview, playability, audio/subtitles and credits sit below the banner.

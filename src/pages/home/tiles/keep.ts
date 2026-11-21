@@ -12,7 +12,7 @@ import { loadInto, skArt, tileHead, type TileDef } from '../tile';
 interface HeroData { base: WatchRow | null; recs: Title[] }
 
 export const keepTile: TileDef = {
-  id: 'keep', tab: 'home', title: 'Keep watching', icon: 'clock', place: [6, 1, 7, 5], minH: 560, cls: 'onimg',
+  id: 'keep', tab: 'home', title: 'Keep watching', icon: 'clock', place: [1, 1, 12, 5], minH: 560, cls: 'onimg',
   mount(host, ctx) {
     let rec = -1; // -1 = the thing you were watching, else an index into the picks
     let recommendations: Promise<Title[]> | null = null;

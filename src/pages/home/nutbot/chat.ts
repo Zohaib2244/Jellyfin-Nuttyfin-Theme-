@@ -2,6 +2,7 @@
  * The NutBot chat: a modal <dialog> (focus trap, Escape and the backdrop come from the platform), a bottom sheet on
  * phones. It only talks to a `NutBrain`; picks are library items (Play / Details) or Seerr results (Request).
  */
+import './chat.css';
 import { ApiError } from '../../../api';
 import type { SeerrResult, Title } from '../../../api/types';
 import { esc, html, type SafeHtml } from '../../../lib/html';

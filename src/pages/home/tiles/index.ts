@@ -8,27 +8,23 @@ import { cwMiniTile } from './cwmini';
 import { keepTile } from './keep';
 import { nextTile } from './next';
 import { comingTile, newFilmsTile, newHeroTile, newShowsTile } from './newly';
-import { nutbotTile } from './nutbot';
-import { reqAskTile, reqFlowTile, reqMineTile } from './requests';
 import { whatsNewTile } from './whatsnew';
 import type { HomeTab, TileDef } from '../tile';
 
 export const TABS: ReadonlyArray<{ id: HomeTab; label: string }> = [
   { id: 'home', label: 'Home' }, { id: 'continue', label: 'Continue Watching' }, { id: 'explore', label: 'Explore' },
-  { id: 'new', label: 'Newly Added' }, { id: 'requests', label: 'Requests' },
+  { id: 'new', label: 'Newly Added' },
 ];
 
 export const TILES: readonly TileDef[] = [
   // Home
-  nutbotTile, keepTile, nextTile, whatsNewTile, cwMiniTile, // phone order: hero before the next episode
+  keepTile, cwMiniTile, nextTile, whatsNewTile, // phone order: hero, then what you are partway through
   // Continue Watching
   onTheGoTile, finishTile, setsTile, leavingTile,
   // Explore
   recsTile, moodTile, shortTile, tvTile, becauseTile, genresTile,
   // Newly Added
   newHeroTile, newFilmsTile, newShowsTile, comingTile,
-  // Requests
-  reqAskTile, reqMineTile, reqFlowTile,
 ];
 
 export const isTab = (v: string | undefined): v is HomeTab => TABS.some(t => t.id === v);

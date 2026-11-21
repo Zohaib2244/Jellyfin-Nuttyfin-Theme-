@@ -26,12 +26,16 @@ body[data-bg="sky"] .pagebg{ background:
 body[data-stars] .pagebg .stars{ opacity:.6; animation:twinkle 6s ease-in-out infinite alternate; }
 :root[data-eff="light"] body[data-stars] .pagebg .stars{ opacity:0; }
 @keyframes twinkle{ to{ opacity:.25; } }
-.pagebg .wall{ position:absolute; left:-10%; top:-14%; width:120%; display:grid; grid-template-columns:repeat(10, 1fr); gap:14px; transform:rotate(-7deg); opacity:.09; filter:grayscale(.5); animation:wall 120s linear infinite alternate;
-  -webkit-mask:linear-gradient(180deg, #000 10%, transparent 85%); mask:linear-gradient(180deg, #000 10%, transparent 85%); }
-:root[data-eff="light"] .pagebg .wall{ opacity:.13; filter:grayscale(.7) sepia(.3); }
-.pagebg .wall span{ aspect-ratio:2/3; border-radius:8px; overflow:hidden; }
-.pagebg .wall img{ width:100%; height:100%; object-fit:cover; }
-@keyframes wall{ to{ transform:rotate(-7deg) translateY(-120px); } }
+/* Poster wall: a still, tilted collage of the library (like Home's "New this week" tile), very faint. No animation, no
+   blur or filters (cheap to paint), small cached posters; the fixed layer is its own compositing layer so scrolling never repaints it. */
+body[data-bg="wall"] .pagebg{ contain:strict; will-change:transform; }
+.pagebg .wall{ position:absolute; left:-12%; top:-18%; width:124%; display:grid; grid-template-columns:repeat(10, minmax(0, 1fr)); gap:16px; transform:rotate(-8deg); opacity:.16;
+  -webkit-mask:radial-gradient(120% 90% at 70% 0%, #000 25%, transparent 80%); mask:radial-gradient(120% 90% at 70% 0%, #000 25%, transparent 80%); }
+.pagebg .wall span{ aspect-ratio:2/3; border-radius:10px; overflow:hidden; background:color-mix(in srgb, var(--text) 6%, transparent); }
+.pagebg .wall span:nth-child(even){ transform:translateY(38%); }
+.pagebg .wall img{ width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity .5s ease; }
+.pagebg .wall img.in{ opacity:1; }
+:root[data-eff="light"] .pagebg .wall{ opacity:.14; }
 body[data-bg="pixel"] .pagebg{ background:color-mix(in srgb, var(--accent) 34%, transparent);
   -webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' shape-rendering='crispEdges'><path fill-rule='evenodd' d='M6 6h12v10H6zM8 8h8v6H8z'/><rect x='9' y='9' width='2' height='3'/><rect x='13' y='9' width='2' height='3'/><rect x='4' y='9' width='2' height='4'/><rect x='18' y='9' width='2' height='4'/><path fill-rule='evenodd' d='M30 30h12v10H30zM32 32h8v6h-8z'/><rect x='33' y='35' width='2' height='1'/><rect x='37' y='35' width='2' height='1'/><rect x='28' y='33' width='2' height='4'/><rect x='42' y='33' width='2' height='4'/></svg>") 0 0/48px 48px repeat, linear-gradient(180deg, #000 20%, transparent 95%); -webkit-mask-composite:source-in;
   mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' shape-rendering='crispEdges'><path fill-rule='evenodd' d='M6 6h12v10H6zM8 8h8v6H8z'/><rect x='9' y='9' width='2' height='3'/><rect x='13' y='9' width='2' height='3'/><rect x='4' y='9' width='2' height='4'/><rect x='18' y='9' width='2' height='4'/><path fill-rule='evenodd' d='M30 30h12v10H30zM32 32h8v6h-8z'/><rect x='33' y='35' width='2' height='1'/><rect x='37' y='35' width='2' height='1'/><rect x='28' y='33' width='2' height='4'/><rect x='42' y='33' width='2' height='4'/></svg>") 0 0/48px 48px repeat, linear-gradient(180deg, #000 20%, transparent 95%); mask-composite:intersect; }

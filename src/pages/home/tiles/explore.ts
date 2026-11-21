@@ -8,7 +8,7 @@ import { slotOf } from '../copy';
 import { detailsPath, img, ph, playPath, posterUrl, thumbUrl } from '../art';
 import { bestFits, buildWeek, epLabel, firstBusyDay, startOfDay, type FitCandidate, type Week } from '../model';
 import { MOODS, moodPicks, whyFor } from '../nutbot/moods';
-import { chatFor } from '../nutbot/session';
+import { openNutBot } from '../nutbot/launcher';
 import { loadInto, quiet, skPosters, skRows, skStrip, tileHead, type TileDef } from '../tile';
 
 /* ── helpers ── */
@@ -98,7 +98,7 @@ export const moodTile: TileDef = {
             wrap.innerHTML = paint(lib).value;
             wrap.querySelector<HTMLElement>(`[data-pick="${sel}"]`)?.focus({ preventScroll: true });
           } else if (t.closest('[data-ask-bot]')) {
-            chatFor(ctx).chat.open({ ask: MOODS.find(m => m.key === sel)?.ask, trigger: t.closest('button') });
+            openNutBot(ctx.backend, ctx.user, t.closest('button'), MOODS.find(m => m.key === sel)?.ask);
           }
         }, { signal: ac.signal });
         radioKeys(el, '[data-pick]', ac.signal);

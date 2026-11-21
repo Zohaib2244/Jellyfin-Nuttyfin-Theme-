@@ -23,10 +23,10 @@ export const BACKGROUNDS: readonly BackgroundDef[] = [
   { id: 'sky', label: 'Time of day', hint: 'Sky colours follow the clock', wired: true },
   { id: 'pixel', label: 'NutBot pixels', hint: 'Tiny NutBots, tiled', wired: true },
   { id: 'ambient', label: 'Ambient colour', hint: 'Glow from what you are watching', wired: false },
-  { id: 'wall', label: 'Poster wall', hint: 'Your library, very faint', wired: false },
+  { id: 'wall', label: 'Poster wall', hint: 'Your library, tilted and very faint', wired: true },
 ];
 
-export const DEFAULT_BACKGROUND: BackgroundId = 'beam';
+export const DEFAULT_BACKGROUND: BackgroundId = 'wall';
 
 export function isBackgroundId(v: unknown): v is BackgroundId {
   return typeof v === 'string' && BACKGROUNDS.some(b => b.id === v);
@@ -108,11 +108,13 @@ export function createPageBg(el: HTMLElement, initial: BackgroundId = DEFAULT_BA
     } else if (current === 'wall' && wallUrls.length) {
       const wall = document.createElement('div');
       wall.className = 'wall';
-      for (const u of wallUrls.slice(0, 50)) {
+      for (const u of wallUrls.slice(0, 60)) {
         const span = document.createElement('span');
         const img = new Image();
         img.alt = '';
-        img.loading = 'lazy';
+        img.decoding = 'async';
+        img.setAttribute('fetchpriority', 'low');
+        img.onload = () => img.classList.add('in');
         img.src = u;
         span.append(img);
         wall.append(span);

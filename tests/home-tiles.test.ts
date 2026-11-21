@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { moveTile, resolveLayout } from '../src/pages/home/arrange';
 import type { TileDef } from '../src/pages/home/tile';
 import { TABS, TILES, assertUniqueTiles, tilesOf } from '../src/pages/home/tiles';
 
@@ -12,14 +11,13 @@ describe('tile registry', () => {
     const dup: TileDef = { ...(TILES[0] as TileDef), tab: 'explore' };
     expect(() => assertUniqueTiles([...TILES, dup])).toThrow(/exactly one tab/);
   });
-  it('has the five tabs and the tiles the brief asks for, in the right tabs', () => {
-    expect(TABS.map(t => t.label)).toEqual(['Home', 'Continue Watching', 'Explore', 'Newly Added', 'Requests']);
+  it('has the four tabs and the tiles the brief asks for, in the right tabs', () => {
+    expect(TABS.map(t => t.label)).toEqual(['Home', 'Continue Watching', 'Explore', 'Newly Added']);
     const ids = (tab: Parameters<typeof tilesOf>[0]) => tilesOf(tab).map(t => t.id).sort();
-    expect(ids('home')).toEqual(['cwmini', 'keep', 'new', 'next', 'nutbot']);
+    expect(ids('home')).toEqual(['cwmini', 'keep', 'new', 'next']);
     expect(ids('continue')).toEqual(['finish', 'leaving', 'onthego', 'sets']);
     expect(ids('explore')).toEqual(['because', 'genres', 'mood', 'recs', 'short', 'tv']);
     expect(ids('new')).toEqual(['coming', 'newfilms', 'newhero', 'newshows']);
-    expect(ids('requests')).toEqual(['reqask', 'reqflow', 'reqmine']);
   });
   it('tiles of a tab do not overlap on the 12-column grid', () => {
     for (const tab of TABS) {
@@ -37,19 +35,10 @@ describe('tile registry', () => {
   });
 });
 
-describe('arrange layout', () => {
-  const ids = ['a', 'b', 'c', 'd'];
-  it('defaults to the designed order', () => {
-    expect(resolveLayout(ids, undefined)).toEqual({ order: ids, hidden: [] });
-  });
-  it('merges a saved layout with tiles that changed since', () => {
-    const r = resolveLayout(ids, { order: ['c', 'gone', 'a', 'c'], hidden: ['b', 'gone'] });
-    expect(r).toEqual({ order: ['c', 'a', 'b', 'd'], hidden: ['b'] });
-  });
-  it('moves a tile among the visible ones, skipping hidden', () => {
-    expect(moveTile(ids, [], 'c', -1)).toEqual(['a', 'c', 'b', 'd']);
-    expect(moveTile(ids, ['b'], 'c', -1)).toEqual(['c', 'b', 'a', 'd']);
-    expect(moveTile(ids, [], 'a', -1)).toEqual(ids);
-    expect(moveTile(ids, [], 'd', 1)).toEqual(ids);
+describe('Home layout', () => {
+  it('Keep watching is the only full-width tile on top', () => {
+    const top = tilesOf('home').filter(t => t.place[1] === 1);
+    expect(top.map(t => t.id)).toEqual(['keep']);
+    expect(top[0]?.place[2]).toBe(12);
   });
 });

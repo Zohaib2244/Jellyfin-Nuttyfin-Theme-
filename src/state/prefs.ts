@@ -1,6 +1,6 @@
 /** Look preferences: theme (auto/light/dark) and page background. Persisted; applied to <html>/<body>. */
 import { store } from '../lib/storage';
-import { DEFAULT_BACKGROUND, isBackgroundId, type BackgroundId } from '../ui/shell/pagebg';
+import { DEFAULT_BACKGROUND, type BackgroundId } from '../ui/shell/pagebg';
 
 export type ThemePref = 'auto' | 'light' | 'dark';
 export type EffectiveTheme = 'light' | 'dark';
@@ -36,9 +36,9 @@ export function toggleTheme(): void {
   setThemePref(effectiveTheme() === 'dark' ? 'light' : 'dark');
 }
 
+/** One background now (the owner removed the picker on 2026-11-21): the still poster wall. Old saved choices are ignored. */
 export function getBackgroundPref(): BackgroundId {
-  const v = store.get<unknown>('bg', DEFAULT_BACKGROUND);
-  return isBackgroundId(v) ? v : DEFAULT_BACKGROUND;
+  return DEFAULT_BACKGROUND;
 }
 
 export function setBackgroundPref(id: BackgroundId): void {

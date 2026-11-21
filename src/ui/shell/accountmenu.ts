@@ -1,13 +1,29 @@
-/** Avatar menu: who you are, "Page look" (theme + background), Sign out. A small dialog under the avatar. */
+/** Avatar menu: who you are, settings (Jellyfin's own pages for the deep stuff), light/dark, Sign out. A small dialog under the avatar. */
 import type { User } from '../../api';
 import { userImageUrl } from '../../api';
 import { esc, html, raw, setHtml } from '../../lib/html';
-import { getBackgroundPref, getThemePref, setBackgroundPref, setThemePref, type ThemePref } from '../../state/prefs';
+import { getThemePref, setThemePref, type ThemePref } from '../../state/prefs';
 import { icon } from '../icons';
-import { BACKGROUNDS, type BackgroundId } from './pagebg';
 
 const THEMES: ReadonlyArray<[ThemePref, string, 'auto' | 'sunsm' | 'moonsm']> = [
   ['auto', 'Auto', 'auto'], ['light', 'Light', 'sunsm'], ['dark', 'Dark', 'moonsm'],
+];
+
+/** Jellyfin's own web app lives at /web/ on the same host in production (the dev server proxies it under /jf). */
+const JF_WEB = import.meta.env.DEV ? '/jf/web/' : '/web/';
+const jf = (route: string): string => `${JF_WEB}#/${route}`;
+/** Seerr's own site, for its admin settings. */
+const seerrSite = (): string => (location.hostname.endsWith('avns.site') ? 'https://jellyseerr.avns.site' : 'http://jellyseerr.avns.nut');
+
+interface SettingLink { label: string; hint: string; href: (u: User) => string; ic: Parameters<typeof icon>[0]; admin?: boolean }
+const SETTINGS: readonly SettingLink[] = [
+  { label: 'Profile & password', hint: 'Picture, password', href: u => jf(`userprofile?userId=${encodeURIComponent(u.id)}`), ic: 'user' },
+  { label: 'Playback', hint: 'Quality, audio language, skip intros', href: () => jf('mypreferencesplayback'), ic: 'play' },
+  { label: 'Subtitles', hint: 'Language and look', href: () => jf('mypreferencessubtitles'), ic: 'cc' },
+  { label: 'Quick Connect', hint: 'Sign in a TV or phone with a code', href: () => jf('quickconnect'), ic: 'tv' },
+  { label: 'All Jellyfin settings', hint: 'Display, home screen, controls', href: () => jf('mypreferencesmenu'), ic: 'gear' },
+  { label: 'Server dashboard', hint: 'Users, libraries, scheduled tasks', href: () => jf('dashboard'), ic: 'server', admin: true },
+  { label: 'Requests settings', hint: 'Seerr: who can ask, quotas', href: () => seerrSite(), ic: 'inbox', admin: true },
 ];
 
 export const initialOf = (name: string): string => (name.trim()[0] ?? '?').toUpperCase();
@@ -40,14 +56,8 @@ export function mountAccountMenu(trigger: HTMLButtonElement, onSignOut: () => vo
   const sync = () => {
     if (!menu) return;
     const theme = getThemePref();
-    const bg = getBackgroundPref();
     for (const b of menu.querySelectorAll<HTMLElement>('[data-theme-set]')) {
       const on = b.dataset.themeSet === theme;
-      b.setAttribute('aria-checked', String(on));
-      b.tabIndex = on ? 0 : -1;
-    }
-    for (const b of menu.querySelectorAll<HTMLElement>('[data-bg-set]')) {
-      const on = b.dataset.bgSet === bg;
       b.setAttribute('aria-checked', String(on));
       b.tabIndex = on ? 0 : -1;
     }
@@ -63,29 +73,23 @@ export function mountAccountMenu(trigger: HTMLButtonElement, onSignOut: () => vo
     menu.setAttribute('aria-label', 'Account');
     setHtml(menu, html`
       <div class="pm-me">${raw(picMarkup(u))}<div><b>${u.name}</b><small>${roleOf(u)} · signed in</small></div></div>
-      <details class="nf-disclosure">
-        <summary>${icon('palette')}<span style="flex:1">Page look</span></summary>
-        <div class="nf-body">
-          <h3 class="pm-h" style="margin-top:0">Light or dark</h3>
-          <div class="seg3" role="radiogroup" aria-label="Theme">${THEMES.map(([k, l, i]) =>
-            html`<button type="button" role="radio" aria-checked="false" data-theme-set="${k}">${icon(i)}${l}</button>`)}</div>
-          <h3 class="pm-h">Background</h3>
-          <div class="bgopts" role="radiogroup" aria-label="Page background">${BACKGROUNDS.filter(b => b.wired).map(b =>
-            html`<button type="button" class="bgopt" role="radio" aria-checked="false" data-bg-set="${b.id}"><span class="thumbbg" data-v="${b.id}" aria-hidden="true"></span><span>${b.label}<small>${b.hint}</small></span></button>`)}</div>
-        </div>
-      </details>
+      <h3 class="pm-h">Light or dark</h3>
+      <div class="seg3" role="radiogroup" aria-label="Theme">${THEMES.map(([k, l, i]) =>
+        html`<button type="button" role="radio" aria-checked="false" data-theme-set="${k}">${icon(i)}${l}</button>`)}</div>
+      <h3 class="pm-h">Settings</h3>
+      <nav class="pm-links" aria-label="Settings">${SETTINGS.filter(l => !l.admin || u.isAdmin).map(l =>
+        html`<a href="${l.href(u)}" target="_blank" rel="noopener">${icon(l.ic)}<span>${l.label}<small>${l.hint}</small></span>${icon('ext')}</a>`)}</nav>
+      <p class="pm-note">These open Jellyfin's own settings pages in a new tab.</p>
       <button type="button" class="pm-out" data-signout>${icon('logout')}Sign out</button>`);
     document.body.append(menu);
     trigger.setAttribute('aria-expanded', 'true');
     sync();
-    menu.querySelector<HTMLElement>('summary')?.focus();
+    menu.querySelector<HTMLElement>('[role="radio"][tabindex="0"]')?.focus();
 
     menu.addEventListener('click', e => {
       const t = e.target as Element;
       const th = t.closest<HTMLElement>('[data-theme-set]');
       if (th) { setThemePref(th.dataset.themeSet as ThemePref); sync(); return; }
-      const bg = t.closest<HTMLElement>('[data-bg-set]');
-      if (bg) { setBackgroundPref(bg.dataset.bgSet as BackgroundId); sync(); return; }
       if (t.closest('[data-signout]')) { close(); onSignOut(); }
     });
     menu.addEventListener('keydown', e => {
@@ -102,7 +106,7 @@ export function mountAccountMenu(trigger: HTMLButtonElement, onSignOut: () => vo
         }
       }
       if (e.key === 'Tab' && menu) {
-        const f = Array.from(menu.querySelectorAll<HTMLElement>('summary, button, [tabindex="0"]')).filter(x => x.tabIndex >= 0 && x.getClientRects().length);
+        const f = Array.from(menu.querySelectorAll<HTMLElement>('a[href], button, [tabindex="0"]')).filter(x => x.tabIndex >= 0 && x.getClientRects().length);
         const first = f[0];
         const last = f[f.length - 1];
         if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }

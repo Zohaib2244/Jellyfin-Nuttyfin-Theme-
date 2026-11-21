@@ -1,0 +1,81 @@
+/* NutBot chat dialog and the mood chips it shares with Explore. Loaded by chat.ts (so it works on every page). */
+.moodwrap { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.moods { flex: 1; min-width: 0; display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 8px; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+.mood { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 13px 0 10px; border-radius: 999px; border: var(--bw) solid var(--line); background: var(--nested); color: var(--text); font-family: var(--font-read); font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; transition: border-color var(--d-micro), background var(--d-micro); }
+.mood svg { width: 17px; height: 17px; color: var(--accent); }
+.mood:hover { border-color: var(--accent); }
+.mood:active { transform: scale(.97); }
+.mood:focus-visible { outline-offset: 1px; }
+.mood.say, .mood[aria-checked="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.mood.say svg, .mood[aria-checked="true"] svg { color: var(--accent-ink); }
+.moodprev, .moodnext { display: inline-flex; align-items: center; justify-content: center; gap: 4px; flex: 0 0 auto; min-width: 44px; min-height: 44px; padding: 0 10px; background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 8px; font: 700 13px var(--font-read); cursor: pointer; }
+.moodprev svg, .moodnext svg { width: 16px; height: 16px; }
+.moodprev:disabled, .moodnext:disabled { opacity: .35; cursor: default; }
+@container (max-width: 420px) { .nbt-hi { font-size: 21px; } .nbt-face svg { width: 48px; height: 48px; } .nbt-line { -webkit-line-clamp: 1; } }
+
+/* ── NutBot chat dialog ── */
+dialog.nbc { position: fixed; inset: 0; margin: auto; width: min(860px, calc(100vw - 32px)); height: min(720px, calc(100dvh - 32px)); padding: 0; display: flex; flex-direction: column; border-radius: var(--r-tile); border: var(--bw) solid var(--line); background: radial-gradient(90% 60% at 100% 0%, color-mix(in srgb, var(--accent) 10%, var(--panel)), var(--panel) 55%); color: var(--text); overflow: hidden; }
+dialog.nbc:not([open]) { display: none; }
+dialog.nbc[open] { animation: nbcin var(--d-large) var(--ease-out) both; }
+dialog.nbc::backdrop { background: rgba(8, 6, 4, .6); backdrop-filter: blur(3px); }
+@keyframes nbcin { from { opacity: 0; transform: translateY(14px) scale(.98); } }
+.nbc-grab { display: none; }
+.nbc-head { display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 14px; border-bottom: 1px dashed var(--line); }
+.nbc-ttl { flex: 1; min-width: 0; }
+.nbc-ttl h2 { margin: 0; font-family: var(--font-px); font-weight: 400; font-size: 22px; line-height: 1.1; letter-spacing: .03em; }
+.nbc-ttl small { display: block; font-family: var(--font-read); font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nbc-log { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 18px 18px 10px; display: flex; flex-direction: column; gap: 10px; }
+.nbc-log:focus { outline: none; }
+.nm-row { display: flex; gap: 10px; align-items: flex-end; animation: rise var(--d-med) var(--ease-out) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+.nm-row .av { flex: none; width: 34px; height: 34px; }
+.nm-row.cont .av { visibility: hidden; }
+.bub { max-width: min(560px, 100%); padding: 9px 14px; border-radius: 16px 16px 16px 5px; background: var(--nested); border: var(--bw) solid var(--line); font-family: var(--font-read); font-size: 15.5px; line-height: 1.45; }
+.bub b { color: var(--accent); font-weight: 700; }
+.nm-row.me { justify-content: flex-end; }
+.nm-row.me .bub { border-radius: 16px 16px 5px 16px; background: color-mix(in srgb, var(--pc1) 20%, var(--panel)); border-color: color-mix(in srgb, var(--pc1) 60%, var(--line)); }
+.think .bub { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; }
+.dots3 { display: inline-flex; gap: 4px; }
+.dots3 i { width: 7px; height: 7px; border-radius: 2px; background: var(--num); animation: dot3 900ms var(--ease) infinite; }
+.dots3 i:nth-child(2) { animation-delay: 150ms; } .dots3 i:nth-child(3) { animation-delay: 300ms; }
+@keyframes dot3 { 0%, 60%, 100% { transform: translateY(0); opacity: .45; } 30% { transform: translateY(-5px); opacity: 1; } }
+.nbcards { margin-left: 44px; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.nbcard { position: relative; display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 6px 12px; padding: 10px; border-radius: var(--r-card); border: var(--bw) solid var(--line); background: var(--panel); animation: rise var(--d-large) var(--ease-out) calc(var(--i, 0) * 70ms) backwards; }
+.nbcard.req { border-style: dashed; }
+.nbcard > .ph { width: 70px; aspect-ratio: 2 / 3; border-radius: 7px; overflow: hidden; border: 1px solid var(--line); align-self: start; }
+.nbcard > .ph img { width: 100%; height: 100%; object-fit: cover; }
+.nbcard > .ph[data-t]::before { font-size: 10.5px; left: 5px; right: 5px; bottom: 5px; }
+.nbcard .cw { min-width: 0; }
+.nbcard h3 { margin: 0; font-family: var(--font-read); font-size: 15.5px; line-height: 1.2; }
+.nbcard .meta { display: block; margin-top: 2px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.nbcard .why { margin: 5px 0 0; font-family: var(--font-read); font-size: 13.5px; line-height: 1.35; }
+.nbcard .blurb { margin: 3px 0 0; font-family: var(--font-read); font-size: 13px; line-height: 1.35; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.nbcard .ntag { display: inline-flex; align-items: center; gap: 5px; margin-top: 4px; font-family: var(--font-read); font-weight: 700; font-size: 12px; color: var(--num); }
+.nbcard .ntag svg { width: 14px; height: 14px; }
+.nbcard .acts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 2px; }
+.nbcard .acts .btn { flex: 1 1 auto; min-height: 44px; padding: 0 14px; font-size: 14px; }
+.nbcard .done { display: flex; align-items: flex-start; gap: 8px; margin: 0; font-family: var(--font-read); font-weight: 700; font-size: 13.5px; line-height: 1.3; color: var(--ok); }
+.nbcard .done svg { width: 18px; height: 18px; flex: none; margin-top: 1px; }
+.nbcard .done small { display: block; font-weight: 400; color: var(--muted); }
+.nbc-foot { border-top: 1px dashed var(--line); padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 8px; background: var(--panel); }
+.nbc-foot .moods.wait { opacity: .5; pointer-events: none; }
+.composer { display: flex; gap: 8px; align-items: center; }
+.composer input { flex: 1; min-width: 0; height: 48px; padding: 0 18px; border-radius: 24px; border: var(--bw) solid var(--line); background: var(--nested); color: var(--text); font-family: var(--font-read); font-size: 16px; }
+.composer input::placeholder { color: var(--dim); }
+.composer input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+.composer .send { flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; border: var(--bw) solid var(--accent); background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+.composer .send:disabled { opacity: .5; }
+.nbc-fine { margin: 0; font-family: var(--font-read); font-size: 12.5px; color: var(--dim); }
+@media (max-width: 760px) {
+  dialog.nbc { inset: auto 0 0 0; margin: 0; width: 100%; max-width: none; height: calc(100dvh - 56px); border-radius: 22px 22px 0 0; border-bottom: 0; }
+  dialog.nbc[open] { animation: sheetin var(--d-large) var(--ease-out) both; }
+  @keyframes sheetin { from { transform: translateY(100%); } }
+  .nbc-grab { display: block; height: 22px; position: relative; }
+  .nbc-grab::before { content: ''; position: absolute; left: 50%; top: 9px; width: 44px; height: 5px; margin-left: -22px; border-radius: 3px; background: var(--line); }
+  .nbc-head .btn .lbl { display: none; }
+  .nbc-head .btn { padding: 0 12px; }
+  .nbcards { margin-left: 0; grid-template-columns: minmax(0, 1fr); }
+  .nbc-fine { display: none; }
+  .nbc-foot { padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+}
+

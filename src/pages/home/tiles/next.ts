@@ -4,8 +4,6 @@ import { runtime } from '../../../lib/format';
 import { html, type SafeHtml } from '../../../lib/html';
 import { icon } from '../../../ui/icons';
 import { backdropUrl, detailsPath, img, ph, playPath, thumbUrl } from '../art';
-import { epLabel } from '../model';
-import { whyFor } from '../nutbot/moods';
 import { loadInto, skArt, tileHead, type TileDef } from '../tile';
 
 interface NextData {
@@ -17,7 +15,7 @@ interface NextData {
 }
 
 export const nextTile: TileDef = {
-  id: 'next', tab: 'home', title: 'Next episode', icon: 'tv', place: [1, 3, 5, 3], minH: 320, cls: 'onimg',
+  id: 'next', tab: 'home', title: 'Next episode', icon: 'tv', place: [8, 10, 5, 3], minH: 320, cls: 'onimg',
   mount(host, ctx) {
     loadInto<NextData>(host, ctx, {
       head: tileHead('next', 'tv', 'Next episode'),
@@ -47,24 +45,17 @@ export const nextTile: TileDef = {
 
 function episode(e: Episode, season: Episode[]): SafeHtml {
   const eps = season.filter(x => !x.missing && x.season === e.season);
-  const idx = eps.findIndex(x => x.id === e.id);
-  const after = idx >= 0 ? eps[idx + 1] : undefined;
-  const prev = idx > 0 ? eps[idx - 1] : undefined;
-  const lead = prev?.played ? `You finished episode ${prev.episode}.` : e.episode === 1 ? 'A fresh start.' : '';
   return html`
-    <div class="art ph" ${ph(e.id, e.seriesName)}>${img(thumbUrl(e, 800))}</div>
+    <div class="art ph" ${ph(e.id, e.seriesName)}>${img(backdropUrl(e, 900) ?? thumbUrl(e, 800))}</div>
     <div class="shade"></div>
     <div class="nx">
       <h2 class="tl" id="h-next">${icon('tv')}Next episode</h2>
       <div>
-        <div class="eyebrow">${e.seriesName.toUpperCase()} · SEASON ${e.season} · EPISODE ${e.episode}</div>
-        <h3>${e.name || epLabel(e)}</h3>
-        ${e.overview ? html`<p class="ov">${e.overview}</p>` : ''}
-        <p>${[e.runtimeMin ? runtime(e.runtimeMin) : '', lead].filter(Boolean).join(' · ')}</p>
+        <h3>${e.seriesName}</h3>
+        <p class="sx">S${e.season} · E${e.episode}${e.name ? html` · <b>${e.name}</b>` : ''}${e.runtimeMin ? ` · ${runtime(e.runtimeMin)}` : ''}</p>
         <div class="row">
           <a class="btn primary sm" href="#${playPath(e)}">${icon('play')}Play episode ${e.episode}</a>
           <a class="btn glass sm" href="#${detailsPath(e)}">Details</a>
-          ${after ? html`<span class="then"><span>Then<b>${after.name}</b></span><span class="ph" ${ph(after.id)}>${img(thumbUrl(after, 300))}</span></span>` : ''}
         </div>
         ${eps.length > 1 ? html`<div class="epdots" role="img" aria-label="Season ${e.season}: ${eps.filter(x => x.played).length} of ${eps.length} watched">${eps.map(x => html`<i class="${x.played ? 'w' : x.id === e.id ? 'n' : ''}"></i>`)}</div>` : ''}
       </div>
@@ -79,10 +70,8 @@ function start(t: Title): SafeHtml {
     <div class="nx">
       <h2 class="tl" id="h-next">${icon('tv')}Start something new</h2>
       <div>
-        <div class="eyebrow">${(t.kind === 'series' ? 'SHOW' : 'FILM')} · ${[t.year, t.genres[0]?.toUpperCase()].filter(Boolean).join(' · ')}</div>
         <h3>${t.name}</h3>
-        ${t.overview ? html`<p class="ov">${t.overview}</p>` : ''}
-        <p>${whyFor(t)}.${t.kind === 'movie' && t.runtimeMin ? ` ${runtime(t.runtimeMin)}.` : ''}</p>
+        <p class="sx">${[t.kind === 'series' ? 'Show' : 'Film', t.year, t.kind === 'movie' && t.runtimeMin ? runtime(t.runtimeMin) : ''].filter(Boolean).join(' · ')}</p>
         <div class="row"><a class="btn primary sm" href="#${playPath(t)}">${icon('play')}Play</a><a class="btn glass sm" href="#${detailsPath(t)}">Details</a></div>
       </div>
     </div>`;

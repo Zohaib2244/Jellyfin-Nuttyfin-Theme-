@@ -1,27 +1,28 @@
 /**
- * Home and its tabs: #/home/:tab? with tabs Home, Continue Watching, Explore, Newly Added, Requests.
+ * Home and its tabs: #/home/:tab? with tabs Home, Continue Watching, Explore, Newly Added (Requests is its own page).
  * The tab lives in the URL and in the shell's tab bar (animated indicator). Switching tabs does NOT re-render the
  * page: each tab's tiles are built the first time it is opened and then just shown / hidden, so nothing leaks
  * between tabs and coming back is instant. Every tile loads its own data (see tile.ts).
  */
 import './home.css';
-import { clock } from '../../lib/format';
 import { html } from '../../lib/html';
-import { icon } from '../../ui/icons';
 import type { Page } from '../types';
-import { initArrange, type Arrange } from './arrange';
+import { store } from '../../lib/storage';
 import { HomeData } from './data';
 import { TAB_LABEL, type HomeCtx, type HomeTab, type TileDef } from './tile';
-import { TABS, assertUniqueTiles, isTab, TILES, tilesOf } from './tiles';
+import { TABS, assertUniqueTiles, isTab, tilesOf } from './tiles';
 
 const urlOf = (tab: HomeTab): string => (tab === 'home' ? '#/' : `#/home/${tab}`);
 const reduced = (): boolean => matchMedia('(prefers-reduced-motion: reduce)').matches;
-const fmtDate = (d: Date): string => d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+/** Tiles the person dismissed (e.g. the new-arrivals banner), per user. */
+const HIDDEN = (uid: string): string => `nuttyfin.home.hidden.${uid}`;
 
 const page: Page = {
   title: 'Home',
   render(pc) {
     assertUniqueTiles();
+    // the Requests tab moved out of Home: old links go to the Requests page
+    if (pc.params.tab === 'requests') queueMicrotask(() => pc.router.navigate('/requests', { replace: true }));
     let tab: HomeTab = isTab(pc.params.tab) ? pc.params.tab : 'home';
     document.body.dataset.homeTab = tab;
     pc.onDispose(() => { delete document.body.dataset.homeTab; });
@@ -30,15 +31,9 @@ const page: Page = {
     root.className = 'page home';
     root.innerHTML = html`
       <h1 class="sr" id="home-h1" data-autofocus tabindex="-1">${TAB_LABEL[tab]}</h1>
-      <div class="boardbar">
-        <p class="hint" id="homeHint"></p>
-        <button class="btn sm ghost arrbtn" type="button" id="arrBtn" aria-label="Arrange this tab">${icon('grid')}<span class="lbl">Arrange</span></button>
-      </div>
-      <div class="arrbar" id="arrbar" role="region" aria-label="Arrange this tab" hidden></div>
       <section class="board" id="home-panel" role="tabpanel" aria-labelledby="tab-${tab}" tabindex="-1" data-tab="${tab}"></section>`.value;
     const board = root.querySelector('#home-panel') as HTMLElement;
     const h1 = root.querySelector('#home-h1') as HTMLElement;
-    const hint = root.querySelector('#homeHint') as HTMLElement;
 
     const data = new HomeData(pc.backend);
     const ctx: HomeCtx = {
@@ -47,17 +42,13 @@ const page: Page = {
       goTab: t => select(t, { focus: true }),
     };
 
-    /* ── date row ── */
-    const paintHint = (): void => { const d = new Date(); hint.innerHTML = `<b>${fmtDate(d)}</b> · ${clock(d)}`; };
-    paintHint();
-    const tick = window.setInterval(paintHint, 30_000);
-    pc.onDispose(() => window.clearInterval(tick));
+    const uid = pc.user?.id ?? 'anon';
+    const hidden = new Set(store.get<string[]>(HIDDEN(uid), []));
 
     /* ── tiles: built per tab on first visit ── */
     const sections = new Map<string, HTMLElement>();
     const cleanups: Array<() => void> = [];
     const built = new Set<HomeTab>();
-    let arrange: Arrange | null = null;
 
     function buildTab(t: HomeTab): void {
       if (built.has(t)) return;
@@ -73,6 +64,7 @@ const page: Page = {
         sec.style.setProperty('--c', String(def.place[2]));
         sec.style.setProperty('--r', String(def.place[3]));
         if (def.minH) sec.style.setProperty('--minh', `${def.minH}px`);
+        if (hidden.has(def.id)) sec.dataset.off = '';
         sec.hidden = def.tab !== tab;
         const tin = document.createElement('div');
         tin.className = 'tin';
@@ -81,7 +73,6 @@ const page: Page = {
         sections.set(def.id, sec);
         safeMount(def, tin);
       }
-      arrange?.refresh();
     }
 
     function safeMount(def: TileDef, tin: HTMLElement): void {
@@ -99,7 +90,6 @@ const page: Page = {
     let token = 0;
     function select(next: HomeTab, o: { focus?: boolean; fromTabs?: boolean; replaceUrl?: boolean } = {}): void {
       if (next === tab) { if (o.focus) document.getElementById(`tab-${next}`)?.focus(); return; }
-      if (arrange?.active) arrange.stop();
       tab = next;
       document.body.dataset.homeTab = next;
       const my = ++token;
@@ -118,7 +108,6 @@ const page: Page = {
         board.classList.remove('tab-out');
         buildTab(next);
         for (const t of board.querySelectorAll<HTMLElement>('.tile')) t.hidden = t.dataset.tab !== next;
-        arrange?.refresh();
         if (!reduced()) {
           const visible = board.querySelectorAll<HTMLElement>('.tile:not([hidden])');
           visible.forEach(t => t.classList.remove('tab-in'));
@@ -129,8 +118,7 @@ const page: Page = {
             t.addEventListener('animationend', () => t.classList.remove('tab-in'), { once: true });
           });
         }
-        const bar = root.querySelector<HTMLElement>('.boardbar');
-        if (bar && bar.getBoundingClientRect().top < 0) bar.scrollIntoView({ block: 'start', behavior: reduced() ? 'auto' : 'smooth' });
+        if (board.getBoundingClientRect().top < 0) board.scrollIntoView({ block: 'start', behavior: reduced() ? 'auto' : 'smooth' });
       };
       swap();
     }
@@ -145,7 +133,11 @@ const page: Page = {
     root.addEventListener('click', e => {
       const dismiss = (e.target as Element).closest<HTMLElement>('[data-dismiss-tile]');
       if (dismiss?.dataset.dismissTile) {
-        arrange?.hideTile(dismiss.dataset.dismissTile);
+        const id = dismiss.dataset.dismissTile;
+        hidden.add(id);
+        store.set(HIDDEN(uid), [...hidden]);
+        const sec = sections.get(id);
+        if (sec) sec.dataset.off = '';
         return;
       }
       const b = (e.target as Element).closest<HTMLElement>('[data-tab-link]');
@@ -162,16 +154,9 @@ const page: Page = {
     pc.onDispose(() => {
       window.removeEventListener('hashchange', onHash);
       cleanups.splice(0).forEach(fn => { try { fn(); } catch (err) { console.error(err); } });
-      arrange?.destroy();
-    });
-
-    /* ── Arrange ── */
-    arrange = initArrange({
-      root, board, userId: pc.user?.id ?? 'anon', currentTab: () => tab, defs: TILES,
     });
 
     buildTab(tab);
-    arrange.refresh();
 
     // the Requests badge in the rail: how many of your requests are still open (soft: nothing if Seerr is off)
     void data.requestSummary().then(list => { if (!pc.signal.aborted) pc.shell.setRequestsBadge(list.filter(r => r.state !== 'available' && r.state !== 'declined').length); });

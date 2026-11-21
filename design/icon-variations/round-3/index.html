@@ -1,0 +1,24 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nuttyfin icon ideas</title>
+<style>
+:root{--bg:#13100c;--panel:#1e1a14;--line:#3d3220;--text:#e8dfc8;--muted:#a8997c;--accent:#ff6b2b}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,sans-serif;padding:24px 16px}
+h1{font-weight:600;margin:0 0 4px}p.s{color:var(--muted);margin:0 0 20px}
+.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.c{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+.row{display:flex;align-items:flex-end;gap:14px;margin-bottom:12px}
+.row img:nth-child(1){width:96px}.row img:nth-child(2){width:48px}.row img:nth-child(3){width:24px}.row img:nth-child(4){width:16px}
+.tab{display:inline-flex;align-items:center;gap:6px;background:#2a241c;border-radius:8px 8px 0 0;padding:5px 10px;font-size:12.5px;margin-bottom:10px}
+.tab img{width:16px}
+h2{font-size:16px;margin:0 0 4px}.c p{margin:0;color:var(--muted);font-size:13.5px}
+</style>
+<h1>Nuttyfin icon ideas, round 3</h1><p class="s">Six new directions. Each is shown at 96, 48, 24 and 16 px, plus a browser tab.</p>
+<div class="g" id="g"></div>
+<script>
+const I=[['sticker','Sticker','The app\'s own sticker-card look: an orange play tile with the hard offset shadow the buttons use. Simplest and clearest at 16 px.'],
+['crt','Little telly','A cream retro TV with rabbit ears and an orange play on the screen. Friendly and family-feeling.'],
+['marquee','Marquee bulbs','A play button drawn in cinema marquee lights. Most "night at the movies"; busier when tiny.'],
+['clapper','Clapperboard','A tilted clapper top over a play screen. Says "films" instantly.'],
+['drive-in','Drive-in','A screen on a sunset sky. Warm and distinctive; the gradient is the brand.'],
+['remote','Remote','A chunky retro remote with one big play button. Playful, reads as "press play".']];
+g.innerHTML=I.map(([f,t,d])=>`<div class="c"><div class="row">${[1,2,3,4].map(()=>`<img src="${f}.svg" alt="">`).join('')}</div><span class="tab"><img src="${f}.svg" alt="">Nuttyfin</span><h2>${t}</h2><p>${d}</p></div>`).join('');
+</script>

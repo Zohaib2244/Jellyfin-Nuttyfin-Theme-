@@ -2,11 +2,11 @@
 import './login.css';
 import { session as authSession } from '../../api/auth';
 import { brandMark } from '../../ui/brand';
-import { imageUrl, SignInError, type SignInFailure } from '../../api';
+import { SignInError, type SignInFailure } from '../../api';
 import { html, raw, setHtml } from '../../lib/html';
 import { store } from '../../lib/storage';
 import type { Page, PageContext } from '../types';
-import { ARTWORK } from './artwork';
+import { ARTWORK, artworkUrl } from './artwork';
 
 /** Plain-language message for each failure (exported for tests). */
 export function friendlyError(reason: SignInFailure): string {
@@ -19,13 +19,14 @@ export function friendlyError(reason: SignInFailure): string {
 }
 
 const COLUMNS = 7;
-const PER_COLUMN = 8;
+const PER_COLUMN = 6;
 
 function artMarkup(): string {
   let out = '';
   for (let c = 0; c < COLUMNS; c++) {
     const ids = Array.from({ length: PER_COLUMN }, (_, i) => ARTWORK[(c * PER_COLUMN + i) % ARTWORK.length] as string);
-    out += `<div class="lg-col">${[...ids, ...ids].map((id, i) => `<img alt="" src="${imageUrl(id, 'Primary', { maxWidth: 260, quality: 60 })}"${i >= PER_COLUMN ? ' loading="lazy"' : ''}>`).join('')}</div>`;
+    // small, low-quality posters (the same URLs the signed-in page background uses, so they are cached for later)
+    out += `<div class="lg-col">${[...ids, ...ids].map((id, i) => `<img alt="" decoding="async" src="${artworkUrl(id)}"${i >= PER_COLUMN ? ' loading="lazy" fetchpriority="low"' : ''}>`).join('')}</div>`;
   }
   return out;
 }
@@ -57,8 +58,7 @@ const page: Page = {
           <details class="lg-help"><summary>Need help signing in?</summary><div>Your server owner manages accounts and passwords.</div></details>
         </div>
       </section>
-      <div class="lg-status" id="lgStatus" role="status"><span></span>Loading artwork</div>
-      <button class="lg-motion" id="lgMotion" type="button" aria-pressed="false">Pause background</button>`);
+      <div class="lg-status" id="lgStatus" role="status" hidden></div>`);
 
     const $ = <T extends HTMLElement>(s: string) => root.querySelector<T>(s) as T;
     const form = $<HTMLFormElement>('#lgForm');
@@ -169,6 +169,7 @@ const page: Page = {
 
     /* artwork + motion */
     const art = $('#lgArt');
+    art.classList.add('ready'); // show the wall straight away; each poster fades in as it arrives
     const status = $('#lgStatus');
     const imgs = Array.from(art.querySelectorAll<HTMLImageElement>('img'));
     let settled = 0;
@@ -176,19 +177,12 @@ const page: Page = {
     const settle = (img: HTMLImageElement) => {
       settled++;
       if (img.naturalWidth) { loaded++; img.classList.add('ready'); }
-      if (loaded >= 10 || settled === imgs.length) { art.classList.add('ready'); status.hidden = true; }
       if (settled === imgs.length && !loaded) { status.hidden = false; status.textContent = 'Artwork unavailable. You can still sign in.'; }
     };
     for (const img of imgs) {
       if (img.complete) settle(img);
       else { img.addEventListener('load', () => settle(img), { once: true }); img.addEventListener('error', () => settle(img), { once: true }); }
     }
-    $('#lgMotion').addEventListener('click', e => {
-      const b = e.currentTarget as HTMLButtonElement;
-      const paused = root.classList.toggle('paused');
-      b.textContent = paused ? 'Play background' : 'Pause background';
-      b.setAttribute('aria-pressed', String(paused));
-    });
 
     return root;
   },
