@@ -47,3 +47,8 @@ The original Jellyfin web interface becomes the default again. The helper can be
 Added NuttyFin's acorn/play identity to navigation, login and the favicon. Login now has Remember me: checked stores the sign-in token in persistent browser storage; unchecked uses browser-session storage. Passwords are never saved. Existing remembered sign-ins remain valid. Quick Connect follows the same preference.
 
 Verified the login and brand at desktop and phone widths, plus checked and unchecked password sign-ins against the real Jellyfin server, page reloads and a second tab. Demo-mode lifecycle checks and six new automated storage regressions pass. The static release update retains old hashed assets and requires no service restart or Caddy reload.
+
+## Frontend update — 21 November 2026
+
+Released `20261121-174901-4bae1c9` (previous: `20261121-174444-b6eb403`, before that `20261117-101629-brand-remember`; all kept under `releases/`). Static only: no Caddy reload, no helper change. Contents: Home restructure (full-width Keep watching, Recently added, no Arrange/date row, NutBot floating button / phone top-bar button), full-width pages, floating icon rail, Sticker brand mark, AVN Hub colour themes with light/dark, dot-grid or scrolling-posters background, account menu with Appearance/Settings pages, Details full-bleed hero, Requests rework (Requests + Discover tabs, honest stages, removed state, Networks/Studios, Browse), Newly Added banner rule and redesigned On the way.
+To roll back: point `current` at the previous release folder (`sudo ln -sfn releases/<old> current.new && sudo mv -T current.new current`).
