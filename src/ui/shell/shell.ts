@@ -175,7 +175,8 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
       avatarBtn.hidden = !u;
       if (u) {
         avatarBtn.setAttribute('aria-label', `${u.name}, ${roleOf(u)}. Account and page look`);
-        setHtml(avatarBtn, html`${raw(picMarkup(u))}<span class="nm">${u.name}<small>${roleOf(u)}</small></span>${icon('down')}`);
+        setHtml(avatarBtn, html`${raw(picMarkup(u))}`); // just the face; name and role live in the menu
+        avatarBtn.title = u.name;
       } else avatarBtn.replaceChildren();
     },
   };
