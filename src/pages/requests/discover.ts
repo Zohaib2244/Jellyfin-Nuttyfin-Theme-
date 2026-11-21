@@ -1,27 +1,38 @@
 /**
- * The "Discover" tab, like Seerr's own front page: a search box, then sideways rails (Trending, Popular films,
- * Film genres, Upcoming films, Popular shows, Show genres, Upcoming shows). A genre tile opens that genre's results.
+ * The "Discover" tab, like Seerr's own front page: a search box and "Browse all", then sideways rails (Trending,
+ * Popular films, Film genres, Upcoming films, Studios, Popular shows, Show genres, Upcoming shows, Networks).
+ * Genre, studio and network tiles open the Browse view (browse.ts) with that filter on; so do "Browse all" and "See all".
  * Every poster opens the details sheet first; requesting is a second step inside it.
  * Rails load as they come near the screen, scroll with arrow buttons, the keyboard (Left/Right between posters) and swipe.
  */
-import type { DiscoverItem, DiscoverRail, GenreTile } from '../../api/desk-types';
+import type { DiscoverRail, GenreTile } from '../../api/desk-types';
 import type { SeerrResult } from '../../api/types';
 import { html, raw } from '../../lib/html';
 import { icon } from '../../ui/icons';
 import { nutbot } from '../../ui/nutbot';
+import { ic } from '../common/icons';
 import type { PageContext } from '../types';
-import { genreTile, posterTile, skeletonGrid, skeletonRail } from './ui';
+import { mountBrowse, type BrowsePanel } from './browse';
+import { emptyBrowse, NETWORKS, parseBrowse, serialiseBrowse, STUDIOS, type BrowseState } from './browse-model';
+import { brandTile, genreTile, posterTile, skeletonGrid, skeletonRail } from './ui';
 
-type RailDef = { id: string; title: string; kind: 'items'; rail: DiscoverRail } | { id: string; title: string; kind: 'genres'; mediaType: 'movie' | 'tv' };
+type RailDef = { id: string; title: string; kind: 'items'; rail: DiscoverRail; all?: 'movie' | 'tv' }
+  | { id: string; title: string; kind: 'genres'; mediaType: 'movie' | 'tv' }
+  | { id: string; title: string; kind: 'brands'; mediaType: 'movie' | 'tv' };
 const RAILS: readonly RailDef[] = [
   { id: 'trending', title: 'Trending', kind: 'items', rail: 'trending' },
-  { id: 'movies', title: 'Popular films', kind: 'items', rail: 'movies' },
+  { id: 'movies', title: 'Popular films', kind: 'items', rail: 'movies', all: 'movie' },
   { id: 'mgenres', title: 'Film genres', kind: 'genres', mediaType: 'movie' },
   { id: 'mup', title: 'Upcoming films', kind: 'items', rail: 'movies-upcoming' },
-  { id: 'tv', title: 'Popular shows', kind: 'items', rail: 'tv' },
+  { id: 'studios', title: 'Studios', kind: 'brands', mediaType: 'movie' },
+  { id: 'tv', title: 'Popular shows', kind: 'items', rail: 'tv', all: 'tv' },
   { id: 'tgenres', title: 'Show genres', kind: 'genres', mediaType: 'tv' },
   { id: 'tup', title: 'Upcoming shows', kind: 'items', rail: 'tv-upcoming' },
+  { id: 'networks', title: 'Networks', kind: 'brands', mediaType: 'tv' },
 ];
+
+/** Set when the Browse view was opened from Discover's front page in this visit, so its Back button can just go back. */
+let cameFromHome = false;
 
 export interface DiscoverEnv {
   ctx: PageContext;
@@ -33,13 +44,30 @@ export interface DiscoverPanel { refresh(): void; dispose(): void }
 const reduced = (): boolean => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export function mountDiscover(el: HTMLElement, env: DiscoverEnv): DiscoverPanel {
+  const browsing = parseBrowse(env.ctx.query);
+  if (browsing) {
+    const panel: BrowsePanel = mountBrowse(el, {
+      ctx: env.ctx, state: browsing, open: env.open,
+      back: () => { if (cameFromHome) { cameFromHome = false; history.back(); } else env.ctx.router.navigate('/requests/discover', { replace: true }); },
+    });
+    return panel;
+  }
+  return mountHome(el, env);
+}
+
+/** Open the Browse view (a real history entry, so Back returns to the front page where it was). */
+function browse(env: DiscoverEnv, s: BrowseState): void {
+  cameFromHome = true;
+  env.ctx.router.navigate(`/requests/discover?${serialiseBrowse(s)}`);
+}
+
+function mountHome(el: HTMLElement, env: DiscoverEnv): DiscoverPanel {
   const { ctx } = env;
   const seerr = ctx.backend.seerr;
   const q0 = ctx.query;
   const st = {
     query: (q0.get('q') ?? '').slice(0, 80),
     kind: 'all' as 'all' | 'movie' | 'tv',
-    genre: q0.get('genre') ? { id: Number(q0.get('genre')), mediaType: (q0.get('gtype') === 'tv' ? 'tv' : 'movie') as 'movie' | 'tv', name: q0.get('gname') ?? 'Genre', page: 1, totalPages: 1, items: [] as DiscoverItem[] } : null,
     results: [] as SeerrResult[],
   };
   let alive = true;
@@ -52,6 +80,7 @@ export function mountDiscover(el: HTMLElement, env: DiscoverEnv): DiscoverPanel 
       <input id="rqq" type="search" maxlength="80" placeholder="Search films and shows" value="${st.query}">
       <button class="btn primary sm" type="submit">${icon('search')}<span class="lbl">Search</span></button>
     </form>
+    <div class="rq-browseall"><button type="button" class="btn sm" data-browse="movie">${ic('sliders')}Browse all films</button><button type="button" class="btn sm" data-browse="tv">${ic('sliders')}Browse all shows</button></div>
     <div id="rqview"></div>`.value;
   const view = el.querySelector<HTMLElement>('#rqview') as HTMLElement;
   const input = el.querySelector<HTMLInputElement>('#rqq') as HTMLInputElement;
@@ -63,9 +92,9 @@ export function mountDiscover(el: HTMLElement, env: DiscoverEnv): DiscoverPanel 
   function showRails(): void {
     view.innerHTML = RAILS.map(r => html`<section class="rq-railsec" data-rail="${r.id}" aria-labelledby="rqr-${r.id}">
       <div class="rq-railhead"><h2 class="rq-gh" id="rqr-${r.id}">${r.title}</h2>
-        <div class="rq-arrows"><button type="button" class="iconbtn rq-arrow" data-scroll="-1" aria-label="Scroll ${r.title} back" disabled>${icon('back')}</button>
+        <div class="rq-arrows">${r.kind === 'items' && r.all ? html`<button type="button" class="btn sm ghost rq-seeall" data-browse="${r.all}" aria-label="See all ${r.all === 'tv' ? 'shows' : 'films'}">See all</button>` : ''}<button type="button" class="iconbtn rq-arrow" data-scroll="-1" aria-label="Scroll ${r.title} back" disabled>${icon('back')}</button>
         <button type="button" class="iconbtn rq-arrow" data-scroll="1" aria-label="Scroll ${r.title} on">${icon('next')}</button></div></div>
-      <div class="rq-railbox">${raw(skeletonRail(r.kind === 'genres' ? 5 : 8))}</div>
+      <div class="rq-railbox">${raw(r.kind === 'items' ? skeletonRail(8) : skeletonRail(5).replace('rq-rail sk', `rq-rail sk ${r.kind}`))}</div>
     </section>`.value).join('');
     io?.disconnect();
     io = new IntersectionObserver(entries => {
@@ -83,14 +112,18 @@ export function mountDiscover(el: HTMLElement, env: DiscoverEnv): DiscoverPanel 
       if (def.kind === 'items') {
         const page = await seerr.discoverRail(def.rail, 1, ctx.signal);
         markup = page.items.length ? page.items.map((r, i) => posterTile(r, i).value).join('') : '';
-      } else {
+      } else if (def.kind === 'genres') {
         const list: GenreTile[] = await seerr.genres(def.mediaType, ctx.signal);
         markup = list.map((g, i) => genreTile(g, def.mediaType, i).value).join('');
+      } else {
+        markup = (def.mediaType === 'tv' ? NETWORKS : STUDIOS).map((b, i) => brandTile(b, def.mediaType, i).value).join('');
       }
       if (!alive) return;
       if (!markup) { sec.hidden = true; return; } // e.g. no show genres on this Seerr
-      box.innerHTML = `<ul class="rq-rail ${def.kind === 'genres' ? 'genres' : ''}" aria-label="${def.title}">${markup}</ul>`;
+      box.innerHTML = `<ul class="rq-rail ${def.kind === 'items' ? '' : def.kind}" aria-label="${def.title}">${markup}</ul>`;
       const rail = box.firstElementChild as HTMLElement;
+      // a logo that does not load: show the name instead
+      if (def.kind === 'brands') rail.addEventListener('error', e => { (e.target as Element).closest('.rq-brand')?.classList.add('noimg'); }, true);
       const sync = (): void => {
         const [back, on] = Array.from(sec.querySelectorAll<HTMLButtonElement>('[data-scroll]'));
         if (back) back.disabled = rail.scrollLeft <= 4;
@@ -103,28 +136,6 @@ export function mountDiscover(el: HTMLElement, env: DiscoverEnv): DiscoverPanel 
     }
   }
 
-  /* ── genre view ── */
-  async function showGenre(more = false): Promise<void> {
-    const g = st.genre;
-    if (!g) return;
-    const my = ++token;
-    if (!more) {
-      view.innerHTML = html`<div class="rq-genrehead"><button type="button" class="btn sm" id="rqgback">${icon('back')}Back to Discover</button>
-        <h2 class="rq-gh" id="rqgh" tabindex="-1">${g.name} ${g.mediaType === 'tv' ? 'shows' : 'films'}</h2></div><div id="rqgres">${skeletonGrid(12)}</div>`.value;
-    }
-    const page = await seerr.discoverGenre(g.mediaType, g.id, more ? g.page + 1 : 1, ctx.signal).catch(() => null);
-    if (!alive || my !== token || st.genre !== g) return;
-    const box = view.querySelector<HTMLElement>('#rqgres') as HTMLElement;
-    if (!page) { box.innerHTML = quiet('That did not load. Try again in a moment.'); return; }
-    const before = g.items.length;
-    g.items = more ? [...g.items, ...page.items.filter(x => !g.items.some(y => y.tmdbId === x.tmdbId))] : page.items;
-    g.page = page.page;
-    g.totalPages = page.totalPages;
-    box.innerHTML = g.items.length ? `${grid(g.items)}${g.page < g.totalPages ? '<div class="rq-moregrid"><button type="button" class="btn sm" id="rqgmore">Show more</button></div>' : ''}` : quiet('Nothing in this genre right now.');
-    if (more) box.querySelectorAll<HTMLElement>('.rq-open')[before]?.focus();
-    else view.querySelector<HTMLElement>('#rqgh')?.focus({ preventScroll: true });
-  }
-
   /* ── search (same behaviour as before: debounced, Films/Shows filter) ── */
   async function runSearch(): Promise<void> {
     const my = ++token;
@@ -132,7 +143,6 @@ export function mountDiscover(el: HTMLElement, env: DiscoverEnv): DiscoverPanel 
     st.query = text;
     env.setQuery({ q: text || null });
     if (text.length < 2) { home(); return; }
-    st.genre = null;
     let res = view.querySelector<HTMLElement>('#rqsres');
     if (!res) {
       view.innerHTML = html`<div class="rq-searchhead"><div class="rq-kinds" role="group" aria-label="What to show">
@@ -159,7 +169,6 @@ export function mountDiscover(el: HTMLElement, env: DiscoverEnv): DiscoverPanel 
 
   function home(): void {
     ++token;
-    if (st.genre) { void showGenre(); return; }
     if (!view.querySelector('[data-rail]')) showRails();
   }
 
@@ -172,26 +181,15 @@ export function mountDiscover(el: HTMLElement, env: DiscoverEnv): DiscoverPanel 
     const open = t.closest<HTMLElement>('[data-open]');
     if (open) { env.open({ tmdbId: Number(open.dataset.open), mediaType: open.dataset.type === 'tv' ? 'tv' : 'movie', title: open.dataset.title || undefined }); return; }
     const g = t.closest<HTMLElement>('[data-genre]');
-    if (g) {
-      st.genre = { id: Number(g.dataset.genre), mediaType: g.dataset.gtype === 'tv' ? 'tv' : 'movie', name: g.dataset.gname ?? 'Genre', page: 1, totalPages: 1, items: [] };
-      env.setQuery({ genre: String(st.genre.id), gtype: st.genre.mediaType, gname: st.genre.name });
-      lastGenreTile = `[data-genre="${st.genre.id}"][data-gtype="${st.genre.mediaType}"]`;
-      void showGenre();
+    if (g) { browse(env, { ...emptyBrowse(g.dataset.gtype === 'tv' ? 'tv' : 'movie'), genres: [Number(g.dataset.genre)] }); return; }
+    const b = t.closest<HTMLElement>('[data-brand]');
+    if (b) {
+      const id = Number(b.dataset.brand);
+      browse(env, b.dataset.btype === 'tv' ? { ...emptyBrowse('tv'), network: id } : { ...emptyBrowse('movie'), studio: id });
       return;
     }
-    if (t.closest('#rqgback')) {
-      st.genre = null;
-      env.setQuery({ genre: null, gtype: null, gname: null });
-      showRails();
-      // back to the tile that was opened, once its rail has loaded
-      const sel = lastGenreTile;
-      const sec = view.querySelector<HTMLElement>(`[data-rail="${sel.includes('"tv"') ? 'tgenres' : 'mgenres'}"]`);
-      sec?.scrollIntoView({ block: 'center' });
-      const tryFocus = (n: number): void => { const b = view.querySelector<HTMLElement>(sel); if (b) b.focus(); else if (n > 0 && alive) setTimeout(() => tryFocus(n - 1), 150); };
-      tryFocus(20);
-      return;
-    }
-    if (t.closest('#rqgmore')) { void showGenre(true); return; }
+    const all = t.closest<HTMLElement>('[data-browse]');
+    if (all) { browse(env, emptyBrowse(all.dataset.browse === 'tv' ? 'tv' : 'movie')); return; }
     if (t.closest('#rqclear')) { input.value = ''; void runSearch(); input.focus(); return; }
     const kind = t.closest<HTMLElement>('[data-kind]');
     if (kind) {
@@ -206,7 +204,6 @@ export function mountDiscover(el: HTMLElement, env: DiscoverEnv): DiscoverPanel 
       if (rail) rail.scrollBy({ left: Number(arrow.dataset.scroll) * Math.max(200, rail.clientWidth * 0.85), behavior: reduced() ? 'auto' : 'smooth' });
     }
   });
-  let lastGenreTile = '';
   // Left / Right between posters in a rail (Tab still walks through them all)
   el.addEventListener('keydown', e => {
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
@@ -222,7 +219,6 @@ export function mountDiscover(el: HTMLElement, env: DiscoverEnv): DiscoverPanel 
     refresh(): void {
       // statuses may have changed after a request: reload what is on screen
       if (st.query.length >= 2) void runSearch();
-      else if (st.genre) void showGenre();
       else showRails();
     },
     dispose(): void { alive = false; io?.disconnect(); window.clearTimeout(timer); },

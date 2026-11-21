@@ -87,7 +87,11 @@ function mount(root: HTMLElement, ctx: PageContext, caps: SeerrCapabilities): vo
   const open = (t: { tmdbId: number; mediaType: 'movie' | 'tv'; title?: string }): void => { openTitleSheet(sheetEnv, t); };
 
   function select(next: TabId, fromCode = false): void {
-    if (next === tab && current) return;
+    if (next === tab && current) {
+      // "Discover" while browsing: back to Discover's front page
+      if (next === 'discover' && /[?&]type=/.test(location.hash)) ctx.router.navigate('/requests/discover');
+      return;
+    }
     current?.dispose();
     closeAllDialogs();
     tab = next;
@@ -108,7 +112,7 @@ function mount(root: HTMLElement, ctx: PageContext, caps: SeerrCapabilities): vo
     current = tab === 'discover'
       ? mountDiscover(box, { ctx: pctx, open, setQuery })
       : mountList(box, { ctx: pctx, caps, open, setQuery });
-    ctx.shell.setTitle(tab === 'discover' ? 'Discover · Requests' : 'Requests');
+    if (!(tab === 'discover' && /[?&]type=/.test(location.hash))) ctx.shell.setTitle(tab === 'discover' ? 'Discover · Requests' : 'Requests'); // Browse names itself
   }
 
   ctx.shell.setTabs({ label: 'Requests sections', tabs: TABS, selected: tab, panelId: 'rq-panel', onSelect: id => { if (id === 'requests' || id === 'discover') select(id); } });

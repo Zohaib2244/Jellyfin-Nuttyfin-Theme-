@@ -88,10 +88,10 @@ export function openTitleSheet(env: SheetEnv, target: SheetTarget): DialogHandle
           ${d.genres.length ? html`<ul class="rq-genres" aria-label="Genres">${d.genres.slice(0, 4).map(g => html`<li>${g}</li>`)}</ul>` : ''}
         </div>
       </div>
-      ${status ? html`<p class="rq-dstatus ${status.tone}" role="status">${ic(status.tone === 'ok' ? 'check' : status.tone === 'wait' ? 'clock' : 'dl')}<span>${status.text}</span></p>` : ''}
+      ${status ? html`<p class="rq-dstatus ${status.tone}" role="status">${ic(status.tone === 'ok' ? 'check' : status.tone === 'wait' ? 'clock' : status.tone === 'bad' ? 'x' : 'dl')}<span>${status.text}</span></p>` : ''}
       <div class="rq-dacts">
         ${inLib ? html`<a class="btn primary" href="#/title/${d.jellyfinId}" data-go data-autofocus>${ic('play')}${d.mediaType === 'movie' ? 'Play or open in library' : 'Open in library'}</a>` : ''}
-        ${canAsk ? html`<button class="btn ${inLib ? '' : 'primary'}" type="button" id="rq-req" ${inLib ? '' : raw('data-autofocus')}>${ic('ask')}${d.partial ? 'Request more seasons' : 'Request'}</button>` : ''}
+        ${canAsk ? html`<button class="btn ${inLib ? '' : 'primary'}" type="button" id="rq-req" ${inLib ? '' : raw('data-autofocus')}>${ic('ask')}${d.partial ? 'Request more seasons' : d.mediaStatus === 7 ? 'Request again' : 'Request'}</button>` : ''}
         ${d.trailer ? html`<button class="btn" type="button" id="rq-trailer" ${!inLib && !canAsk ? raw('data-autofocus') : ''}>${ic('trailer')}Trailer</button>` : ''}
         ${d.myRequestId ? html`<button class="btn ghost" type="button" id="rq-cancel">Cancel my request</button>` : ''}
       </div>

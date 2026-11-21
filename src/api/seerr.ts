@@ -179,6 +179,8 @@ export class SeerrClient implements SeerrApi {
   discoverRail(...a: Parameters<SeerrApi['discoverRail']>): ReturnType<SeerrApi['discoverRail']> { return this.desk.discoverRail(...a); }
   genres(...a: Parameters<SeerrApi['genres']>): ReturnType<SeerrApi['genres']> { return this.desk.genres(...a); }
   discoverGenre(...a: Parameters<SeerrApi['discoverGenre']>): ReturnType<SeerrApi['discoverGenre']> { return this.desk.discoverGenre(...a); }
+  genreList(...a: Parameters<SeerrApi['genreList']>): ReturnType<SeerrApi['genreList']> { return this.desk.genreList(...a); }
+  browse(...a: Parameters<SeerrApi['browse']>): ReturnType<SeerrApi['browse']> { return this.desk.browse(...a); }
   // ── phase5-7: end ──
 
   private async rowDetail(r: RequestRaw): Promise<{ title?: string; name?: string; releaseDate?: string; firstAirDate?: string; posterPath?: string } | undefined> {

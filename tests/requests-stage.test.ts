@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { TitleFacts } from '../src/api/desk-types';
-import { etaText, longDate, releaseWait, requestStage, titleStatus, type StageInput } from '../src/pages/requests/stage';
+import { etaText, GROUPS, isRemoved, longDate, releaseWait, requestStage, titleStatus, type StageInput } from '../src/pages/requests/stage';
 
 const NOW = new Date('2026-11-21T12:00:00Z');
 const r = (o: Partial<StageInput> = {}): StageInput => ({
@@ -28,11 +28,11 @@ describe('request stage', () => {
 
   it('in cinemas with a later home release says when it can be watched at home', () => {
     const s = requestStage(r(), film({ releaseDate: '2026-11-03', homeRelease: '2027-01-20' }), NOW);
-    expect(s.line).toBe('Approved 3 weeks ago · in cinemas now, out to watch at home 20 January 2027');
+    expect(s.line).toBe('Approved 3 weeks ago · in cinemas now, available for download from 20 January 2027');
   });
 
   it('in cinemas recently with no home date announced (the real Godzilla case)', () => {
-    expect(requestStage(r(), film({ releaseDate: '2026-11-03' }), NOW).line).toBe('Approved 3 weeks ago · in cinemas now, not out to watch at home yet');
+    expect(requestStage(r(), film({ releaseDate: '2026-11-03' }), NOW).line).toBe('Approved 3 weeks ago · in cinemas now, not available for download yet');
   });
 
   it('released and out at home but not grabbed: searching for a copy', () => {
@@ -53,7 +53,24 @@ describe('request stage', () => {
 
   it('available and the library line', () => {
     expect(requestStage(r({ requestStatus: 5, mediaStatus: 5 }), null, NOW)).toMatchObject({ id: 'available', step: 4, group: 'added' });
-    expect(requestStage(r({ requestStatus: 5, mediaStatus: 7 }), null, NOW)).toMatchObject({ id: 'removed', group: 'added' });
+  });
+
+  it('added and later removed is its own red "Removed" group, never "Added"', () => {
+    const s = requestStage(r({ requestStatus: 5, mediaStatus: 7 }), film({ releaseDate: '2020-01-01' }), NOW);
+    expect(s).toMatchObject({ id: 'removed', group: 'removed', step: 4, short: 'Removed', line: 'Removed from the library' });
+    // an approved request whose media was deleted is removed too
+    expect(requestStage(r({ requestStatus: 2, mediaStatus: 7 }), null, NOW)).toMatchObject({ id: 'removed', group: 'removed' });
+    // but a live download means it is coming back
+    expect(requestStage(r({ requestStatus: 2, mediaStatus: 7, downloads: [{ percent: 10 }] }), null, NOW)).toMatchObject({ id: 'downloading', group: 'onway' });
+    // declined and pending stay what they are
+    expect(requestStage(r({ requestStatus: 3, mediaStatus: 7 }), null, NOW).group).toBe('declined');
+    expect(isRemoved({ requestStatus: 1, mediaStatus: 7, downloads: [] })).toBe(false);
+    expect(isRemoved({ requestStatus: 5, mediaStatus: 5, downloads: [] })).toBe(false);
+    expect(GROUPS.map(g => g.id)).toEqual(['pending', 'onway', 'added', 'removed', 'declined']);
+  });
+
+  it('the details sheet says a removed title can be requested again', () => {
+    expect(titleStatus({ mediaType: 'movie', mediaStatus: 7 }, NOW)).toEqual({ tone: 'bad', text: 'Removed from the library · you can request it again' });
   });
 
   it('partly available shows say which seasons', () => {

@@ -7,6 +7,7 @@ import { esc, html, raw, type SafeHtml } from '../../lib/html';
 import { relativeTime } from '../../lib/format';
 import { ic } from '../common/icons';
 import { requestLabel } from '../home/model';
+import { logoUrl, type Brand } from './browse-model';
 import { seasonsText } from './model';
 import { STEPS, type Stage } from './stage';
 
@@ -70,6 +71,15 @@ export function genreTile(g: GenreTile, mediaType: 'movie' | 'tv', i: number): S
   </li>`;
 }
 
+/** A network or studio: its white logo centred on a dark tile (like Seerr's), the name for screen readers. */
+export function brandTile(b: Brand, mediaType: 'movie' | 'tv', i: number): SafeHtml {
+  return html`<li class="rq-btile" style="--i:${Math.min(i, 12)}">
+    <button type="button" class="rq-brand" data-brand="${b.id}" data-btype="${mediaType}" aria-label="${b.name} ${mediaType === 'tv' ? 'shows' : 'films'}">
+      <img src="${logoUrl(b.logo)}" alt="" loading="lazy" decoding="async"><span class="rq-bname" aria-hidden="true">${b.name}</span>
+    </button>
+  </li>`;
+}
+
 export const skeletonRail = (n = 8): string => `<ul class="rq-rail sk" aria-hidden="true">${'<li class="rq-tile"><i class="rq-sk poster"></i><i class="rq-sk line"></i></li>'.repeat(n)}</ul>`;
 export const skeletonGrid = (n = 6): string => `<div class="rq-skgrid" aria-hidden="true">${'<div><i class="rq-sk poster"></i><i class="rq-sk line"></i></div>'.repeat(n)}</div>`;
 export const skeletonRows = (n = 3): string => `<div class="rq-skrows" aria-hidden="true">${'<div><i class="rq-sk pic"></i><span><i class="rq-sk line"></i><i class="rq-sk line s"></i></span></div>'.repeat(n)}</div>`;
@@ -79,8 +89,12 @@ export const skeletonRows = (n = 3): string => `<div class="rq-skrows" aria-hidd
 export function stepper(s: Stage): SafeHtml {
   if (s.id === 'declined') return raw('');
   const bad = s.id === 'failed';
-  return html`<ol class="rq-stepper ${s.id}" aria-label="Progress: ${STEPS[s.step]}, step ${s.step + 1} of ${STEPS.length}">${STEPS.map((label, i) => {
-    const st = i < s.step || (i === s.step && s.step === 4 && s.id !== 'partial') ? 'done' : i === s.step ? (bad ? 'bad' : 'now') : 'todo';
+  const gone = s.id === 'removed';
+  // removed: the last step reads "Removed" in red instead of "In the library"
+  const labels = gone ? [...STEPS.slice(0, -1), 'Removed'] : STEPS;
+  return html`<ol class="rq-stepper ${s.id}" aria-label="${gone ? 'Was added to the library, then removed' : `Progress: ${STEPS[s.step]}, step ${s.step + 1} of ${STEPS.length}`}">${labels.map((label, i) => {
+    const st = gone ? (i === s.step ? 'gone' : 'done')
+      : i < s.step || (i === s.step && s.step === 4 && s.id !== 'partial') ? 'done' : i === s.step ? (bad ? 'bad' : 'now') : 'todo';
     return html`<li class="${st}" ${i === s.step ? raw('aria-current="step"') : ''}><i aria-hidden="true"></i><span>${label}</span></li>`;
   })}</ol>`;
 }
@@ -104,6 +118,7 @@ export function requestRow(r: DeskRequest, s: Stage, c: RowCtx): SafeHtml {
   const meta = [metaOf(r.mediaType, r.year), r.mediaType === 'tv' ? seasonsText(r.seasons) : '', r.is4k ? '4K' : ''].filter(Boolean).join(' · ');
   const decide = !!c.caps?.perms.manageRequests && r.requestStatus === 1;
   const lib = (s.id === 'available' || s.id === 'partial') && r.jellyfinId;
+  const again = s.id === 'removed' && !!c.caps && (r.mediaType === 'movie' ? c.caps.perms.requestMovie : c.caps.perms.requestTv);
   return html`<li class="rq-row g-${s.group}" data-req-id="${r.id}">
     <button type="button" class="rq-rowopen" data-open="${r.tmdbId}" data-type="${r.mediaType}" data-title="${r.title}" aria-label="${title}: details">
       <span class="rq-poster">${posterOf({ ...r, title }, 185)}</span>
@@ -112,11 +127,12 @@ export function requestRow(r: DeskRequest, s: Stage, c: RowCtx): SafeHtml {
       <h3><button type="button" class="rq-tlink ${r.title ? '' : 'loading'}" data-open="${r.tmdbId}" data-type="${r.mediaType}" data-title="${r.title}">${title}</button></h3>
       <p class="rq-meta">${meta}${who ? html` · <span class="rq-who">asked by ${who === 'You' ? 'you' : who}</span>` : s.id === 'requested' || !when ? '' : ` · asked ${when}`}</p>
       ${stepper(s)}
-      <p class="rq-line ${s.id}">${s.line}</p>
+      <p class="rq-line ${s.id}">${s.id === 'removed' ? ic('x') : ''}${s.line}</p>
       ${s.id === 'downloading' && s.percent != null ? html`<span class="prog rq-prog" role="progressbar" aria-label="${named} downloaded" aria-valuenow="${s.percent}" aria-valuemin="0" aria-valuemax="100"><i style="width:${s.percent}%"></i></span>` : ''}
     </div>
-    ${decide || lib ? html`<div class="rq-btns">
+    ${decide || lib || again ? html`<div class="rq-btns">
       ${lib ? html`<a class="btn sm" href="#/title/${r.jellyfinId}" aria-label="Open ${named} in the library">${ic('play')}Open</a>` : ''}
+      ${again ? html`<button class="btn sm" type="button" data-open="${r.tmdbId}" data-type="${r.mediaType}" data-title="${r.title}" aria-label="Request ${named} again">${ic('ask')}Request again</button>` : ''}
       ${decide ? html`<button class="btn sm primary" type="button" data-act="approve" data-id="${r.id}" aria-label="Approve ${named}">${ic('check')}Approve</button>
         <button class="btn sm" type="button" data-act="decline" data-id="${r.id}" aria-label="Decline ${named}">${ic('x')}Decline</button>` : ''}
     </div>` : ''}

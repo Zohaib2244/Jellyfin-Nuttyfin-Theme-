@@ -133,9 +133,28 @@ export interface DiscoverItem extends SeerrResult {
   /** 0-10 */
   rating?: number;
 }
-export interface DiscoverPage { items: DiscoverItem[]; page: number; totalPages: number }
+export interface DiscoverPage { items: DiscoverItem[]; page: number; totalPages: number; /** Seerr's totalResults, when it says */ total?: number }
 export type DiscoverRail = 'trending' | 'movies' | 'movies-upcoming' | 'tv' | 'tv-upcoming';
 export interface GenreTile { id: number; name: string; backdrop?: string }
+
+/** A plain genre name (Seerr /genres/movie|tv), for the Browse filter chips. */
+export interface GenreName { id: number; name: string }
+
+/** Browse sort as the page knows it; seerr-desk maps "release" to the right Seerr field per media type. */
+export type BrowseSort = 'popularity.desc' | 'vote_average.desc' | 'release.desc' | 'release.asc';
+/** One Browse query: films OR shows (Seerr's discover endpoints cannot mix the two in one sorted list). */
+export interface BrowseQuery {
+  mediaType: 'movie' | 'tv';
+  /** TMDB genre ids; a title must have all of them */
+  genres: readonly number[];
+  sort: BrowseSort;
+  fromYear?: number;
+  toYear?: number;
+  /** TMDB network id (shows only) */
+  network?: number;
+  /** TMDB company id (films only) */
+  studio?: number;
+}
 
 export type RequestScope = 'mine' | 'all';
 /** What the filter chips mean: waiting = not approved yet, onway = approved/downloading, ready = in the library. */
@@ -195,6 +214,11 @@ export interface SeerrDeskApi {
   genres(mediaType: 'movie' | 'tv', signal?: AbortSignal): Promise<GenreTile[]>;
   /** Films or shows of one genre (Seerr /discover/movies|tv?genre=). */
   discoverGenre(mediaType: 'movie' | 'tv', genreId: number, page?: number, signal?: AbortSignal): Promise<DiscoverPage>;
+  /** Genre names for the Browse filter (Seerr /genres/movie|tv). [] when unavailable. */
+  genreList(mediaType: 'movie' | 'tv', signal?: AbortSignal): Promise<GenreName[]>;
+  /** One page of the Browse view (Seerr /discover/movies|tv with genre, sort, years, studio/network).
+   *  THROWS when Seerr does not answer, so the page can show an error instead of "nothing found". */
+  browse(q: BrowseQuery, page?: number, signal?: AbortSignal): Promise<DiscoverPage>;
   /** Throws ApiError (use explainRequestError). */
   createRequest(input: DeskRequestInput): Promise<SeerrRequest>;
   /** Cancel (own pending, or anyone's with the manage permission). Throws ApiError. */

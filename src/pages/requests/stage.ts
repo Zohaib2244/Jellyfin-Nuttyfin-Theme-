@@ -13,7 +13,7 @@ import type { DownloadInfo, TitleFacts } from '../../api/desk-types';
 import { relativeTime } from '../../lib/format';
 
 export type StageId = 'requested' | 'declined' | 'failed' | 'waiting' | 'downloading' | 'partial' | 'available' | 'removed';
-export type StageGroup = 'pending' | 'onway' | 'added' | 'declined';
+export type StageGroup = 'pending' | 'onway' | 'added' | 'removed' | 'declined';
 
 export interface Stage {
   id: StageId;
@@ -95,10 +95,10 @@ export function releaseWait(mediaType: 'movie' | 'tv', facts: TitleFacts | null 
   const today = isoDay(now);
   if (mediaType === 'movie') {
     if (facts.releaseDate && facts.releaseDate > today) return { date: facts.releaseDate, text: `comes out ${longDate(facts.releaseDate, now)}` };
-    if (facts.homeRelease && facts.homeRelease > today) return { date: facts.homeRelease, text: `in cinemas now, out to watch at home ${longDate(facts.homeRelease, now)}` };
-    // in cinemas recently with no home date announced yet: nothing to download for a while
+    if (facts.homeRelease && facts.homeRelease > today) return { date: facts.homeRelease, text: `in cinemas now, available for download from ${longDate(facts.homeRelease, now)}` };
+    // in cinemas recently with no digital/disc date announced yet: nothing to download for a while
     if (!facts.homeRelease && facts.releaseDate && now.getTime() - new Date(`${facts.releaseDate}T00:00:00`).getTime() < 100 * DAY) {
-      return { text: 'in cinemas now, not out to watch at home yet' };
+      return { text: 'in cinemas now, not available for download yet' };
     }
     return null;
   }
@@ -113,6 +113,13 @@ export function releaseWait(mediaType: 'movie' | 'tv', facts: TitleFacts | null 
   }
   return null;
 }
+
+/**
+ * Was this request's title in the library and then removed? Seerr marks the media "deleted" (7) and leaves the request
+ * completed (5) or approved (2). A live download means it is coming back, so that is not "removed".
+ */
+export const isRemoved = (r: Pick<StageInput, 'requestStatus' | 'mediaStatus' | 'downloads'>): boolean =>
+  r.mediaStatus === 7 && (r.requestStatus === 5 || r.requestStatus === 2) && !r.downloads.length;
 
 export function requestStage(r: StageInput, facts: TitleFacts | null | undefined, now: Date = new Date()): Stage {
   const asked = relativeTime(r.createdAt, now).toLowerCase();
@@ -135,8 +142,9 @@ export function requestStage(r: StageInput, facts: TitleFacts | null | undefined
       : partly.length ? `Some episodes of ${seasonWords(partly)} are ready to watch · the rest is on the way` : 'Partly in the library · the rest is on the way';
     return { id: 'partial', step: 4, group: 'onway', short: 'Partly ready', line };
   }
+  // was in the library, then removed (Seerr media status 7 "deleted"): its own red group, can be asked for again
+  if (isRemoved(r)) return { id: 'removed', step: 4, group: 'removed', short: 'Removed', line: 'Removed from the library' };
   if (r.requestStatus === 5) {
-    if (ms === 7) return { id: 'removed', step: 4, group: 'added', short: 'Removed', line: 'Was added to the library, since removed' };
     return { id: 'available', step: 4, group: 'added', short: 'Done', line: 'Finished' };
   }
 
@@ -160,6 +168,7 @@ export const GROUPS: ReadonlyArray<{ id: StageGroup; label: string; empty: strin
   { id: 'pending', label: 'Waiting for a yes', empty: 'Nothing is waiting for a yes.' },
   { id: 'onway', label: 'On the way', empty: 'Nothing on the way right now.' },
   { id: 'added', label: 'Added to the library', empty: 'Nothing added yet.' },
+  { id: 'removed', label: 'Removed', empty: 'Nothing has been removed from the library.' },
   { id: 'declined', label: 'Declined', empty: 'Nothing declined.' },
 ];
 
@@ -170,8 +179,9 @@ export const GROUPS: ReadonlyArray<{ id: StageGroup; label: string; empty: strin
 export function titleStatus(
   d: { mediaType: 'movie' | 'tv'; mediaStatus?: number; downloads?: readonly DownloadInfo[]; facts?: TitleFacts; seasons?: ReadonlyArray<{ number: number; state?: string }> },
   now: Date = new Date(),
-): { tone: 'ok' | 'info' | 'wait'; text: string } | null {
+): { tone: 'ok' | 'info' | 'wait' | 'bad'; text: string } | null {
   const ms = d.mediaStatus;
+  if (ms === 7 && !d.downloads?.length) return { tone: 'bad', text: 'Removed from the library · you can request it again' };
   if (ms === 5) return { tone: 'ok', text: 'In the library · ready to watch' };
   if (ms === 4) {
     const ready = d.facts?.seasonsReady ?? d.seasons?.filter(s => s.state === 'available').map(s => s.number) ?? [];

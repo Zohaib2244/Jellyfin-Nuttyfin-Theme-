@@ -5,7 +5,7 @@
  * Shapes verified against Seerr 3.5.1 (tests/fixtures/seerr/*.json).
  */
 import type {
-  CastMember, DeskRequest, DeskRequestInput, DiscoverItem, DiscoverPage, DiscoverRail, DownloadInfo, GenreTile, QualityProfile, RequestFailureInfo, RequestFilter,
+  BrowseQuery, CastMember, GenreName, DeskRequest, DeskRequestInput, DiscoverItem, DiscoverPage, DiscoverRail, DownloadInfo, GenreTile, QualityProfile, RequestFailureInfo, RequestFilter,
   RequestScope, RequestsPage, SeasonInfo, SeerrCapabilities, SeerrDeskApi, SeerrDetail, SeerrIssue, SeerrPerms, TitleFacts,
 } from './desk-types';
 import { ApiError, type Http } from './http';
@@ -19,6 +19,35 @@ const RAIL_PATH: Record<DiscoverRail, string> = {
   trending: '/discover/trending', movies: '/discover/movies', 'movies-upcoming': '/discover/movies/upcoming', tv: '/discover/tv', 'tv-upcoming': '/discover/tv/upcoming',
 };
 const RAIL_TYPE: Partial<Record<DiscoverRail, 'movie' | 'tv'>> = { movies: 'movie', 'movies-upcoming': 'movie', tv: 'tv', 'tv-upcoming': 'tv' };
+
+/**
+ * Seerr query parameters for one Browse page (verified against Seerr 3.5.1, read-only):
+ *  - genre: comma list = all of them (TMDB with_genres); studio (films) / network (shows) work together with genre and sortBy
+ *  - sortBy: popularity.desc, vote_average.desc, primary_release_date.* (films) / first_air_date.* (shows).
+ *    title.asc is ignored by TMDB and original_title.asc sorts by the original-language title, so A-Z is not offered.
+ *  - voteAverage sorting alone surfaces one-vote oddities, so "Top rated" asks for a vote-count floor; "Newest" stops at
+ *    today (otherwise announced titles dated 2099 come first) and "Oldest" needs a floor too (1870s test reels).
+ *  - years: primaryReleaseDateGte/Lte (films) / firstAirDateGte/Lte (shows). Unknown parameters are rejected with 400.
+ */
+export function browseParams(q: BrowseQuery, page: number, today: string): Record<string, string | number> {
+  const film = q.mediaType === 'movie';
+  const out: Record<string, string | number> = { page };
+  const field = film ? 'primary_release_date' : 'first_air_date';
+  out.sortBy = q.sort === 'release.desc' ? `${field}.desc` : q.sort === 'release.asc' ? `${field}.asc` : q.sort;
+  if (q.genres.length) out.genre = q.genres.join(',');
+  if (film && q.studio) out.studio = q.studio;
+  if (!film && q.network) out.network = q.network;
+  const gte = film ? 'primaryReleaseDateGte' : 'firstAirDateGte';
+  const lte = film ? 'primaryReleaseDateLte' : 'firstAirDateLte';
+  if (q.fromYear) out[gte] = `${q.fromYear}-01-01`;
+  let upTo = q.toYear ? `${q.toYear}-12-31` : '';
+  if (q.sort === 'release.desc' && (!upTo || upTo > today)) upTo = today;
+  if (upTo) out[lte] = upTo;
+  const floor = q.sort === 'vote_average.desc' ? (film ? 1000 : 500) : q.sort === 'release.asc' ? (film ? 300 : 100) : q.sort === 'release.desc' ? 20 : 0;
+  // a network or studio is a small list already: a high floor would empty it
+  if (floor) out.voteCountGte = q.network || q.studio ? Math.min(floor, 50) : floor;
+  return out;
+}
 
 /** sessionStorage, or null where it is missing or blocked (tests, private windows). */
 function session(): Storage | null {
@@ -81,7 +110,7 @@ interface RawHit {
   id: number; mediaType?: string; title?: string; name?: string; releaseDate?: string; firstAirDate?: string; posterPath?: string; overview?: string;
   backdropPath?: string; voteAverage?: number; mediaInfo?: RawMedia;
 }
-interface RawPage { page?: number; totalPages?: number; results?: RawHit[] }
+interface RawPage { page?: number; totalPages?: number; totalResults?: number; results?: RawHit[] }
 interface RawIssue {
   id: number; issueType: number; status: number; createdAt?: string;
   media?: { tmdbId?: number; mediaType?: string; jellyfinMediaId?: string | null };
@@ -111,7 +140,7 @@ export function hitToItem(h: RawHit, fallbackType?: 'movie' | 'tv'): DiscoverIte
 
 export function mapPage(r: RawPage | undefined, fallbackType?: 'movie' | 'tv'): DiscoverPage {
   const items = (r?.results ?? []).map(h => hitToItem(h, fallbackType)).filter((x): x is DiscoverItem => !!x);
-  return { items, page: r?.page ?? 1, totalPages: r?.totalPages ?? 1 };
+  return { items, page: r?.page ?? 1, totalPages: r?.totalPages ?? 1, ...(typeof r?.totalResults === 'number' ? { total: r.totalResults } : {}) };
 }
 
 /** Radarr/Sonarr queue entries as Seerr reports them. Empty when nothing is really downloading. */
@@ -383,6 +412,25 @@ export class SeerrDesk implements SeerrDeskApi {
       if (signal?.aborted) throw e;
       return { items: [], page: 1, totalPages: 1 };
     }
+  }
+
+  async genreList(mediaType: 'movie' | 'tv', signal?: AbortSignal): Promise<GenreName[]> {
+    if (!(await this.available())) return [];
+    try {
+      const r = await this.http<Array<{ id?: number; name?: string }>>(`/genres/${mediaType}`, { signal, timeoutMs: 10_000 });
+      return (Array.isArray(r) ? r : []).filter((g): g is GenreName => typeof g.id === 'number' && !!g.name).map(g => ({ id: g.id, name: g.name }));
+    } catch (e) {
+      if (signal?.aborted) throw e;
+      return [];
+    }
+  }
+
+  async browse(q: BrowseQuery, page = 1, signal?: AbortSignal): Promise<DiscoverPage> {
+    if (!(await this.available())) throw new ApiError(503, 'network', 'Seerr is not available');
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const path = q.mediaType === 'movie' ? '/discover/movies' : '/discover/tv';
+    return mapPage(await this.http<RawPage>(path, { query: browseParams(q, page, today), signal, timeoutMs: 12_000 }), q.mediaType);
   }
 
   /** TMDB title + poster for a media row, through the facts cache. Failures leave the title blank. */

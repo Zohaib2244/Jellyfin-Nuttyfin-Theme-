@@ -65,7 +65,7 @@ export function mountList(el: HTMLElement, env: ListEnv): ListPanel {
   const visible = (): DeskRequest[] => st.items.filter(r => !st.person || String(r.requestedById ?? r.requestedBy) === st.person);
 
   function paintCounts(list: DeskRequest[], stages: Map<number, Stage>): void {
-    const n: Record<Filter, number> = { all: list.length, pending: 0, onway: 0, added: 0, declined: 0 };
+    const n: Record<Filter, number> = { all: list.length, pending: 0, onway: 0, added: 0, removed: 0, declined: 0 };
     for (const r of list) n[(stages.get(r.id) as Stage).group]++;
     el.querySelectorAll<HTMLElement>('[data-filter]').forEach(b => {
       const f = b.dataset.filter as Filter;
@@ -105,7 +105,7 @@ export function mountList(el: HTMLElement, env: ListEnv): ListPanel {
     const groups = GROUPS.filter(g => st.filter === 'all' || st.filter === g.id);
     groupsEl.innerHTML = groups.map(g => {
       let rows = list.filter(r => stages.get(r.id)?.group === g.id);
-      if (g.id === 'added' || g.id === 'declined') rows = rows.sort((a, b) => (b.updatedAt ?? b.createdAt).localeCompare(a.updatedAt ?? a.createdAt));
+      if (g.id === 'added' || g.id === 'removed' || g.id === 'declined') rows = rows.sort((a, b) => (b.updatedAt ?? b.createdAt).localeCompare(a.updatedAt ?? a.createdAt));
       if (g.id === 'pending') rows = rows.sort((a, b) => a.createdAt.localeCompare(b.createdAt)); // oldest question first
       if (!rows.length) return st.filter === 'all' ? '' : quiet(g.empty);
       const limit = st.filter === 'all' && !st.expanded.has(g.id) ? FIRST : rows.length;

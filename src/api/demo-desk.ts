@@ -6,6 +6,7 @@
  */
 import { ApiError } from './http';
 import type {
+  BrowseQuery, GenreName,
   DeskRequest, DeskRequestInput, DiscoverItem, DiscoverPage, DiscoverRail, GenreTile, RequestFilter, RequestScope, RequestsPage, SeasonInfo, SeerrCapabilities,
   SeerrDeskApi, SeerrDetail, SeerrIssue, TitleFacts,
 } from './desk-types';
@@ -205,6 +206,15 @@ export function createDemoDesk(ctx: DemoDeskCtx): DemoDesk {
     cachedFacts: () => null,
     discoverRail: async (rail: DiscoverRail): Promise<DiscoverPage> => { await sleep(150); return pageOf(ctx.search.filter(RAILS[rail])); },
     genres: async (mediaType: 'movie' | 'tv'): Promise<GenreTile[]> => { await sleep(90); return GENRES[mediaType]; },
+    genreList: async (mediaType: 'movie' | 'tv'): Promise<GenreName[]> => { await sleep(60); return GENRES[mediaType].map(g => ({ id: g.id, name: g.name })); },
+    browse: async (q: BrowseQuery): Promise<DiscoverPage> => {
+      await sleep(160);
+      const list = ctx.search.filter((r, i) => r.mediaType === q.mediaType && q.genres.every(g => (i + g) % 3 !== 0)
+        && (!q.fromYear || (r.year ?? 0) >= q.fromYear) && (!q.toYear || (r.year ?? 9999) <= q.toYear));
+      if (q.sort === 'release.desc') list.sort((a, b) => (b.year ?? 0) - (a.year ?? 0));
+      if (q.sort === 'release.asc') list.sort((a, b) => (a.year ?? 0) - (b.year ?? 0));
+      return pageOf(list);
+    },
     discoverGenre: async (mediaType: 'movie' | 'tv', genreId: number): Promise<DiscoverPage> => {
       await sleep(150);
       return pageOf(ctx.search.filter((r, i) => r.mediaType === mediaType && (i + genreId) % 3 !== 0));
