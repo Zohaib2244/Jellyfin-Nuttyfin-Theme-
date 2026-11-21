@@ -35,11 +35,12 @@ export function mediaState(status: number | undefined): RequestState | undefined
   }
 }
 
-/** Seerr request status: 1 pending approval, 2 approved, 3 declined. A processing/available media status wins. */
-export function requestState(requestStatus: number, mediaStatus?: number): RequestState {
+/** Seerr request status: 1 pending approval, 2 approved, 3 declined. An available media status wins.
+ *  Media "processing" (3) only means approved-and-waiting; it counts as downloading only when Radarr/Sonarr report a real download. */
+export function requestState(requestStatus: number, mediaStatus?: number, downloading = false): RequestState {
   if (requestStatus === 3) return 'declined';
   if (mediaStatus === 5 || mediaStatus === 4) return 'available';
-  if (mediaStatus === 3) return 'downloading';
+  if (mediaStatus === 3 && downloading) return 'downloading';
   return requestStatus === 2 ? 'approved' : 'requested';
 }
 
@@ -199,7 +200,7 @@ export class SeerrClient implements SeerrApi {
       title: d?.title ?? d?.name ?? '',
       year: yearOf(d?.releaseDate ?? d?.firstAirDate),
       posterPath: d?.posterPath || undefined,
-      state: requestState(r.status, r.media?.status),
+      state: requestState(r.status, r.media?.status, (r.media?.downloadStatus?.length ?? 0) > 0),
       requestedBy: r.requestedBy?.displayName ?? r.requestedBy?.jellyfinUsername ?? r.requestedBy?.username ?? '',
       createdAt: r.createdAt ?? '',
       seasons: r.seasons?.map(s => s.seasonNumber),

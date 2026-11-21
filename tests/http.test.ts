@@ -32,7 +32,8 @@ describe('seerr status mapping', () => {
     expect([2, 3, 4, 5, 1, undefined].map(mediaState)).toEqual(['requested', 'downloading', 'available', 'available', undefined, undefined]);
     expect(requestState(1)).toBe('requested');
     expect(requestState(2)).toBe('approved');
-    expect(requestState(2, 3)).toBe('downloading');
+    expect(requestState(2, 3)).toBe('approved'); // processing but nothing downloading yet
+    expect(requestState(2, 3, true)).toBe('downloading');
     expect(requestState(2, 5)).toBe('available');
     expect(requestState(3, 5)).toBe('declined');
   });
