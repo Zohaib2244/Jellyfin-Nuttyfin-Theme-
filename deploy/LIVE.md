@@ -52,3 +52,5 @@ Verified the login and brand at desktop and phone widths, plus checked and unche
 
 Released `20261121-174901-4bae1c9` (previous: `20261121-174444-b6eb403`, before that `20261117-101629-brand-remember`; all kept under `releases/`). Static only: no Caddy reload, no helper change. Contents: Home restructure (full-width Keep watching, Recently added, no Arrange/date row, NutBot floating button / phone top-bar button), full-width pages, floating icon rail, Sticker brand mark, AVN Hub colour themes with light/dark, dot-grid or scrolling-posters background, account menu with Appearance/Settings pages, Details full-bleed hero, Requests rework (Requests + Discover tabs, honest stages, removed state, Networks/Studios, Browse), Newly Added banner rule and redesigned On the way.
 To roll back: point `current` at the previous release folder (`sudo ln -sfn releases/<old> current.new && sudo mv -T current.new current`).
+
+Follow-up release 20261121-175252-613cc57: Details "Audio & subtitles" card (no popover), player seek/volume pill at the top, spinner/Paused state reconciled with the video.
