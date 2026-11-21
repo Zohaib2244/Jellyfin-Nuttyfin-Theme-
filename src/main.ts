@@ -4,8 +4,10 @@ import './styles/palettes.css';
 import './styles/base.css';
 import './styles/shell.css';
 import './styles/backgrounds.css';
+import './styles/motion.css';
 import { createBackend } from './api';
 import { installImageFallback } from './lib/dom';
+import { initMotion } from './lib/motion-dom';
 import { Router } from './router';
 import { routes } from './routes';
 import { mountShell } from './ui/shell/shell';
@@ -18,6 +20,7 @@ async function boot(): Promise<void> {
   let router: Router | undefined;
   const shell = mountShell({ backend, navigate: p => router?.navigate(p) });
   router = new Router({ routes, backend, shell, view: shell.view });
+  initMotion();
 
   shell.setUser(backend.currentUser());
   backend.onAuthChange(u => { shell.setUser(u); router?.reguard(); });

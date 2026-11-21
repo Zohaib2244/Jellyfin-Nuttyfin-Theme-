@@ -2,6 +2,7 @@
 import type { User } from '../../api';
 import { userImageUrl } from '../../api';
 import { esc, html, raw, setHtml } from '../../lib/html';
+import { leave } from '../../lib/motion';
 import { BACKGROUND_CHOICES, PALETTES, getBackgroundPref, getPalette, getThemePref, setBackgroundPref, setPalette, setThemePref, type PaletteId, type ThemePref } from '../../state/prefs';
 import { BACKGROUNDS, type BackgroundId } from './pagebg';
 import { icon } from '../icons';
@@ -47,8 +48,10 @@ export function mountAccountMenu(trigger: HTMLButtonElement, onSignOut: () => vo
 
   const close = (returnFocus = false) => {
     if (!menu) return;
-    menu.remove();
+    const gone = menu;
     menu = null;
+    gone.inert = true; // plays its exit, takes no focus or clicks
+    leave(gone, { maxMs: 140 });
     trigger.setAttribute('aria-expanded', 'false');
     if (returnFocus) trigger.focus();
   };

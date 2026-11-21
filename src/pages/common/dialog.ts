@@ -4,6 +4,7 @@
  * Tab is trapped, Esc closes, and focus returns to whatever opened it. On phones CSS turns it into a bottom sheet.
  */
 import type { SafeHtml } from '../../lib/html';
+import { leave } from '../../lib/motion';
 import { icon } from '../../ui/icons';
 import './common.css';
 import './dialog.css';
@@ -64,7 +65,8 @@ export function openDialog(content: SafeHtml | HTMLElement, opts: DialogOptions)
       if (closed || opts.canClose?.() === false) return;
       closed = true;
       document.removeEventListener('keydown', onKey, true);
-      scrim.remove();
+      scrim.inert = true; // the closing animation must not catch focus or clicks
+      leave(scrim, { maxMs: 200 });
       for (const el of inerted) el.inert = false;
       const i = open.indexOf(handle);
       if (i >= 0) open.splice(i, 1);

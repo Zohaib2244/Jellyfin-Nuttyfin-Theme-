@@ -11,6 +11,7 @@ import type { Backend } from './api';
 import type { RouteDef } from './routes';
 import type { Page, PageContext, RouteMatch, RouterApi, ShellHooks } from './pages/types';
 import type { NavKey } from './pages/types';
+import { noteSwap, routeDone, routeStart } from './lib/motion';
 
 /* ── pure matching ── */
 export interface Matched extends RouteMatch { route: RouteDef }
@@ -168,6 +169,7 @@ export class Router implements RouterApi {
     this.abort = new AbortController();
     const signal = this.abort.signal;
     view.setAttribute('aria-busy', 'true');
+    routeStart(); // thin progress line, only if the page takes > 150ms
     shell.setChrome(m.route.chrome ?? 'full');
     shell.setNav(m.route.nav ?? null);
     shell.resetSlots();
@@ -194,12 +196,14 @@ export class Router implements RouterApi {
 
     await this.swap(el, restoreY);
     view.removeAttribute('aria-busy');
+    routeDone();
     if (tabFocus) this.focusSelectedTab(el); else this.focusPage(el);
   }
 
   private async swap(el: HTMLElement, restoreY: number | null): Promise<void> {
     const { view } = this.deps;
     const apply = () => {
+      noteSwap();
       view.replaceChildren(el);
       window.scrollTo(0, restoreY ?? 0);
     };
@@ -214,7 +218,7 @@ export class Router implements RouterApi {
       } catch { /* aborted by a newer transition */ }
     } else {
       apply();
-      if (this.hasContent && !reducedMotion()) {
+      if (!reducedMotion()) { // also the very first page: it rises in instead of popping
         document.body.classList.add('swapping');
         setTimeout(() => document.body.classList.remove('swapping'), 400);
       }

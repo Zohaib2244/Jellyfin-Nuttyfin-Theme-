@@ -1,0 +1,128 @@
+/* Motion system. Rules (docs/DESIGN-RULES.md, "Motion"): quick, purposeful, transform/opacity (plus tiny colour fades),
+   one-shot, never on offscreen items, no glows / lifting cards / continuous movement. Every duration comes from the
+   --d-* / --ease-* tokens; everything lives inside prefers-reduced-motion: no-preference, so reduced motion gets none of it.
+   JS side: src/lib/motion.ts (pure helpers) + src/lib/motion-dom.ts (one MutationObserver, rail indicator, route bar).
+   Imported last from src/main.ts. Page CSS loads later, so overrides of page rules use extra specificity on purpose. */
+
+:root { --m-rise: 12px; --m-step: 20ms; interpolate-size: allow-keywords; }
+
+/* Static structure that must exist whatever the motion preference (the dynamic parts are gated below). */
+.route-bar { position: fixed; z-index: 700; left: 0; right: 0; top: 0; height: 3px; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); opacity: 0; pointer-events: none; }
+.nav { position: relative; }
+.nav-ind { position: absolute; left: 0; top: 0; width: var(--iw, 0); height: var(--ih, 0); z-index: 0; pointer-events: none; opacity: 0; background: var(--accent); border-radius: 14px; transform: translate(var(--ix, 0), var(--iy, 0)); }
+.nav-ind[data-on="true"] { opacity: 1; }
+.nav:has(> .nav-ind[data-on="true"]) .ni[aria-current="page"] { background: transparent; }
+@media (max-width: 760px) {
+  .nav-ind { width: 28px; height: 3px; border-radius: 0 0 3px 3px; transform: translate(calc(var(--ix, 0px) + (var(--iw, 0px) - 28px) / 2), -4px); }
+  .nav:has(> .nav-ind[data-on="true"]) .ni[aria-current="page"]::before { display: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+
+/* ── keyframes ── */
+@keyframes m-page-in { from { opacity: 0; transform: translateY(var(--m-rise)); } }
+@keyframes m-vt-out { to { opacity: 0; } }
+@keyframes m-up { from { opacity: 0; transform: translateY(10px); } }
+@keyframes m-fade { from { opacity: 0; } }
+@keyframes m-fade-out { to { opacity: 0; } }
+@keyframes m-dlg-out { to { opacity: 0; transform: translateY(10px) scale(.98); } }
+@keyframes m-sheet-out { to { transform: translateY(100%); } }
+@keyframes m-pop-out { to { opacity: 0; transform: translateY(-6px) scale(.97); } }
+@keyframes m-pop-in { from { opacity: 0; transform: scale(.6); } }
+@keyframes m-heart { 0% { transform: scale(.6); } 45% { transform: scale(1.3); } 100% { transform: scale(1); } }
+@keyframes m-draw { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+@keyframes m-bump { 35% { transform: scale(1.3); } }
+@keyframes m-grow { from { transform: scaleX(0); } }
+@keyframes m-dot { from { transform: scale(.3); opacity: .2; } }
+@keyframes m-line { from { background-color: var(--line); } }
+@keyframes m-route { from { transform: scaleX(0); } to { transform: scaleX(.92); } }
+
+/* ── 1. Page enter: the router's View Transition (or the .swapping fallback) fades and rises the page ~12px once.
+      Lists inside it only fade (data-enter="soft") while the page itself is rising, so nothing moves twice. ── */
+::view-transition-old(page) { animation: m-vt-out 120ms var(--ease-in) both; }
+::view-transition-new(page) { animation: m-page-in 300ms var(--ease-out) both; }
+body.swapping #view { animation: m-page-in 300ms var(--ease-out) both; }
+
+/* thin route progress line: only appears when a page takes longer than 150ms (see RouteProgress) */
+.route-bar[data-state="run"] { opacity: 1; animation: m-route 6s cubic-bezier(.08, .6, .2, 1) both; }
+.route-bar[data-state="done"] { transform: scaleX(1); opacity: 0; transition: transform 160ms var(--ease-out), opacity 240ms var(--ease) 120ms; }
+
+/* ── 2. Lists, grids, rails: staggered fade-up. motion-dom.ts stamps data-enter + --i on the first 12 visible NEW items
+      of a batch and removes it again (one-shot). Specificity is raised so this wins over older per-page entrances. ── */
+:root [data-enter][data-enter][data-enter] { animation: m-up var(--d-small) var(--ease-out) calc(var(--i, 0) * var(--m-step)) backwards; }
+:root [data-enter="soft"][data-enter][data-enter] { animation-name: m-fade; }
+/* items that used to animate on their own: only the stamped ones animate now (no offscreen work, no replays) */
+:root .lib .lc.in:not([data-enter]),
+:root .rq .rq-row:not([data-enter]),
+:root .rq .rq-tile:not([data-enter]) { animation: none; }
+
+/* ── 3. Images: still-loading posters wait at opacity 0 on their placeholder gradient, then fade in (no layout change) ── */
+img[data-img] { transition: opacity var(--d-med) var(--ease-out); }
+img[data-img="wait"] { opacity: 0; }
+
+/* ── 4. Press feedback and state transitions (zero-specificity :where, so a component's own rule always wins) ── */
+body:not([data-shell="none"]) :where(button, [role="tab"], [role="radio"], [role="switch"], summary, .chip, .lc .hit, .pc, .chap, .nli, .rc, .sc .th, .og) { transition: transform var(--d-micro) var(--ease); }
+body:not([data-shell="none"]) :where(button, [role="tab"], [role="radio"], [role="switch"], summary, .lc .hit, .pc, .chap, .nli, .rc, .sc .th, .og):active:not(:disabled, [aria-disabled="true"]) { transform: scale(.97); }
+:where(.chip, .key, .rq-fchip, .mood, .seg button, .seg a, .seasontabs button, .palopt, .seg2 [role="radio"], .seg3 button, .minibtn, .wk, .kth, .dialog .opts label) {
+  transition: background-color var(--d-small) var(--ease), border-color var(--d-small) var(--ease), color var(--d-small) var(--ease), transform var(--d-micro) var(--ease);
+}
+input[type="checkbox"], input[type="radio"] { transition: transform var(--d-micro) var(--ease); }
+input[type="checkbox"]:active, input[type="radio"]:active { transform: scale(.85); }
+
+/* favourite heart pops, watched check draws itself (data-pop is set once when aria-pressed turns true) */
+[data-fav][data-pop] svg { animation: m-heart 420ms var(--ease-spring) both; }
+[data-watched][data-pop] svg path, [data-epwatch][data-pop] svg path { stroke-dasharray: 24; animation: m-draw 380ms var(--ease-out) both; }
+[data-watched][data-pop] svg, [data-epwatch][data-pop] svg { animation: m-bump 380ms var(--ease-spring) both; }
+
+/* accordion / <details>: the body eases open and closed (Chromium/Safari 18+; others just toggle) */
+@supports selector(::details-content) {
+  details::details-content { block-size: 0; overflow: clip; transition: block-size var(--d-med) var(--ease-out), content-visibility var(--d-med) allow-discrete; }
+  details[open]::details-content { block-size: auto; }
+}
+
+/* ── 5. Overlays ── */
+/* dialogs and sheets: open animations live in dialog.css; closing plays here (lib/motion.ts leave()) */
+.scrim[data-leaving] { animation: m-fade-out 160ms var(--ease-in) both; pointer-events: none; }
+.scrim[data-leaving] .dialog { animation: m-dlg-out 160ms var(--ease-in) both; }
+@media (max-width: 760px) { .scrim[data-leaving] .dialog { animation: m-sheet-out 200ms var(--ease-in) both; } }
+/* account menu */
+.pop[data-leaving] { animation: m-pop-out 120ms var(--ease-in) both; pointer-events: none; }
+/* Details "More" menu and the search results panel are toggled with [hidden]: fade them out too */
+:root .dt .menu, :root .qres { transition: opacity var(--d-micro) var(--ease-in), transform var(--d-micro) var(--ease-in), display var(--d-micro) allow-discrete; }
+:root .dt .menu[hidden], :root .qres[hidden] { opacity: 0; transform: translateY(-6px); }
+/* an entrance animation that fills forwards would swallow the exit transition: fill only before it starts */
+:root .dt .menu, :root .qres, :root dialog.nbc[open] { animation-fill-mode: backwards; }
+/* NutBot chat (native <dialog>): fade and slide out, backdrop included */
+:root dialog.nbc { transition: opacity var(--d-small) var(--ease-in), transform var(--d-small) var(--ease-in), display var(--d-small) allow-discrete, overlay var(--d-small) allow-discrete; }
+:root dialog.nbc:not([open]) { opacity: 0; transform: translateY(14px) scale(.98); }
+:root dialog.nbc::backdrop { transition: opacity var(--d-small) linear, display var(--d-small) allow-discrete, overlay var(--d-small) allow-discrete; }
+:root dialog.nbc:not([open])::backdrop { opacity: 0; }
+@media (max-width: 760px) { :root dialog.nbc:not([open]) { transform: translateY(100%); } }
+/* NutBot button: pops in when the person signs in, presses in */
+.nbfab:not([hidden]) { animation: m-pop-in var(--d-med) var(--ease-spring) backwards; transition: transform var(--d-micro) var(--ease), border-color var(--d-micro); }
+
+/* ── 6. Numbers and progress ── */
+:where(.prog i, .pbar i, .sprog i, .cwr .bar i, .og .ogart .bar i) { transform-origin: 0 50%; animation: m-grow 600ms var(--ease-out) 120ms backwards; }
+[data-bump] { animation: m-bump 400ms var(--ease-spring) both; }
+/* request stage steppers fill in sequence, left to right, once the row has appeared */
+.rq-stepper li:nth-child(1) { --k: 0; } .rq-stepper li:nth-child(2) { --k: 1; } .rq-stepper li:nth-child(3) { --k: 2; }
+.rq-stepper li:nth-child(4) { --k: 3; } .rq-stepper li:nth-child(5) { --k: 4; } .rq-stepper li:nth-child(6) { --k: 5; }
+[data-enter] .rq-stepper li.done i, [data-enter] .rq-stepper li.now i { animation: m-dot var(--d-med) var(--ease-spring) calc(var(--i, 0) * var(--m-step) + 100ms + var(--k, 0) * 55ms) backwards; }
+[data-enter] .rq-stepper li.done::after { animation: m-line var(--d-med) var(--ease-out) calc(var(--i, 0) * var(--m-step) + 100ms + var(--k, 0) * 55ms) backwards; }
+
+/* ── 7. Shell ── */
+.nav-ind[data-ready] { transition: transform var(--d-med) var(--ease-out), opacity var(--d-small) var(--ease); }
+/* the icon colour follows the indicator as it arrives; the item also presses in */
+:root .nav .ni { transition: color var(--d-med) var(--ease-out), background var(--d-micro) var(--ease), transform var(--d-micro) var(--ease); }
+/* theme / colour palette switch: colours cross-fade for ~300ms (class set by motion-dom.ts), never permanently */
+html.theme-switching, html.theme-switching *, html.theme-switching *::before, html.theme-switching *::after {
+  transition: background-color 240ms var(--ease), border-color 240ms var(--ease), color 240ms var(--ease), fill 240ms var(--ease), stroke 240ms var(--ease) !important;
+}
+
+} /* end no-preference */
+
+@media (prefers-reduced-motion: reduce) {
+  [data-enter], [data-pop] svg, [data-bump], .route-bar, .nav-ind { animation: none !important; transition: none !important; }
+  img[data-img] { opacity: 1 !important; transition: none !important; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
