@@ -19,8 +19,8 @@ import './library.css';
 import { slotAt, type BotCtx, type Slot } from './bot';
 import { cardHTML, LANES, shelfHTML, showCardHTML, type CardCtx } from './cards';
 import {
-  activeKeys, groupsFor, laneOf, letterOf, ORDERS, parseState, passes, pickResuming, stateToQuery, toQuery, VIEWS,
-  type Group, type LibKind, type LibState, type OrderId, type ViewId,
+  activeKeys, groupsFor, laneOf, letterOf, ORDERS, parseState, passes, pickResuming, stateToQuery, toQuery, VIEW_CHOICES,
+  type Group, type LibKind, type LibState, type OrderId, type Selection, type ViewId,
 } from './filters';
 import { openSurprise } from './surprise';
 import { libTabList, libTabOf, LIB_TABS, type LibCounts, type LibTab } from './tabs';
@@ -78,25 +78,26 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
       <h1 class="sr" id="libTitle" data-autofocus></h1>
       <p class="page-sub" id="lede"></p>
     </header>
-    <section class="bot" aria-label="NutBot">
+    <section class="bot" id="botStrip" aria-label="NutBot">
       <span aria-hidden="true">${nutbot(46, 'happy')}</span>
       <p class="say" id="say" aria-live="polite"></p>
       <div class="acts">
         <button class="btn sm" type="button" id="tryMix"></button>
-        <button class="btn sm primary" type="button" id="surprise">${ic('shuffle')}Surprise me</button>
+        <button class="iconbtn" type="button" id="botHide" aria-label="Hide this for today" title="Hide this for today">${ic('x')}</button>
       </div>
     </section>
-    <div class="desk" id="desk" role="group" aria-label="Mix your list" hidden></div>
+    <div class="desk" id="desk" role="group" aria-label="Filters" hidden></div>
     <div class="sum" id="sum">
-      <button class="btn sm filterbtn" type="button" id="filterBtn" aria-haspopup="dialog">${ic('sliders')}Filters<span class="badge" id="fcount" hidden></span></button>
+      <button class="btn sm filterbtn" type="button" id="filterBtn" aria-haspopup="dialog">${ic('sliders')}Sort and filter<span class="badge" id="fcount" hidden></span></button>
       <div class="count" id="count" aria-live="polite"></div>
       <div class="actv" id="on"></div>
+      <button class="btn sm primary sup" type="button" id="surprise" aria-label="Surprise me" title="Surprise me">${ic('shuffle')}<span class="t">Surprise me</span></button>
       <div class="ctlrow">
         <span class="lbl" id="orderLbl">ORDER</span>
         <div class="seg order" id="order" role="group" aria-labelledby="orderLbl"></div>
         <span class="lbl" id="viewLbl">VIEW</span>
         <div class="seg views" id="views" role="group" aria-labelledby="viewLbl"></div>
-        <button class="iconbtn" type="button" id="foldBtn" aria-expanded="false" aria-controls="desk" title="Show the mixing desk">${ic('sliders')}<span class="sr">Show or hide the mixing desk</span></button>
+        <button class="iconbtn" type="button" id="foldBtn" aria-expanded="false" aria-controls="desk" title="Show the filters">${ic('sliders')}<span class="sr">Show or hide the filters</span></button>
       </div>
     </div>
     <div class="resw" id="resw">
@@ -163,7 +164,7 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
           }
         }
         if (kind === 'shows') {
-          if (!seasons.size) await loadShowExtras(ac.signal);
+          await ensureExtras();
           markStarted(nextItems); // phase4
           // "Where you are" needs the watching lane, which only the browser can work out
           if (st.sel.where?.size) {
@@ -189,6 +190,9 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
     feedBackground();
   }
 
+  /** Seasons, next-up and half-watched episodes, fetched once and shared by the list and NutBot's counts. */
+  let extrasP: Promise<void> | null = null;
+  const ensureExtras = (): Promise<void> => (extrasP ??= loadShowExtras(ctx.signal));
   async function loadShowExtras(signal: AbortSignal): Promise<void> {
     const [s, n, r] = await Promise.all([
       backend.allSeasons(signal).catch(() => [] as Season[]),
@@ -349,7 +353,8 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
     res.removeAttribute('aria-busy');
     res.className = `res v-${st.view}`;
     res.setAttribute('role', 'list');
-    resw.classList.toggle('norail', !['posters', 'wall', 'list'].includes(st.view));
+    // the A to Z handle is for long lists only: not for shelves, an empty result, an error, or a handful of titles
+    resw.classList.toggle('norail', !['posters', 'wall', 'list'].includes(st.view) || failed || items.length < 20);
     res.replaceChildren();
     lastLetter = null;
     rendered = 0;
@@ -382,6 +387,8 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
       res.append(el);
     }
     total = sets.length;
+    // the first shelves are what you see: their posters load at once, the rest as you scroll
+    res.querySelectorAll<HTMLImageElement>('.shelf:nth-child(-n+2) img').forEach(i => { i.loading = 'eager'; });
   }
 
   function paintProgress(): void {
@@ -425,12 +432,13 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
       : `<b>${loading && !items.length ? '...' : n}</b>${n === 1 ? unit : unit + 's'}${act.length ? ' <span class="sr">match</span>' : ''}`;
     q('#on').innerHTML = act.length
       ? html`${act.map(a => html`<button type="button" data-drop="${a.g.id}:${a.key.k}" aria-label="Remove ${a.key.t}">${a.key.t}${ic('x')}</button>`)}${act.length > 1 ? html`<button type="button" class="clear" data-clear>Clear all</button>` : ''}`.value
-      : '<span class="none">Everything. Press a switch to narrow it down.</span>';
+      : '';
     const fc = q('#fcount');
     fc.textContent = String(act.length);
     fc.hidden = !act.length;
     q('#order').innerHTML = ORDERS[kind].map(([k, t]) => `<button type="button" data-order="${k}" aria-pressed="${String(st.order === k)}">${t}</button>`).join('');
-    q('#views').innerHTML = VIEWS[kind].map(([k, t, i]) => `<button type="button" data-view="${k}" aria-pressed="${String(st.view === k)}" aria-label="${t}" title="${t}">${ic(i).value}</button>`).join('');
+    q('#views').hidden = q('#viewLbl').hidden = q('#order').hidden = q('#orderLbl').hidden = isShelves(); // Collections is its own tab: look and order do not apply
+    q('#views').innerHTML = VIEW_CHOICES[kind].map(([k, t, i]) => `<button type="button" data-view="${k}" aria-pressed="${String(st.view === k)}" aria-label="${t}" title="${t}">${ic(i).value}</button>`).join('');
     paintDesk(desk);
     for (const r of sheetRoots()) { paintDesk(r.querySelector<HTMLElement>('.desk') as HTMLElement); syncSheet(r); }
 
@@ -459,15 +467,16 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
   }
 
   function ledeHtml(tab: string): string {
+    // The lede says what the count row beside it does not (the count is the headline number), so nothing is said twice.
     if (tab === 'movies' || tab === '4k') {
-      if (tab === '4k') return `<b>${counts.fourK ?? '...'} ${counts.fourK === 1 ? 'film' : 'films'}</b> in 4K. The rest play in HD.`;
-      return `<b>${counts.movies ?? '...'} films</b> on the server${counts.unseen != null ? ` · ${counts.unseen} you have not seen yet` : ''}`;
+      if (tab === '4k') return 'The rest of the films play in HD.';
+      return counts.unseen != null ? `<b>${counts.unseen}</b> you have not seen yet` : '';
     }
-    if (tab === 'sets') return `<b>${collections.length || '...'} sets</b> of films that belong together, in watching order`;
+    if (tab === 'sets') return 'Films that belong together, in watching order';
     const c = cx();
     const lanes = { new: 0, watching: 0 };
     if (!activeKeys(st.sel, groups).length) for (const t of items) { const l = laneOf(t, c.now); if (l === 'new' || l === 'watching') lanes[l]++; }
-    return `<b>${counts.shows ?? '...'} shows</b>${items.length && !activeKeys(st.sel, groups).length ? ` · ${lanes.new} with new episodes · ${lanes.watching} on the go` : ''}`;
+    return items.length && !activeKeys(st.sel, groups).length ? `<b>${lanes.new}</b> with new episodes · <b>${lanes.watching}</b> on the go` : '';
   }
 
   function paintDesk(target: HTMLElement): void {
@@ -476,7 +485,7 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
     const sig = groups.map(g => `${g.id}:${g.keys.length}`).join('|');
     if (target.dataset.sig !== sig) {
       target.dataset.sig = sig;
-      target.innerHTML = groups.map(g => html`<fieldset class="chan${g.wide ? ' wide' : ''}"><legend>${ic(g.icon)}${g.label}${g.one ? html` <span class="one">pick one</span>` : ''}</legend>
+      target.innerHTML = groups.map(g => html`<fieldset class="chan${g.wide ? ' wide' : ''}"><legend>${ic(g.icon)}${g.label}${g.one ? html` <span class="one">pick one</span>` : html` <span class="one">${g.bucket ? 'mood or genre: any of these' : 'any of these'}</span>`}</legend>
         <div class="keys">${g.keys.map(k => {
           const c = g.id === 'genre' ? genres.find(x => x.name === k.k)?.count : undefined;
           return html`<button type="button" class="key" data-g="${g.id}" data-k="${k.k}" aria-pressed="false"><span>${k.t}</span>${c != null ? html`<b class="n">${c}</b>` : ''}</button>`;
@@ -533,7 +542,7 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
     const sel: Record<string, Set<string>> = {};
     for (const p of mix) { const [g, k] = p.split(':') as [string, string]; (sel[g] ??= new Set()).add(k); }
     const [n, newest, resume] = await Promise.all([
-      backend.items({ ...toQuery(kind, { sel, order: st.order, view: st.view }, groups), start: 0, limit: 0 }, ctx.signal).then(r => r.total).catch(() => 0),
+      mixCount(sel).catch(() => 0),
       backend.latest({ kind: kind === 'movies' ? 'movie' : 'series', limit: 1 }).then(r => r[0]).catch(() => undefined),
       backend.resume(6).then(r => r.find(i => kind === 'movies' ? i.kind === 'movie' : i.kind === 'episode')).catch(() => undefined),
     ]);
@@ -554,6 +563,22 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
     paintBot(true);
   }
 
+  /**
+   * How many titles a mix matches. The server cannot know a show's watching lane ("New episodes"), so a mix that uses one is
+   * counted in the browser with the SAME lane rule the page's own groups and lede use: NutBot, the "Try:" button and the
+   * New episodes group can never disagree.
+   */
+  async function mixCount(sel: Selection): Promise<number> {
+    const state: LibState = { sel, order: st.order, view: st.view };
+    if (kind !== 'shows' || !sel.where?.size) return (await backend.items({ ...toQuery(kind, state, groups), start: 0, limit: 0 }, ctx.signal)).total;
+    const rest: Selection = { ...sel };
+    delete rest.where;
+    const r = await backend.items({ ...toQuery(kind, { ...state, sel: rest }, groups), start: 0, limit: 1000 }, ctx.signal);
+    await ensureExtras();
+    markStarted(r.items);
+    return r.items.filter(t => passes(t, state, groups, { lane: x => laneOf(x) })).length;
+  }
+
   function paintBot(animate = false): void {
     const lines = botSlot.lines[kind];
     const line = lines[botLine % lines.length];
@@ -563,6 +588,7 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
     say.innerHTML = html`<small>Right now · ${botSlot.label}</small><span class="ln${swap ? ' swap' : ''}">${line(botCtx)}</span>`.value;
     const names = botSlot.mix[kind].map(p => { const [g, k] = p.split(':') as [string, string]; return groups.find(x => x.id === g)?.keys.find(x => x.k === k)?.t; }).filter(Boolean) as string[];
     const tm = q('#tryMix');
+    tm.hidden = botCtx.n === 0; // a mix that matches nothing is not worth suggesting
     tm.innerHTML = html`${ic('sliders')}Try: ${names.join(' + ')} <small>${botCtx.n}</small>`.value;
     tm.setAttribute('aria-label', `Try this mix: ${names.join(' and ')}, ${botCtx.n} results`);
   }
@@ -642,20 +668,20 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
     desk.hidden = !desk.hidden;
     store.set('libDesk', !desk.hidden);
     q('#foldBtn').setAttribute('aria-expanded', String(!desk.hidden));
-    q('#foldBtn').setAttribute('title', desk.hidden ? 'Show the mixing desk' : 'Hide the mixing desk');
+    q('#foldBtn').setAttribute('title', desk.hidden ? 'Show the filters' : 'Hide the filters');
   });
 
   /* phone: the desk lives in a sheet */
   q('#filterBtn').addEventListener('click', openSheet);
   function openSheet(): void {
-    const body = html`<div class="sheethead"><h2 id="sheetT">Mix your list</h2><button class="btn sm ghost" type="button" data-clear>Clear</button><button class="iconbtn" type="button" data-close aria-label="Close">${ic('x')}</button></div>
+    const body = html`<div class="sheethead"><h2 id="sheetT">Sort and filter</h2><button class="btn sm ghost" type="button" data-clear>Clear</button><button class="iconbtn" type="button" data-close aria-label="Close">${ic('x')}</button></div>
       <div class="sheetbody">
-        <div class="sgrp"><h3>LOOK</h3><div class="seg" role="group" aria-label="View">${VIEWS[kind].map(([k, t, i]) => html`<button type="button" data-view="${k}" aria-pressed="false">${ic(i)}${t.split(' ')[0]}</button>`)}</div></div>
-        <div class="sgrp"><h3>ORDER</h3><div class="seg" role="group" aria-label="Order">${ORDERS[kind].map(([k, t]) => html`<button type="button" data-order="${k}" aria-pressed="false">${t}</button>`)}</div></div>
+        <div class="sgrp"><h3>LOOK</h3><div class="seg seg-look" role="group" aria-label="View">${VIEW_CHOICES[kind].map(([k, t, i]) => html`<button type="button" data-view="${k}" aria-pressed="false">${ic(i)}${t.split(' ')[0]}</button>`)}</div></div>
+        <div class="sgrp"><h3>ORDER</h3><div class="seg seg-order" role="group" aria-label="Order">${ORDERS[kind].map(([k, t]) => html`<button type="button" data-order="${k}" aria-pressed="false">${t}</button>`)}</div></div>
         <div class="desk"></div>
       </div>
       <div class="sheetfoot"><button class="btn primary" type="button" data-close id="sheetGo" data-autofocus></button></div>`;
-    const dlg = openDialog(body, { label: 'Mix your list', scrimClass: 'lib-sheet', noClose: true });
+    const dlg = openDialog(body, { label: 'Sort and filter', scrimClass: 'lib-sheet', noClose: true });
     dlg.el.addEventListener('click', handleClick);
     paintChrome();
   }
@@ -691,6 +717,15 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
     io = new IntersectionObserver(entries => { if (entries.some(en => en.isIntersecting)) void loadMore(false); }, { rootMargin: '700px 0px' });
     io.observe(q('#more'));
   }
+  // phones: the A to Z handle shows while the list is moving, then tucks away
+  let railTimer = 0;
+  const onScroll = (): void => {
+    resw.classList.add('rail-on');
+    clearTimeout(railTimer);
+    railTimer = window.setTimeout(() => resw.classList.remove('rail-on'), 1800);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  ctx.onDispose(() => { window.removeEventListener('scroll', onScroll); clearTimeout(railTimer); });
   // paintMore() is called after each page: re-arm so a still-visible bar loads the next page too
   const rearm = new MutationObserver(() => observeSentinel());
   rearm.observe(res, { childList: true });
@@ -708,8 +743,13 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
   });
 
   /* ── boot ── */
-  desk.hidden = !(store.get('libDesk', false) || activeKeys(st.sel, groups).length > 0);
-  q('#foldBtn').setAttribute('title', desk.hidden ? 'Show the mixing desk' : 'Hide the mixing desk');
+  // open when the person left it open, or a switch beyond the one that defines this tab is on (4K Movies IS the "In 4K" switch)
+  desk.hidden = !(store.get('libDesk', false) || activeKeys(st.sel, groups).length > (currentTab() === '4k' ? 1 : 0));
+  q('#foldBtn').setAttribute('title', desk.hidden ? 'Show the filters' : 'Hide the filters');
+  // NutBot's line can be put away for the day (it comes back tomorrow)
+  const today = Math.floor(Date.now() / 864e5);
+  q('#botStrip').hidden = store.get<number>('libBotOff', 0) === today;
+  q('#botHide').addEventListener('click', () => { store.set('libBotOff', today); q('#botStrip').hidden = true; q('#surprise').focus(); });
   paintChrome();
 
   // side data that does not block the first paint
