@@ -7,7 +7,7 @@
 - Keep the established warm palette and typography. Use compact accessible disclosure, tab, and menu patterns.
 - Short on time and the weekly calendar (On TV this week) now live in the Explore tab, not Home. Mood navigation must have visible, keyboard-accessible controls and no overlapping buttons.
 - The Newly Added tab (renamed from "New films" 2026-11-16) is its own tab and is the What's-new page (whats-new.html just redirects to home.html#new): summary hero, recently added with filters, on the way. Tabs: Home, Continue Watching, Explore (was Recommendations), Newly Added, Requests. No Stats tab.
-- Navigation: left icon rail (Home/Library/Requests/Saved) on desktop; section tabs sit in the top bar beside search; phones use the bottom tab bar (the same four items).
+- Navigation: left icon rail (Home/Library/Requests/Favourites) on desktop; section tabs sit in the top bar beside search; phones use the bottom tab bar (the same four items).
 - Section tabs share one row with the date and Arrange (no separate date row); the tab bar scrolls sideways on phones.
 - Home = NutBot + Next episode beside the Keep watching hero, which holds the recommendations (a rail that swaps the hero); then New this week beside a compact Continue watching list (all in-progress items, "See all" opens the tab); No separate Picked for you or full Continue watching strip on Home.
 - Every tile belongs to exactly one tab; never show the same tile in two tabs.
@@ -23,7 +23,7 @@
 - Home: the Keep watching hero (with its "Up next for you" rail) is the ONLY full-width tile, on top. Below it: New this week on the left; compact Continue watching above Next episode on the right.
 - No Arrange button / layout editing. No date row on Home: the clock sits at the bottom of the left rail.
 - Next episode tile: show name, S·E · episode title · runtime, Play + Details. No description. Use the show's backdrop (episode stills often have the title burnt in).
-- NutBot is not a Home tile any more: a floating "Ask NutBot" button (bottom-right, every signed-in page except the player) opens the chat.
+- NutBot is not a Home tile any more: an "Ask NutBot" button in the top bar (next to the theme switch, every size, every signed-in page except the player) opens the chat. (Superseded 21 Nov, audit round: the floating bottom-right button is gone; it covered content on desktop and landscape phones.)
 - Requests is no longer a Home tab; it is only the Requests page in the left rail. Home tabs: Home, Continue Watching, Explore, Newly Added.
 - Page background: one still, tilted, very faint poster wall (an optimised variant of the New this week collage). No background picker; Page look keeps only Light/Dark/Auto. The "no moving collages" rule still holds: the wall never moves.
 - Account menu holds Settings links to Jellyfin's own pages (profile, playback, subtitles, Quick Connect, all settings; owner: server dashboard and Seerr settings).
@@ -39,7 +39,7 @@
 - Newly Added "On the way": the person's own open requests with the Requests page's stages (one plain status line, a pill in the Requests chip colours, a progress bar only for a real download), "See all requests" to #/requests, an empty state that links to Discover.
 
 ## Owner update — 21 November 2026 (one navigation model)
-- Rail = places (Home, Library, Requests, Saved). Top-bar tabs = the sections of a place (Library: Movies, Shows, 4K Movies, Collections). No in-page tab bars, switch blocks or duplicate Movies/Shows links anywhere; Movies and Shows are reached only through Library.
+- Rail = places (Home, Library, Requests, Favourites; "Saved" was a placeholder and is now Favourites, `#/favourites`: the person's hearted films and shows in the Library's poster grid, Films | Shows tabs in the top bar only when both exist, friendly empty state). Top-bar tabs = the sections of a place (Library: Movies, Shows, 4K Movies, Collections). No in-page tab bars, switch blocks or duplicate Movies/Shows links anywhere; Movies and Shows are reached only through Library.
 - Page header: the tab names the page, so the h1 is screen-reader only and the visible header is one `.page-head` lede line (optional chips on the right). Home has none.
 ## Motion (21 November 2026)
 Owner: "the website is missing some much needed animations": add them everywhere, but keep them purposeful. Code: `src/styles/motion.css` (the look), `src/lib/motion.ts` (pure helpers, unit-tested), `src/lib/motion-dom.ts` (one MutationObserver; no per-item timers, no markup changes in pages).
@@ -49,3 +49,7 @@ Owner: "the website is missing some much needed animations": add them everywhere
 - What exists: page enter (View Transition, 12px rise; list items inside only fade while the page rises), thin route progress line after 150ms, list stagger (`data-enter` is stamped once on NEW, on-screen items of `.lc .sc .ep .pc .chap .person .rq-row .rq-tile .rq-gtile .rc .nli` and search results, never replayed on filter/view/season re-renders), image fade-in on `.ph`/`.pic` pictures, skeleton to content and tab-panel fades, press scale .97 on buttons/tabs/cards, heart pop, watched check draw, badge bump, progress bars grow from 0, request steppers fill in sequence, dialog/sheet/menu/NutBot open and close, rail indicator that slides between items, colour cross-fade on theme or palette change (`html.theme-switching` for ~300ms).
 - Adding a list: add its item selector to `ITEM_SEL` in motion-dom.ts (give items `data-id` or a link so repeats are recognised). Opt out with `data-no-enter` on a container. A new overlay that is removed from the DOM: call `leave(el)` from `src/lib/motion.ts` and style `[data-leaving]`; one toggled with `[hidden]`: add it to the allow-discrete rule in motion.css. A forward-filling entrance (`animation-fill-mode: both`) swallows an exit transition, so use `backwards`.
 - Never hide content to animate it: images wait at opacity 0 only while loading, with a timeout and an off-screen skip; nothing animated is `aria-hidden` or delays focus.
+
+## Audit round (21 November 2026, fixer A)
+- Unknown addresses (a typo, an unknown `:tab`) show a friendly 404 ("We could not find that page", NutBot sleepy, Home / Library). They never silently render Home.
+- Every colour theme (8 palettes x light/dark) meets WCAG AA: 4.5:1 for text and counts, `accent-ink` on `accent` too (3:1 for the accent on the bare page backdrop, which only carries large/UI marks). `tests/contrast.test.ts` reads tokens.css + palettes.css; run it after touching a colour. Light themes therefore use deeper accents than the dark ones.

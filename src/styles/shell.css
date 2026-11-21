@@ -16,7 +16,7 @@ body { padding-left: var(--rail-w); }
 .nav .ni[aria-disabled="true"] { opacity: .55; }
 
 /* ── Top bar ── */
-.top { position: sticky; top: 0; z-index: 50; display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto auto; grid-template-areas: "tabs search qopen theme acct"; grid-template-rows: var(--top-h); align-items: center; column-gap: 16px; padding: 0 28px; background: var(--bg); border-bottom: var(--bw) solid var(--line); }
+.top { position: sticky; top: 0; z-index: 50; display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto auto auto; grid-template-areas: "tabs search qopen bot theme acct"; grid-template-rows: var(--top-h); align-items: center; column-gap: 16px; padding: 0 28px; background: var(--bg); border-bottom: var(--bw) solid var(--line); }
 .top::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1.5px; height: 2px; background: linear-gradient(90deg, var(--pc1), var(--pc2) 30%, transparent 60%); opacity: .85; pointer-events: none; }
 .brand { grid-area: brand; display: none; align-items: center; gap: 10px; padding: 4px; min-height: 44px; text-decoration: none; }
 .brand .wm { font-family: var(--font-px); font-size: 22px; letter-spacing: .04em; }
@@ -169,17 +169,6 @@ body[data-shell="none"] main { max-width: none; padding: 0; }
 .rclock b small { font-size: 11px; margin-left: 2px; color: var(--muted); }
 @media (max-width: 760px) { .rclock { display: none; } }
 
-/* ── NutBot, from anywhere: a floating button bottom-right ── */
-.nbfab { position: fixed; right: 22px; bottom: 22px; z-index: 70; display: inline-flex; align-items: center; justify-content: center; width: 60px; height: 60px; padding: 0; border-radius: 999px; border: var(--bw) solid var(--line); background: var(--panel); color: var(--text); font-family: var(--font-read); font-weight: 700; font-size: 14.5px; cursor: pointer; box-shadow: 0 6px 18px rgba(0, 0, 0, .35); }
-.nbfab[hidden], body[data-shell="none"] .nbfab { display: none; }
-.nbfab svg { width: 38px; height: 38px; flex: none; }
-.nbfab:hover { border-color: var(--accent); }
-.nbfab:active { transform: scale(.97); }
-.nbfab:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-@media (max-width: 760px) {
-  .nbfab { right: 14px; bottom: calc(76px + env(safe-area-inset-bottom)); height: 52px; width: 52px; padding: 0; justify-content: center; }
-}
-
 /* ── Account menu: settings links ── */
 .pm-links { display: flex; flex-direction: column; gap: 2px; }
 .pm-links a { display: grid; grid-template-columns: 22px minmax(0, 1fr) 16px; align-items: center; gap: 12px; min-height: 48px; padding: 6px 10px; border-radius: 10px; color: var(--text); text-decoration: none; font-family: var(--font-read); font-weight: 700; font-size: 14.5px; }
@@ -237,12 +226,9 @@ body[data-shell="none"] main { max-width: none; padding: 0; }
 .pm-sub { display: flex; align-items: center; gap: 8px; margin: -2px 0 4px; }
 .pm-sub h2 { margin: 0; font-family: var(--font-px); font-weight: 400; font-size: 18px; letter-spacing: .04em; }
 
-/* NutBot button in the top bar: phones only (desktop keeps the floating button) */
-.nbtop { grid-area: bot; display: none; }
+/* NutBot: a button in the top bar on every screen size (there is no floating button; it used to cover page content) */
+.nbtop { grid-area: bot; }
+.nbtop[hidden] { display: none; }
 .nbtop svg { width: 30px; height: 30px; }
-@media (max-width: 760px) {
-  .nbtop:not([hidden]) { display: inline-grid; }
-  .nbfab { display: none !important; }
-  main { padding-bottom: 96px; }
-}
+@media (max-width: 760px) { main { padding-bottom: 96px; } }
 @media (max-width: 420px) { .brand .wm { display: none; } }

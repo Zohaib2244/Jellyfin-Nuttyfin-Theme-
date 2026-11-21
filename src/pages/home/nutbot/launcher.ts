@@ -1,5 +1,5 @@
 /**
- * NutBot from anywhere: the shell's floating button opens the same chat Home used to host in a tile.
+ * NutBot from anywhere: the top-bar button opens the same chat Home used to host in a tile.
  * One chat per signed-in person, kept for the whole visit (it is not tied to a page).
  */
 import type { Backend, User } from '../../../api';

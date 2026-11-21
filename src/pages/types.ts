@@ -14,7 +14,7 @@ export interface Page {
 }
 
 /** Highlight in the left rail / bottom bar. */
-export type NavKey = 'home' | 'library' | 'requests' | 'saved';
+export type NavKey = 'home' | 'library' | 'requests' | 'favourites';
 
 export interface Tab {
   id: string;

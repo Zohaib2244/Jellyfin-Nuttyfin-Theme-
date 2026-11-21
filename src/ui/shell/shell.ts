@@ -26,12 +26,12 @@ export interface Shell extends RouterShell {
   setUser(u: User | null): void;
 }
 
-interface NavItem { key: NavKey; label: string; icon: IconName; href?: string }
+interface NavItem { key: NavKey; label: string; icon: IconName; href: string }
 const NAV: readonly NavItem[] = [
   { key: 'home', label: 'Home', icon: 'home', href: '#/' },
   { key: 'library', label: 'Library', icon: 'film', href: '#/movies' },
   { key: 'requests', label: 'Requests', icon: 'inbox', href: '#/requests' },
-  { key: 'saved', label: 'Saved', icon: 'plane' }, // placeholder: not built yet
+  { key: 'favourites', label: 'Favourites', icon: 'heart', href: '#/favourites' },
 ];
 
 export interface ShellOptions {
@@ -44,9 +44,8 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
   initPrefs();
   mountIconSprite(body);
 
-  const navItems = NAV.map(n => n.href
-    ? html`<a class="ni" href="${n.href}" data-nav="${n.key}">${icon(n.icon)}<span class="lbl">${n.label}</span>${n.key === 'requests' ? raw('<span class="badge" id="reqBadge"></span>') : ''}</a>`
-    : html`<button class="ni" type="button" data-soon="${n.label}">${icon(n.icon)}<span class="lbl">${n.label}</span></button>`);
+  const navItems = NAV.map(n =>
+    html`<a class="ni" href="${n.href}" data-nav="${n.key}">${icon(n.icon)}<span class="lbl">${n.label}</span>${n.key === 'requests' ? raw('<span class="badge" id="reqBadge"></span>') : ''}</a>`);
 
   const shellHtml = html`
     <div class="pagebg" id="pagebg" aria-hidden="true"></div>
@@ -60,12 +59,11 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
       <a class="brand" href="#/" aria-label="Nuttyfin home">${brandMark(38)}<span class="wm">Nutty<em>Fin</em></span></a>
       <div class="toptabs" id="toptabs"></div>
       ${searchMarkup()}
-      <button class="iconbtn nbtop" type="button" id="nbTop" aria-label="Talk to NutBot" title="Talk to NutBot" hidden>${nutbot(30, 'happy')}</button>
+      <button class="iconbtn nbtop" type="button" id="nbTop" aria-label="Ask NutBot" title="Ask NutBot" hidden>${nutbot(30, 'happy')}</button>
       <button class="themesw" type="button" role="switch" id="themeSw" aria-checked="true" aria-label="Dark theme">${pixelIcon('moon', 'moon')}${pixelIcon('sun', 'sun')}</button>
       <div class="acct"><button class="avatar" type="button" id="avatarBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="acct-menu" hidden></button></div>
     </header>
     <main id="app"><div id="view"></div></main>
-    <button class="nbfab" type="button" id="nbFab" aria-label="Talk to NutBot" title="Talk to NutBot" hidden>${nutbot(38, 'happy')}</button>
     <div class="toasts" id="toasts" role="status" aria-live="polite"></div>`;
   body.insertAdjacentHTML('beforeend', shellHtml.value);
 
@@ -96,14 +94,11 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
   window.setInterval(paintClock, 20_000);
 
   /* NutBot, reachable from every page */
-  const nbFab = q<HTMLButtonElement>('#nbFab');
   let currentUser: User | null = null;
-  const nbTop = q<HTMLButtonElement>('#nbTop'); // phones: NutBot lives in the top bar so it never covers content
-  for (const btn of [nbFab, nbTop]) {
-    btn.addEventListener('click', () => {
-      void import('../../pages/home/nutbot/launcher').then(m => m.openNutBot(backend, currentUser, btn));
-    });
-  }
+  const nbTop = q<HTMLButtonElement>('#nbTop'); // a button in the top bar on every size, so it never covers page content
+  nbTop.addEventListener('click', () => {
+    void import('../../pages/home/nutbot/launcher').then(m => m.openNutBot(backend, currentUser, nbTop));
+  });
 
   /* theme switch */
   const paintTheme = () => {
@@ -130,10 +125,6 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
   const account: AccountMenu = mountAccountMenu(avatarBtn, () => { void backend.signOut(); });
 
   /* rail */
-  q('#rail').addEventListener('click', e => {
-    const b = (e.target as Element).closest<HTMLElement>('[data-soon]');
-    if (b) toast(`${b.dataset.soon} is coming soon`, 'info');
-  });
   q('#skip').addEventListener('click', () => { view.setAttribute('tabindex', '-1'); view.focus(); });
 
   /* tabs slot */
@@ -173,7 +164,6 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
     setUser(u) {
       if (currentUser && (!u || u.id !== currentUser.id)) void import('../../pages/home/nutbot/launcher').then(m => m.closeNutBot());
       currentUser = u;
-      nbFab.hidden = !u;
       nbTop.hidden = !u;
       account.setUser(u);
       avatarBtn.hidden = !u;
