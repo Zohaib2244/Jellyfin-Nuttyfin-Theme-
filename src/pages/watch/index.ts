@@ -6,6 +6,7 @@
 import { imageUrl } from '../../api';
 import { ApiError } from '../../api/http';
 import { trickplayUrl } from '../../api/playback';
+import { validPrefs, type PlayPrefs } from '../details/target';
 import type { Backend } from '../../api/backend';
 import type { Episode, MediaItem, MediaSegment, PlaybackInfo, PlaybackReport, TrickplayInfo } from '../../api/types';
 import { clock } from '../../lib/format';
@@ -132,6 +133,7 @@ class Player {
     this.ctx.shell.setTitle(item.kind === 'episode' ? `${item.seriesName} S${item.season}E${item.episode}` : item.name);
     const t = parseTime(this.ctx.query.get('t'));
     this.startAt = startSeconds(t, item);
+    this.applySavedChoice(item);
     const picks = startingTracks(item, this.choice.version, this.choice.audio, this.choice.sub);
     this.choice = { ...this.choice, audio: picks.audio, sub: picks.sub, start: this.startAt };
     this.lastSubOn = picks.sub;
@@ -156,6 +158,24 @@ class Player {
       this.ui.setHasNext(!!this.next);
     }).catch(() => undefined) : Promise.resolve();
     await Promise.all([seg, nxt]);
+  }
+
+  /** The sound/subtitle/version this person picked for the title (on the details page or in this player) applies
+   *  wherever playback starts from (Home's Resume, a search result...), unless the link itself says otherwise. */
+  private get prefKey(): string { const it = this.item; return `${this.ctx.user?.id ?? 'anon'}:${it ? (it.kind === 'episode' ? it.seriesId : it.id) : this.id}`; }
+  private applySavedChoice(item: MediaItem): void {
+    const q = this.ctx.query;
+    if (q.get('audio') != null || q.get('sub') != null || q.get('version')) return;
+    const saved = validPrefs(store.get<Record<string, PlayPrefs>>('playprefs', {})[this.prefKey], item.versions ?? []);
+    if (!saved) return;
+    this.choice = { ...this.choice, version: saved.ver, audio: saved.audio, sub: saved.sub };
+  }
+  private rememberChoice(): void {
+    const v = this.info?.version ?? this.item?.versions?.[0];
+    if (!v || this.choice.audio == null) return;
+    const all = store.get<Record<string, PlayPrefs>>('playprefs', {});
+    all[this.prefKey] = { ver: v.id, audio: this.choice.audio, sub: this.choice.sub };
+    store.set('playprefs', all);
   }
 
   private async load(at: number, my = this.generation): Promise<void> {
@@ -498,6 +518,7 @@ class Player {
       this.choice.sub = next; if (next >= 0) this.lastSubOn = next;
       const label = next < 0 ? 'Off' : (v.subtitles.find(s => s.index === next)?.label ?? 'On');
       this.ui.announce(`Subtitles: ${label}`); this.ui.flash('cc', next < 0 ? 'Subtitles off' : `Subtitles: ${label}`);
+      this.rememberChoice();
       if (how === 'track' && this.item) { this.tracks.show(this.item.id, v, next, this.token); this.paintMenus(); }
       else await this.reload(at);
       return;
@@ -506,6 +527,7 @@ class Player {
       const next = Number(value);
       if (next === this.choice.audio) return;
       this.choice.audio = next;
+      this.rememberChoice();
       this.ui.announce(`Now hearing ${v?.audio.find(a => a.index === next)?.label ?? 'another track'}`);
       await this.reload(at);
       return;

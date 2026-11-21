@@ -3,6 +3,7 @@
  * the settings sheet, and the moment cards (skip, up next, pause, end, error). It owns no playback state: it paints what index.ts
  * tells it and reports what the person did through `UIHost`.
  */
+import { morphHeight } from '../../lib/morph';
 import { esc, html, raw, setHtml } from '../../lib/html';
 import { store } from '../../lib/storage';
 import { ic, spriteMarkup, type PlIcon } from './icons';
@@ -590,11 +591,13 @@ export class PlayerUI {
     });
     const tabs = Array.from(sheet.querySelectorAll<HTMLElement>('.pl-tab'));
     const select = (id: string, focus = false): void => {
-      for (const t of tabs) {
-        const on = t.id === id;
-        t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;
-        (this.root.querySelector(`#${t.getAttribute('aria-controls')}`) as HTMLElement).hidden = !on;
-      }
+      morphHeight(sheet, () => {
+        for (const t of tabs) {
+          const on = t.id === id;
+          t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;
+          (this.root.querySelector(`#${t.getAttribute('aria-controls')}`) as HTMLElement).hidden = !on;
+        }
+      });
       if (focus) (this.root.querySelector(`#${id}`) as HTMLElement).focus();
     };
     this.selectTab = select;

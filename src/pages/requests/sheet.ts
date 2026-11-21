@@ -13,6 +13,7 @@ import { runtime } from '../../lib/format';
 import { esc, html, raw, type SafeHtml } from '../../lib/html';
 import { nutbot } from '../../ui/nutbot';
 import { openDialog, type DialogHandle } from '../common/dialog';
+import { morphHeight } from '../../lib/morph';
 import { ic } from '../common/icons';
 import { embedUrl } from '../details/trailer';
 import { askLabel, blockedReason, quotaLeft, quotaText, requestableSeasons, seasonList, seasonsToAsk, takenText } from './model';
@@ -78,7 +79,7 @@ export function openTitleSheet(env: SheetEnv, target: SheetTarget): DialogHandle
     // "already asked / in the library" is said by the status line; only show the reason when it adds something
     const showBlock = block && !(status && block.tone === 'info');
 
-    dlg.body.innerHTML = html`<article class="rq-det" aria-labelledby="rqdh">
+    const next = html`<article class="rq-det" aria-labelledby="rqdh">
       <div class="rq-hero ${bg ? '' : 'none'}">${bg ? raw(`<img src="${esc(bg)}" alt="" decoding="async">`) : ''}</div>
       <div class="rq-dhead">
         ${posterOf(d, 342)}
@@ -104,6 +105,7 @@ export function openTitleSheet(env: SheetEnv, target: SheetTarget): DialogHandle
     return html`<li><span class="rq-face">${pic ? raw(`<img src="${esc(pic)}" alt="" loading="lazy">`) : html`${c.name.split(' ').map(w => w[0]).slice(0, 2).join('')}`}</span><b>${c.name}</b>${c.character ? html`<small>${c.character}</small>` : ''}</li>`;
   })}</ul>` : ''}
     </article>`.value;
+    morphHeight(dlg.el, () => { dlg.body.innerHTML = next; });
     if (!dlg.body.querySelector('[data-autofocus]')) dlg.body.querySelector<HTMLElement>('#rqdh')?.setAttribute('data-autofocus', '');
     focusFirst();
     dlg.body.scrollTop = 0;
@@ -163,7 +165,7 @@ export function openTitleSheet(env: SheetEnv, target: SheetTarget): DialogHandle
         ${taken ? html`<span class="t">${s.state === 'available' ? ic('check') : ic('clock')}${taken}</span>` : ''}</label></li>`;
   })}</ul></div>`;
 
-    dlg.body.innerHTML = html`<div class="rq-step2">
+    const next = html`<div class="rq-step2">
       <div class="head">${posterOf(d, 185)}<div><p class="rq-stepno">Step 2 of 2</p><h2 id="rq2h" tabindex="-1" data-autofocus>Request ${d.title}</h2><p class="lead">${metaOf(d.mediaType, d.year)}</p></div></div>
       ${d.mediaType === 'tv' ? seasonsBlock() : html`<p class="rq-plain">${ic('film')}<span>The film will be added to the library once it can be downloaded.</span></p>`}
       ${profiles ? html`<div class="blk"><label class="lbl" for="rq-q">Quality</label>
@@ -177,6 +179,7 @@ export function openTitleSheet(env: SheetEnv, target: SheetTarget): DialogHandle
         <button class="btn" type="button" id="rq-back">${ic('back')}Back to details</button>
         <button class="btn primary" type="button" id="rq-go">${ic('check')}<span id="rq-golbl">${askLabel(d.mediaType, 'all')}</span></button>
       </div></div>`.value;
+    morphHeight(dlg.el, () => { dlg.body.innerHTML = next; });
     focusFirst();
     dlg.body.scrollTop = 0;
     dlg.el.scrollTop = 0;
@@ -239,9 +242,10 @@ export function openTitleSheet(env: SheetEnv, target: SheetTarget): DialogHandle
     const approved = r.state !== 'requested';
     dlg.body.onclick = null;
     dlg.body.onchange = null;
-    dlg.body.innerHTML = html`<div class="okview">${nutbot(72, 'happy')}<h2 tabindex="-1" data-autofocus>Requested ${d.title}</h2>
+    const next = html`<div class="okview">${nutbot(72, 'happy')}<h2 tabindex="-1" data-autofocus>Requested ${d.title}</h2>
       <p>${approved ? 'It is approved. It will be downloaded as soon as a copy can be found.' : 'It is waiting for the server owner to say yes. You can follow it on the Requests tab.'}</p>
       <div class="acts"><button class="btn" type="button" data-close>Done</button><button class="btn primary" type="button" id="rq-see">See my requests</button></div></div>`.value;
+    morphHeight(dlg.el, () => { dlg.body.innerHTML = next; });
     focusFirst();
     dlg.body.querySelector('#rq-see')?.addEventListener('click', () => { dlg.close(); env.showMine(); });
   }
