@@ -26,7 +26,7 @@ const badge = (t: Title, now: Date): SafeHtml => {
 interface HeroData extends Fresh { recent: Title[]; asked: number; fetchedAt: number }
 
 export const newHeroTile: TileDef = {
-  id: 'newhero', tab: 'new', title: "What's new", icon: 'spark', place: [1, 1, 12, 3], minH: 0,
+  id: 'newhero', tab: 'new', title: "What's new", icon: 'spark', place: [1, 1, 12, 2], minH: 0,
   mount(host, ctx) {
     // absent until we know something is new, so "all caught up" never flashes a banner and leaves no gap
     ctx.setPresent('newhero', false);
