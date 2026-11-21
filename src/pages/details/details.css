@@ -1,6 +1,6 @@
 /* Details page. Lifted from design/mockups/details.html; scoped under .dt (page) and .dialog.* (dialogs) so nothing leaks.
    No hover glows / lifting cards (docs/DESIGN-RULES.md). */
-.dt { --d-kb: 1800ms; --gut: 28px; }
+.dt { --d-kb: 1800ms; --gut: 28px; --num-ink: color-mix(in srgb, var(--num) 55%, var(--text)); /* small mono text: readable on every palette, light and dark */ }
 @keyframes dt-rise { from { opacity: 0; transform: translateY(14px); } }
 
 /* ── hero: a full-bleed banner from the rail to the window edge (--vw is the page width without the scrollbar, set in index.ts) ── */
@@ -33,6 +33,7 @@
 .dt .facts .rate { display: inline-flex; align-items: center; gap: 5px; }
 .dt .facts .rate svg { color: var(--warn); width: 16px; height: 16px; }
 .dt .facts .num { font-weight: 700; }
+.dt .facts .epfact b { font-weight: 700; }
 .dt .facts .rt { border: 1px solid color-mix(in srgb, var(--text) 55%, transparent); padding: 0 6px; border-radius: 4px; font-size: 13.5px; }
 .dt .actrow { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px 16px; margin-top: 22px; }
 /* #playrow is re-rendered on its own; display: contents lets Play sit beside the icons and the time line run under both */
@@ -63,6 +64,7 @@
 .dt .morebtn { background: none; border: 0; padding: 0 2px; min-height: 44px; cursor: pointer; font-family: var(--font-read); font-weight: 700; font-size: 15px; color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
 .dt .morebtn[hidden] { display: none; }
 .dt .il .tags { margin-top: 14px; }
+.dt .il [data-tagsmore] { margin-top: 4px; }
 .dt .credits { margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--line); }
 .dt .credits .kv { display: flex; flex-wrap: wrap; gap: 12px 36px; }
 .dt .credits .kv dt { font-size: 13px; }
@@ -75,7 +77,7 @@
 .dt .playextra { display: grid; gap: 10px; justify-items: start; }
 .dt .playextra:empty { display: none; }
 .dt .upnext { display: flex; flex-wrap: wrap; gap: 2px 10px; margin: 0; font-family: var(--font-read); font-size: 15px; }
-.dt .upnext .k { font-family: var(--font-px); font-size: 13.5px; color: var(--muted); letter-spacing: .03em; padding-top: 1px; }
+.dt .upnext .k { font: 700 13.5px var(--font-read); color: var(--muted); padding-top: 1px; }
 .dt .morewrap { position: relative; }
 .dt .menu { position: absolute; z-index: 60; left: 0; top: calc(100% + 8px); width: 280px; background: var(--panel); border: var(--bw) solid var(--line); border-radius: var(--r-card); padding: 6px; font-family: var(--font-read); animation: dt-pop var(--d-small) var(--ease-out) both; }
 @keyframes dt-pop { from { opacity: 0; transform: translateY(-6px); } }
@@ -93,17 +95,17 @@
 .dt .wp .onecopy { display: flex; align-items: flex-start; gap: 8px; min-width: 0; font-family: var(--font-read); font-size: 14px; color: var(--text); }
 .dt .wp .onecopy svg { flex: none; width: 17px; height: 17px; margin-top: 2px; color: var(--muted); }
 .dt .wp .onecopy span { min-width: 0; overflow-wrap: anywhere; }
-.dt .wp { background: var(--panel); border: var(--bw) solid var(--line); border-radius: 16px; padding: 18px; display: grid; gap: 14px; }
+.dt .wp { display: grid; gap: 14px; }
 .dt .wp .wphead { display: flex; align-items: center; gap: 8px; }
 .dt .wp .wphead h2 { flex: 1; }
 .dt .wp .saved { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0; padding-top: 12px; border-top: 1px dashed var(--line); font-family: var(--font-read); font-size: 13.5px; color: var(--muted); }
-.dt .wp .saved svg { color: var(--num); width: 16px; height: 16px; }
+.dt .wp .saved svg { color: var(--num-ink); width: 16px; height: 16px; }
 .dt .wp .saved span { flex: 1 1 180px; }
 .dt .wp h2 { margin: 0; font-family: var(--font-px); font-weight: 400; font-size: 18px; letter-spacing: .03em; display: flex; align-items: center; gap: 8px; }
 .dt .wp h2 svg { color: var(--accent); }
-.dt .wp .lbl { display: block; font-family: var(--font-px); font-size: 13.5px; color: var(--muted); margin-bottom: 6px; letter-spacing: .03em; }
+.dt .wp .lbl { display: block; font: 700 13.5px var(--font-read); color: var(--muted); margin-bottom: 6px; }
 .dt .wp .hint { margin: 6px 0 0; font-family: var(--font-read); font-size: 13.5px; color: var(--muted); }
-.dt .wp .tech { font-family: var(--font-mono); font-size: 12.5px; color: var(--num); margin-top: 4px; overflow-wrap: anywhere; }
+.dt .wp .tech { font-family: var(--font-mono); font-size: 12.5px; color: var(--num-ink); margin-top: 4px; overflow-wrap: anywhere; }
 .dt .herechip { display: grid; gap: 8px; }
 .dt .herechip .chip { justify-self: start; white-space: normal; }
 .dt .linkbtn { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; background: none; border: 0; padding: 0; cursor: pointer; font-family: var(--font-read); font-size: 14.5px; color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
@@ -117,9 +119,9 @@
 .dt .vseg button { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 46px; padding: 4px 12px; border: var(--bw) solid transparent; background: none; border-radius: 10px; cursor: pointer; font-family: var(--font-read); font-weight: 700; font-size: 15px; color: var(--muted); line-height: 1.2; text-align: left; }
 .dt .vseg button small { font-family: var(--font-mono); font-weight: 400; font-size: 12px; opacity: .85; }
 .dt .vseg button[aria-checked="true"] { background: var(--accent); color: var(--accent-ink); }
-.dt .why summary { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; cursor: pointer; font-family: var(--font-read); font-size: 14px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; list-style: none; }
+.dt .why summary { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; cursor: pointer; font-family: var(--font-read); font-size: 14px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; list-style: none; }
 .dt .why summary::-webkit-details-marker { display: none; }
-.dt .why div { font-family: var(--font-mono); font-size: 12.5px; color: var(--num); padding: 4px 0 2px 12px; border-left: 3px solid var(--line); overflow-wrap: anywhere; }
+.dt .why div { font-family: var(--font-mono); font-size: 12.5px; color: var(--num-ink); padding: 4px 0 2px 12px; border-left: 3px solid var(--line); overflow-wrap: anywhere; }
 
 /* ── sections ── */
 .dt .wrap { max-width: none; margin: 0; }
@@ -150,17 +152,19 @@
 .dt .person .face img { position: relative; width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
 .dt .person b { display: block; font-family: var(--font-read); font-size: 14.5px; line-height: 1.25; }
 .dt .person span { display: block; font-family: var(--font-read); font-size: 13px; color: var(--muted); line-height: 1.3; margin-top: 2px; }
-.dt .person em { display: block; font-style: normal; font-family: var(--font-mono); font-size: 12px; color: var(--num); margin-top: 3px; }
+.dt .person em { display: block; font-style: normal; font-family: var(--font-mono); font-size: 12px; color: var(--num-ink); margin-top: 3px; }
 .dt .person.crew .face { border-style: dashed; }
 
 /* seasons & episodes */
-.dt .seasontabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
-.dt .seasontabs button { display: inline-flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 16px; border-radius: var(--r-ctl); border: var(--bw) solid var(--line); background: var(--panel); cursor: pointer; font-family: var(--font-px); font-size: 15px; color: var(--text); }
+.dt .seasontabs { display: flex; gap: 10px; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; margin: 0 0 16px; padding: 2px 0 4px; }
+.dt .seasontabs::-webkit-scrollbar { display: none; }
+.dt .seasontabs button { flex: none; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 16px; border-radius: var(--r-ctl); border: var(--bw) solid var(--line); background: var(--panel); cursor: pointer; font-family: var(--font-px); font-size: 15px; color: var(--text); }
 .dt .seasontabs button[aria-selected="true"] { border-color: var(--accent); background: var(--accent-soft); }
 .dt .seasontabs .chip { font-size: 12.5px; padding: 0 8px 0 6px; }
 .dt .seasontabs .chip svg { width: 13px; height: 13px; }
 .dt .seasonacts { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 14px; font-family: var(--font-read); color: var(--muted); }
 .dt .seasonacts h3 { margin: 0; font-family: var(--font-read); font-size: 17px; color: var(--text); }
+.dt .ep { scroll-margin-top: calc(var(--top-h) + 20px); }
 .dt .eps { display: grid; gap: 12px; }
 .dt .ep { position: relative; display: grid; grid-template-columns: 232px minmax(0, 1fr) auto; gap: 6px 18px; align-items: center; padding: 12px; border-radius: var(--r-card); border: var(--bw) solid var(--line); background: var(--panel); transition: border-color var(--d-micro); animation: dt-rise var(--d-med) var(--ease-out) both; animation-delay: calc(var(--i, 0) * 25ms); }
 .dt .ep:hover { border-color: var(--accent); }
@@ -185,8 +189,8 @@
 .dt .ep .more .g { display: inline-flex; align-items: center; gap: 8px; padding: 3px 12px 3px 3px; border-radius: 999px; border: var(--bw) solid var(--line); background: var(--nested); font-family: var(--font-read); font-size: 13.5px; }
 .dt .ep .more .g .face { position: relative; width: 30px; height: 30px; border-radius: 50%; overflow: hidden; }
 .dt .ep .more .g img { width: 100%; height: 100%; object-fit: cover; }
-.dt .ep .more .k { font-family: var(--font-px); font-size: 13.5px; color: var(--muted); }
-.dt .ep .more .tech { font-family: var(--font-mono); font-size: 12.5px; color: var(--num); margin-top: 8px; overflow-wrap: anywhere; }
+.dt .ep .more .k { font: 700 13.5px var(--font-read); color: var(--muted); }
+.dt .ep .more .tech { font-family: var(--font-mono); font-size: 12.5px; color: var(--num-ink); margin-top: 8px; overflow-wrap: anywhere; }
 .dt .ep .more .btns { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 .dt .watched { display: inline-flex; align-items: center; gap: 5px; color: var(--ok); font-family: var(--font-read); font-weight: 700; font-size: 14px; }
 .dt .watched svg { width: 16px; height: 16px; stroke-width: 3; }
@@ -205,10 +209,13 @@
 .dt .panel h3 { margin: 0 0 10px; font-family: var(--font-px); font-weight: 400; font-size: 17px; letter-spacing: .03em; color: var(--muted); }
 .dt .panel + .panel { margin-top: 18px; }
 .dt .tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.dt .tags li[hidden] { display: none; }
+.dt .tags li span { display: inline-block; }
+.dt .tags li span::first-letter { text-transform: uppercase; }
 .dt .tags li { display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px; border-radius: 999px; border: var(--bw) solid var(--line); background: var(--nested); font-family: var(--font-read); font-size: 14px; }
 .dt .tags li::before { content: ''; width: 6px; height: 6px; border-radius: 2px; background: var(--accent); margin-right: 8px; }
 .dt .kv { display: grid; grid-template-columns: max-content 1fr; gap: 10px 18px; margin: 0; font-size: 14.5px; }
-.dt .kv dt { color: var(--muted); font-family: var(--font-px); font-size: 14px; padding-top: 1px; }
+.dt .kv dt { color: var(--muted); font: 700 13.5px var(--font-read); padding-top: 1px; }
 .dt .kv dd { margin: 0; font-family: var(--font-read); font-size: 15.5px; }
 .dt .extlinks { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
 .dt .extlinks a { text-decoration: none; }
@@ -220,7 +227,7 @@
 .dt .files { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .dt .files li { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 10px 12px; border-radius: 10px; background: var(--nested); border: 1px solid var(--line); }
 .dt .files b { font-family: var(--font-read); font-size: 15px; }
-.dt .files code { grid-column: 1 / -1; font-family: var(--font-mono); font-size: 12px; color: var(--num); overflow-wrap: anywhere; }
+.dt .files code { grid-column: 1 / -1; font-family: var(--font-mono); font-size: 12px; color: var(--num-ink); overflow-wrap: anywhere; }
 .dt .files .sz { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
 .dt .ownfacts { font-family: var(--font-read); font-size: 14.5px; color: var(--muted); margin: 0 0 14px; display: grid; gap: 6px; }
 .dt .ownfacts span { display: flex; gap: 8px; align-items: flex-start; }
@@ -313,9 +320,12 @@
   .dt .playmeta { grid-row: 2; }
   .dt .acts2 { grid-column: 1; grid-row: 3; }
   .dt .playmeta .ends, .dt .playmeta .pre-ends { display: none; }
+  .dt .playmeta:has(> .ends:only-child) { display: none; }
   .dt .intro { margin-top: 22px; gap: 20px; }
   .dt .ir { padding: 16px; }
-  .dt .menu { left: auto; right: 0; width: 260px; }
+  .dt .acts2 { position: relative; }
+  .dt .morewrap { position: static; }
+  .dt .menu { left: 0; right: auto; width: min(280px, 100%); }
   .dt .section { margin-top: 30px; }
   .dt .sechead h2 { font-size: 19px; }
   .dt .sechead h2 small { display: block; margin: 2px 0 0; }
@@ -329,8 +339,8 @@
   .dt .ep p { font-size: 13.5px; }
   .dt .ep .more { grid-template-columns: 1fr; }
   .dt .ep .more .btns { justify-content: flex-start; }
-  .dt .seasontabs { display: grid; grid-template-columns: 1fr 1fr; }
-  .dt .seasontabs button { justify-content: center; min-height: 52px; padding: 6px 8px; }
+  .dt .seasontabs { margin: 0 calc(-1 * var(--gut)) 16px; padding: 2px var(--gut) 4px; }
+  .dt .seasontabs button { min-height: 48px; padding: 6px 14px; }
   .dt .panel { padding: 16px; }
   .dt .kv { grid-template-columns: 1fr; gap: 2px; }
   .dt .kv dd { margin-bottom: 10px; }
@@ -343,3 +353,14 @@
 /* trailer: a spinner sits in the black box until the video paints over it */
 .dialog .vid .spin { position: absolute; left: calc(50% - 15px); top: calc(50% - 15px); width: 30px; height: 30px; border: 3px solid #f2ead8; border-top-color: transparent; border-radius: 50%; animation: dt-spin 800ms linear infinite; }
 .dialog .vid iframe { z-index: 1; background: transparent; }
+
+/* the floating "Ask NutBot" button sits bottom-right: keep the last rails clear of it */
+.dt .wrap { padding-bottom: 84px; }
+/* landscape phones: the banner is only as tall as its content so Play is on the first screen */
+@media (max-height: 520px) {
+  .dt .dh { min-height: 0; }
+  .dt .dh .in { gap: 12px; padding-bottom: 20px; }
+  .dt .ttl { font-size: clamp(28px, 4vw, 40px); margin: 6px 0 8px; }
+  .dt .ttl .logo { max-height: 84px; }
+  .dt .actrow { margin-top: 14px; }
+}

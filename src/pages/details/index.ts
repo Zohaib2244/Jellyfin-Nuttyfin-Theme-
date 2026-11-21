@@ -171,6 +171,7 @@ async function render(ctx: PageContext): Promise<HTMLElement> {
       seasonCount: groups().filter(g => g.number > 0).length || main.seasonCount || 0,
       episodeCount: eps.filter(e => !e.missing).length || main.episodeCount || 0,
       versionsCount: isSeries ? 0 : versions().length, endsAtText: endsAtText(remaining),
+      focus: focusEp ?? undefined,
     };
   }
 
@@ -229,9 +230,20 @@ async function render(ctx: PageContext): Promise<HTMLElement> {
     }
     parts.push(castSection(main.people ?? []));
     if (isSeries) parts.push(guestSection(groups().find(g => g.number === season)?.eps ?? [], season));
-    parts.push(aboutSection({ title: main, people: main.people ?? [], versions: isSeries ? [] : versions(), owner, ownerName: OWNER_NAME }));
+    parts.push(aboutSection({
+      title: main, people: main.people ?? [], versions: isSeries ? [] : versions(), owner, ownerName: OWNER_NAME,
+      seasonCount: groups().filter(g => g.number > 0).length || main.seasonCount || 0, episodeCount: eps.filter(e => !e.missing).length || main.episodeCount || 0,
+    }));
     parts.push(moreSection(similar, isSeries, cx, main));
     q('#below').innerHTML = parts.map(p => p.value).join('');
+  }
+
+  /** The tab strip scrolls sideways on a phone: bring the selected season into view without moving the page. */
+  function showSeasonTab(): void {
+    const strip = root.querySelector<HTMLElement>('#seasontabs');
+    const tab = strip?.querySelector<HTMLElement>('[aria-selected="true"]');
+    if (!strip || !tab || strip.scrollWidth <= strip.clientWidth) return;
+    strip.scrollLeft = Math.max(0, tab.offsetLeft - (strip.clientWidth - tab.offsetWidth) / 2);
   }
 
   function paintEpisodes(): void {
@@ -242,6 +254,7 @@ async function render(ctx: PageContext): Promise<HTMLElement> {
     tmp.innerHTML = episodesSection({ groups: groups(), current: season, nextUp: target, owner, openEp, detailed: detailed.has(season) }, cx).value;
     const fresh = tmp.firstElementChild;
     if (fresh) sec.replaceWith(fresh);
+    showSeasonTab();
     const guestHost = root.querySelector('#h-guest')?.closest('section');
     const g = guestSection(groups().find(x => x.number === season)?.eps ?? [], season).value;
     if (guestHost) { const t = document.createElement('div'); t.innerHTML = g; if (t.firstElementChild) guestHost.replaceWith(t.firstElementChild); else guestHost.remove(); }
@@ -359,6 +372,7 @@ async function render(ctx: PageContext): Promise<HTMLElement> {
     if (subIdx >= 0 && !v?.subtitles.some(s => s.index === subIdx)) { subIdx = defaultSubtitle(v, curAudio()); touched.sub = false; }
     touched.ver = true;
     savePrefs();
+    if (remembered) toast(`Saved for this ${isSeries ? 'show' : 'film'}.`);
     paintPlay();
     say(`Version ${v?.name ?? ''}. ${assessment().badge}.`);
   }
@@ -370,6 +384,7 @@ async function render(ctx: PageContext): Promise<HTMLElement> {
     else if (t.dataset.pick === 'sub') { subIdx = Number(t.value); touched.sub = true; }
     else return;
     savePrefs();
+    if (remembered) toast(`Saved for this ${isSeries ? 'show' : 'film'}.`);
     paintPlay();
     say(`${audioShort(curAudio())}, ${subLabel(curVersion(), subIdx)}.`);
   }
@@ -397,6 +412,14 @@ async function render(ctx: PageContext): Promise<HTMLElement> {
     }
     if (has('[data-fav]')) { void toggleFav(); return; }
     if (has('[data-watched]')) { void toggleWatched(); return; }
+    const more = has('[data-tagsmore]');
+    if (more) {
+      const open = more.getAttribute('aria-expanded') !== 'true';
+      root.querySelectorAll<HTMLElement>('#tagList [data-extra]').forEach(li => { li.hidden = !open; });
+      more.setAttribute('aria-expanded', String(open));
+      more.textContent = open ? 'Fewer tags' : `${root.querySelectorAll('#tagList [data-extra]').length} more tags`;
+      return;
+    }
     if (has('[data-trailer]') && trailer) { openTrailer(main.name, trailer); return; }
     if (has('#moreBtn')) { if (menu().hidden) openMenu(); else closeMenu(true); return; }
     if (has('[data-report]')) { closeMenu(false); reportDialog(); return; }
@@ -508,9 +531,14 @@ async function render(ctx: PageContext): Promise<HTMLElement> {
   /* ── go ── */
   paintHero();
   paintBelow();
+  showSeasonTab();
   if (isSeries) {
     void ensureDetail(season).then(() => {
-      if (focusEp) root.querySelector(`.ep[data-ep="${CSS.escape(focusEp.id)}"]`)?.scrollIntoView({ block: 'center', behavior: 'auto' });
+      // an episode link: land on the Episodes heading (the first few rows) or on the row itself with room under the top bar
+      if (!focusEp) return;
+      const idx = eps.filter(e => e.season === season).findIndex(e => e.id === focusEp.id);
+      const target = idx > 2 ? root.querySelector(`.ep[data-ep="${CSS.escape(focusEp.id)}"]`) : root.querySelector('#episodes');
+      target?.scrollIntoView({ block: 'start', behavior: 'auto' });
     });
   }
   return root;

@@ -50,14 +50,14 @@ export function howPanel(p: PlayState, a: Assessment, o: { owner: boolean; headi
   return html`<div class="wp" role="group" aria-labelledby="howH">
     <div class="wphead"><h2 id="howH">${ic('chat')}${o.heading}</h2>${chip(a)}</div>
     <p class="hint">${a.why}</p>
-    ${multi ? html`<div><span class="lbl" id="verlbl">Version</span><div class="vseg" role="radiogroup" aria-labelledby="verlbl" id="verseg"></div></div>` : html`<div><span class="lbl">Version</span><span class="onecopy">${ic('layers')}<span>${v?.name || 'The only copy'}</span></span></div>`}
+    ${multi ? html`<div><span class="lbl" id="verlbl">Version</span><div class="vseg" role="radiogroup" aria-labelledby="verlbl" id="verseg"></div></div>` : o.owner ? html`<div><span class="lbl">File</span><span class="onecopy">${ic('layers')}<span>${v?.name || 'The only copy'}</span></span></div>` : ''}
     <div class="two">
       <label><span class="lbl">Sound</span><span class="select"><select data-pick="audio" id="pickAudio" aria-label="Sound">${(v?.audio ?? []).map(t => html`<option value="${t.index}" ${t.index === p.audio?.index ? raw('selected') : ''}>${audioShort(t)}</option>`)}${v?.audio.length ? '' : html`<option value="-1">No sound info</option>`}</select>${ic('down')}</span></label>
       <label><span class="lbl">Subtitles</span><span class="select"><select data-pick="sub" id="pickSub" aria-label="Subtitles"><option value="-1" ${p.sub < 0 ? raw('selected') : ''}>Off</option>${(v?.subtitles ?? []).map(s => html`<option value="${s.index}" ${s.index === p.sub ? raw('selected') : ''}>${s.label}</option>`)}</select>${ic('down')}</span></label>
     </div>
     ${o.owner ? html`<details class="why"><summary>${ic('info')}Technical details</summary><div>${a.tech || 'No technical details'}</div></details>` : ''}
     ${o.hasChapters ? html`<button class="linkbtn" type="button" data-howchap>${ic('list')}Start from a chapter</button>` : ''}
-    <p class="saved">${ic('check')}<span>${p.remembered ? 'Remembered for this title on this device.' : 'Change anything and Nuttyfin remembers it for this title on this device.'}</span>${p.remembered ? html`<button class="linkbtn" type="button" data-howreset>Back to the usual</button>` : ''}</p>
+    ${p.remembered ? html`<p class="saved">${ic('check')}<span>Your choices are saved for this title.</span><button class="linkbtn" type="button" data-howreset>Back to the usual</button></p>` : ''}
   </div>`;
 }
 
@@ -88,6 +88,8 @@ export interface HeroModel {
   episodeCount: number;
   versionsCount: number;
   endsAtText: string;
+  /** the episode the page was opened on (an episode link), named in the meta line */
+  focus?: Episode | undefined;
 }
 
 /** Icon-only toggle content; the visible tooltip comes from data-tip, the name from aria-label. */
@@ -100,12 +102,14 @@ export function playRow(m: HeroModel): SafeHtml {
   const ep = series && m.target ? epLabel(m.target) : '';
   const verb = m.resume ? 'Resume' : 'Play';
   const label = [verb, ep].filter(Boolean).join(' ');
+  // a film's runtime is already in the meta line above Play, so only an episode or a half-watched title repeats a time here
   const time = m.resume
     ? html`<b>${runtime(m.resume.remainingMin)} left</b>`
-    : m.runtimeMin ? html`<b>${hm(m.runtimeMin)}</b>` : '';
-  const bits = [ep ? html`<span>${ep}</span>` : '', time ? html`<span>${time}</span>` : '', time ? html`<span class="ends">${m.endsAtText}</span>` : ''].filter(x => x !== '');
+    : m.runtimeMin && series ? html`<b>${hm(m.runtimeMin)}</b>` : '';
+  const hasEnd = !!m.resume || !!m.runtimeMin;
+  const bits = [ep ? html`<span>${ep}</span>` : '', time ? html`<span>${time}</span>` : '', hasEnd ? html`<span class="ends">${m.endsAtText}</span>` : ''].filter(x => x !== '');
   return html`<a class="btn primary big" id="playLink" href="${m.playHref}" aria-label="${label}${m.target?.name ? `, ${m.target.name}` : ''}">${ic('play')}${verb}</a>
-    ${bits.length ? html`<div class="playmeta">${m.resume ? html`<span class="bar" aria-hidden="true"><i style="width:${Math.round(m.resume.percent)}%"></i></span>` : ''}${bits.map((b, i) => html`${i ? html`<i class="dot${i === bits.length - 1 && time ? ' pre-ends' : ''}" aria-hidden="true">·</i>` : ''}${b}`)}</div>` : ''}`;
+    ${bits.length ? html`<div class="playmeta">${m.resume ? html`<span class="bar" aria-hidden="true"><i style="width:${Math.round(m.resume.percent)}%"></i></span>` : ''}${bits.map((b, i) => html`${i ? html`<i class="dot${i === bits.length - 1 && hasEnd ? ' pre-ends' : ''}" aria-hidden="true">·</i>` : ''}${b}`)}</div>` : ''}`;
 }
 
 /** Start over (and, for shows, which episode Play opens): lives below the banner. */
@@ -125,6 +129,7 @@ export function hero(m: HeroModel, c: Ctx): SafeHtml {
   const years = series ? `${t.year ?? ''}${t.endYear && t.endYear !== t.year ? `–${t.endYear}` : t.status === 'Continuing' ? '–now' : ''}` : `${t.year ?? ''}`;
   const sizeText = series ? (m.seasonCount ? `${m.seasonCount} ${m.seasonCount === 1 ? 'season' : 'seasons'}` : '') : (t.runtimeMin ? hm(t.runtimeMin) : '');
   const facts = [
+    m.focus ? html`<span class="epfact"><b>${epLabel(m.focus)}</b>${m.focus.name ? ` · ${m.focus.name}` : ''}</span>` : '',
     t.rating != null ? html`<span class="rate">${ic('star')}<span class="num">${t.rating.toFixed(1)}</span><span class="sr"> out of 10</span></span>` : '',
     years ? html`<span>${years}</span>` : '',
     sizeText ? html`<span>${sizeText}</span>` : '',
@@ -148,7 +153,7 @@ export function hero(m: HeroModel, c: Ctx): SafeHtml {
               <button class="ibtn" type="button" id="moreBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="moreMenu" aria-label="More" data-tip="More">${ic('dots')}</button>
               <div class="menu" id="moreMenu" role="menu" aria-label="More" hidden>
                 <button type="button" role="menuitem" data-report>${ic('flag')}Report a problem</button>
-                ${m.owner ? html`<hr><button type="button" role="menuitem" class="danger" data-remove>${ic('trash')}Remove...</button>` : ''}
+                ${m.owner ? html`<hr><button type="button" role="menuitem" class="danger" data-remove>${ic('trash')}Remove from the server</button>` : ''}
               </div>
             </div>
           </div>
@@ -173,13 +178,16 @@ function intro(m: HeroModel): SafeHtml {
   ];
   const rows = kv.filter(([, v]) => v);
   const links = externalLinks(t.providerIds, t.kind);
-  const chips = [...t.genres, ...(t.tags ?? []).slice(0, 6)];
+  // raw keywords are noisy: genres always, the first few keywords, the rest behind one button
+  const keywords = [...new Set(t.tags ?? [])].slice(0, 12);
+  const chips = [...t.genres, ...keywords.slice(0, 3)];
+  const extra = keywords.slice(3);
   return html`<section class="intro" aria-labelledby="h-intro">
     <h2 class="sr" id="h-intro">About ${series ? 'this show' : 'this film'}</h2>
     <div class="il">
       ${t.overview ? html`<p class="tagline${m.clamp ? ' clamp' : ''}" id="tagline">${t.overview}</p><button class="morebtn" type="button" id="clampBtn" data-clamp aria-expanded="${String(!m.clamp)}" aria-controls="tagline">${m.clamp ? 'Read more' : 'Show less'}</button>`
         : t.tagline ? html`<p class="tagline">${t.tagline}</p>` : html`<p class="tagline note">No description yet.</p>`}
-      ${chips.length ? html`<ul class="tags" aria-label="Genres and tags">${chips.map(x => html`<li>${x}</li>`)}</ul>` : ''}
+      ${chips.length ? html`<ul class="tags" id="tagList" aria-label="Genres and tags">${chips.map(x => html`<li><span>${x}</span></li>`)}${extra.map(x => html`<li data-extra hidden><span>${x}</span></li>`)}</ul>${extra.length ? html`<button class="linkbtn" type="button" data-tagsmore aria-expanded="false" aria-controls="tagList">${extra.length} more tags</button>` : ''}` : ''}
       ${rows.length || links.length ? html`<div class="credits">${rows.length ? html`<dl class="kv">${rows.map(([k, v]) => html`<div><dt>${k}</dt><dd>${v}</dd></div>`)}</dl>` : ''}
         ${links.length ? html`<div class="extlinks">${links.map(l => html`<a class="btn sm" href="${l.url}" target="_blank" rel="noopener noreferrer">${l.name}${ic('ext')}<span class="sr"> (opens in a new tab)</span></a>`)}</div>` : ''}</div>` : ''}
     </div>
@@ -226,7 +234,7 @@ export function epRow(e: Episode, i: number, o: { now: boolean; open: boolean; o
   const tech = v ? [`${e.runtimeMin} min`, v.videoCodec ? codecName(v.videoCodec) : '', a ? audioShort(a) : '', v.subtitles.length ? subtitleSummary(v.subtitles) : ''].filter(Boolean).join(' · ') : `${e.runtimeMin} min`;
   return html`<div class="ep${o.now ? ' now' : ''}${o.open ? ' open' : ''}" style="--i:${Math.min(i, 12)}" data-ep="${e.id}">
     <a class="hit" href="${c.href(watchPath(e.id, { seconds: e.progress ? ticksToSeconds(e.progress.positionTicks) : undefined }))}" aria-label="${e.progress ? 'Resume' : 'Play'} season ${e.season} episode ${e.episode}, ${e.name}"></a>
-    <div class="th ph" ${raw(phAttrs(`ep${e.id}`, `E${e.episode}`))}>${e.imageTags.primary ? html`<img loading="lazy" src="${imageUrl(e.id, 'Primary', { maxWidth: 480, tag: e.imageTags.primary })}" alt="">` : ''}${e.progress ? html`<span class="prog" aria-hidden="true"><i style="width:${e.progress.percent}%"></i></span>` : ''}<span class="pl">${ic('play')}</span></div>
+    <div class="th ph" ${raw(phAttrs(`ep${e.id}`, `E${e.episode}`))}>${e.imageTags.primary ? html`<img loading="lazy" decoding="async" src="${imageUrl(e.id, 'Primary', { maxWidth: 480, tag: e.imageTags.primary })}" alt="">` : ''}${e.progress ? html`<span class="prog" aria-hidden="true"><i style="width:${e.progress.percent}%"></i></span>` : ''}<span class="pl">${ic('play')}</span></div>
     <div><h3><span>E${e.episode}</span>${e.name}</h3>${e.overview ? html`<p>${e.overview}</p>` : ''}</div>
     <div class="side">${side}<button class="btn sm ghost dtn" type="button" data-epopen="${e.id}" aria-expanded="${String(o.open)}" aria-controls="m${e.id}">${ic(o.open ? 'up' : 'down')}Details</button></div>
     <div class="more" id="m${e.id}" ${o.open ? '' : raw('hidden')}>
@@ -243,12 +251,13 @@ export function episodesSection(o: { groups: readonly SeasonGroup[]; current: nu
   const g = o.groups.find(x => x.number === o.current);
   const eps = g?.eps ?? [];
   const hasNext = !!o.nextUp && o.nextUp.season === o.current;
+  const multi = o.groups.length > 1; // one season needs no tab bar, just its name
   const act = !g ? '' : g.watched >= eps.length && eps.length ? `You watched all of ${o.current === 0 ? 'the specials' : `season ${o.current}`}.` : hasNext && o.nextUp ? `Next up: episode ${o.nextUp.episode}.` : `${g.watched} of ${eps.length} watched.`;
   return html`<section class="section" id="episodes" aria-labelledby="h-eps">
-    <div class="sechead"><h2 id="h-eps">Episodes<small>${o.groups.length} ${o.groups.length === 1 ? 'season' : 'seasons'} here</small></h2></div>
-    <div class="seasontabs" role="tablist" aria-label="Seasons" id="seasontabs">${seasonTabs(o.groups, o.current)}</div>
-    <div role="tabpanel" id="seasonpanel" aria-labelledby="stab-${o.current}" tabindex="-1">
-      <div class="seasonacts">${hasNext ? html`<h3>More from Season ${o.current}</h3>` : ''}<span>${act}</span></div>
+    <div class="sechead"><h2 id="h-eps">Episodes${multi ? html`<small>${o.groups.length} seasons here</small>` : ''}</h2></div>
+    ${multi ? html`<div class="seasontabs" role="tablist" aria-label="Seasons" id="seasontabs">${seasonTabs(o.groups, o.current)}</div>` : ''}
+    <div ${multi ? raw(`role="tabpanel" aria-labelledby="stab-${o.current}"`) : ''} id="seasonpanel" tabindex="-1">
+      <div class="seasonacts">${!multi ? html`<h3>${o.current === 0 ? 'Specials' : `Season ${o.current}`}</h3>` : hasNext ? html`<h3>More from Season ${o.current}</h3>` : ''}<span>${act}</span></div>
       <div class="eps" id="eps">${eps.map((e, i) => epRow(e, i, { now: o.nextUp?.id === e.id, open: o.openEp === e.id, owner: o.owner, guests: o.detailed }, c))}</div>
     </div></section>`;
 }
@@ -280,6 +289,9 @@ export interface AboutModel {
   versions: readonly MediaVersion[];
   owner: boolean;
   ownerName: string;
+  /** series: what the library holds, for the owner card */
+  seasonCount?: number;
+  episodeCount?: number;
 }
 
 export function aboutSection(m: AboutModel): SafeHtml {
@@ -296,13 +308,16 @@ export function aboutSection(m: AboutModel): SafeHtml {
   return html`<section class="section" aria-labelledby="h-about">
     <div class="sechead"><h2 id="h-about">About ${t.name}</h2></div>
     <div class="about">
-      <div class="panel"><h3>Something wrong with it?</h3><div class="reportline"><span>${m.owner ? "Won't play, wrong subtitles, bad sound? Log it so you remember to fix it." : `Won't play, wrong subtitles, bad sound? Tell ${m.ownerName} in two taps.`}</span><button class="btn sm" type="button" data-report>${ic('flag')}Report a problem</button></div></div>
+      <div class="panel"><h3>Something wrong with it?</h3><div class="reportline"><span>Won't play, wrong subtitles or bad sound? Tell us in two taps.</span><button class="btn sm" type="button" data-report>${ic('flag')}Report a problem</button></div></div>
       ${rows.length ? html`<div class="panel"><h3>Details</h3><dl class="kv">${rows.map(([k, v]) => html`<dt>${k}</dt><dd>${v}</dd>`)}</dl></div>` : ''}
     </div>
     ${m.owner ? html`<div class="panel ownercard" aria-labelledby="h-own"><h3 id="h-own">${ic('server')}On the server</h3>
-      <div class="oc"><ul class="files">${files.length ? files.map(f => html`<li><b>${f.name}</b><span class="sz">${f.sz}</span><code>${f.meta}</code></li>`) : html`<li><b>${t.kind === 'series' ? 'Episodes on the server' : 'No file details'}</b></li>`}</ul>
-      <div><div><button class="btn sm danger out" type="button" data-remove>${ic('trash')}Remove...</button></div></div></div></div>` : ''}</section>`;
+      <div class="oc"><ul class="files">${files.length ? files.map(f => html`<li><b>${f.name}</b><span class="sz">${f.sz}</span><code>${f.meta}</code></li>`) : html`<li><b>${t.kind === 'series' ? seriesLine(m.episodeCount, m.seasonCount) : 'No file details'}</b></li>`}</ul>
+      <div><div><button class="btn sm danger out" type="button" data-remove>${ic('trash')}Remove</button></div></div></div></div>` : ''}</section>`;
 }
+
+const seriesLine = (eps?: number, seasons?: number): string =>
+  eps ? `${eps} ${eps === 1 ? 'episode' : 'episodes'}${seasons ? ` in ${seasons} ${seasons === 1 ? 'season' : 'seasons'}` : ''} on the server` : 'Episodes on the server';
 
 /* ── more like this ── */
 export function moreSection(items: readonly Title[], series: boolean, c: Ctx, current: Title): SafeHtml {

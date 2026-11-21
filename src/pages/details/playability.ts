@@ -79,10 +79,10 @@ export function assess(v: MediaVersion | undefined, audio: AudioTrack | undefine
   if (hard) {
     return {
       level: 'heavy', badge: 'Will be converted, may stutter', tone: 'warn', mayStutter: true, tech,
-      why: `This browser cannot play ${codecName(v.videoCodec)}${big ? ' at this size' : ''} directly. The server has to convert it as you watch and has no hardware help for that, so it may stutter. Pick a smaller version if there is one.`,
+      why: `This browser cannot play this video format${big ? ' at this size' : ''} directly, so the server converts it as you watch. That can make it stutter. Pick a smaller version if there is one.`,
     };
   }
-  return { level: 'heavy', badge: 'Needs conversion', tone: 'info', mayStutter: false, tech, why: `This browser cannot play ${codecName(v.videoCodec)} directly. The server converts it to a format that works as you watch; at this size that is fine.` };
+  return { level: 'heavy', badge: 'Needs conversion', tone: 'info', mayStutter: false, tech, why: 'This browser cannot play this video format directly, so the server converts it as you watch. At this size that works fine.' };
 }
 
 const RANK: Record<Level, number> = { direct: 0, convert: 1, heavy: 2, none: 3 };
