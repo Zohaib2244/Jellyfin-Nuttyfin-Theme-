@@ -1,17 +1,12 @@
 /* Library (Movies + Shows). Lifted from design/mockups/library.html; every rule is scoped under .lib so it never leaks
    into other pages. No hover glows / lifting cards (docs/DESIGN-RULES.md). */
 .lib { --sumh: 62px; }
-.lib .head { display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; margin-bottom: 14px; }
-.lib .head h1 { margin: 0; font-family: var(--font-px); font-weight: 400; font-size: 34px; line-height: 1.05; letter-spacing: .02em; }
-.lib .head .lede { margin: 4px 0 0; font-family: var(--font-read); color: var(--muted); font-size: 15px; }
-.lib .head .lede b { color: var(--text); }
 .lib .seg { display: inline-flex; gap: 4px; padding: 4px; border-radius: calc(var(--r-ctl) + 4px); border: var(--bw) solid var(--line); background: var(--nested); }
-.lib .seg > button, .lib .seg > a, .lib-sheet .seg > button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: var(--r-ctl); border: var(--bw) solid transparent; background: none; cursor: pointer; font-family: var(--font-read); font-weight: 700; font-size: 14.5px; color: var(--muted); white-space: nowrap; text-decoration: none; transition: color var(--d-micro), background var(--d-micro); }
-.lib .seg > button:hover, .lib .seg > a:hover, .lib-sheet .seg > button:hover { color: var(--text); }
+.lib .seg > button, .lib-sheet .seg > button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: var(--r-ctl); border: var(--bw) solid transparent; background: none; cursor: pointer; font-family: var(--font-read); font-weight: 700; font-size: 14.5px; color: var(--muted); white-space: nowrap; text-decoration: none; transition: color var(--d-micro), background var(--d-micro); }
+.lib .seg > button:hover, .lib-sheet .seg > button:hover { color: var(--text); }
 .lib .seg small, .lib-sheet .seg small { font-family: var(--font-mono); font-weight: 400; font-size: 12px; color: var(--num); }
-.lib .seg [aria-pressed="true"], .lib .seg [aria-current="page"], .lib-sheet .seg [aria-pressed="true"] { background: var(--panel); border-color: var(--line); color: var(--text); box-shadow: var(--lift-btn); }
-.lib .seg [aria-pressed="true"] svg, .lib .seg [aria-current="page"] svg, .lib-sheet .seg [aria-pressed="true"] svg { color: var(--accent); }
-.lib .libtabs { margin-left: auto; }
+.lib .seg [aria-pressed="true"], .lib-sheet .seg [aria-pressed="true"] { background: var(--panel); border-color: var(--line); color: var(--text); box-shadow: var(--lift-btn); }
+.lib .seg [aria-pressed="true"] svg, .lib-sheet .seg [aria-pressed="true"] svg { color: var(--accent); }
 
 /* NutBot says, with the one accent action: Surprise me */
 .lib .bot { display: flex; align-items: center; gap: 14px; padding: 8px 12px; margin-bottom: 14px; border-radius: var(--r-tile); border: var(--bw) solid var(--line); background: var(--panel); }
@@ -251,12 +246,6 @@
 /* phone */
 @media (max-width: 760px) {
   .lib { --sumh: 58px; }
-  .lib .head { gap: 10px; margin-bottom: 12px; }
-  .lib .head h1 { font-size: 27px; }
-  .lib .head .lede { font-size: 14px; }
-  .lib .libtabs { margin-left: 0; width: 100%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .lib .libtabs > a { padding: 0 4px; font-size: 13px; flex-direction: column; gap: 0; line-height: 1.1; text-align: center; white-space: normal; }
-  .lib .libtabs > a svg { display: none; }
   .lib .bot { flex-wrap: wrap; padding: 12px; gap: 10px; }
   .lib .bot .say { font-size: 15px; flex: 1 1 220px; }
   .lib .bot .acts { width: 100%; flex-wrap: wrap; }
@@ -306,4 +295,3 @@
   .lib-sup .reel .ph { width: 70px; } .lib-sup .reel .ph:nth-child(2) { width: 86px; }
 }
 @media (min-width: 761px) { .lib-sheet { display: none; } }
-.lib .head h1:focus { outline: none; }

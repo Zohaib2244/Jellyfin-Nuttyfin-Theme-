@@ -28,13 +28,13 @@ export default page;
 | `onDispose(fn)` | register cleanup for timers, listeners, observers |
 
 ## ShellHooks (what a page may ask of the shell)
-- `setTabs({ label, tabs, selected, onSelect, panelId? })` / `setTabs(null)`: section tabs in the top bar (keyboard-accessible tablist). The router empties the slot on every navigation, so set tabs at the start of `render`. `selectTab(id)` moves the selection without `onSelect`. `tabsSlot` is the raw element for anything fancier.
+- `setTabs({ label, tabs, selected, onSelect, panelId? })` (a tab may carry a small `count`; a page whose tabs are separate URLs, like Library, does `router.navigate` in `onSelect` and calls `selectTab` as its state changes) / `setTabs(null)`: section tabs in the top bar (keyboard-accessible tablist). The router empties the slot on every navigation, so set tabs at the start of `render`. `selectTab(id)` moves the selection without `onSelect`. `tabsSlot` is the raw element for anything fancier.
 - `setTitle(text)`: `document.title` = "text · Nuttyfin".
 - `setRequestsBadge(n)`: number on the Requests rail item.
 - `setAmbient(url)` / `setWallImages(urls)`: feed the "Ambient colour" and "Poster wall" page backgrounds (picker entries appear once `wired: true` in `src/ui/shell/pagebg.ts`).
 - `toast(msg, icon?)`, `focusSearch()`.
 
-Pages never render navigation, search, or a different header. The rail, top bar and the ONE search are the shell's.
+Pages never render navigation, search, or a different header. The only header is `.page-head` (base.css): an sr-only `h1` plus one `.page-sub` lede line and optional chips; the tabs in the top bar are the page title. The rail, top bar and the ONE search are the shell's.
 
 ## Rules the router gives you
 - Not signed in: redirected to `#/login?next=...`. Login and `#/watch/:id` hide the whole shell (`chrome: 'none'` in the route).

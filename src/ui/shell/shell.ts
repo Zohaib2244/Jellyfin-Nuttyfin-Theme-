@@ -29,8 +29,7 @@ export interface Shell extends RouterShell {
 interface NavItem { key: NavKey; label: string; icon: IconName; href?: string }
 const NAV: readonly NavItem[] = [
   { key: 'home', label: 'Home', icon: 'home', href: '#/' },
-  { key: 'movies', label: 'Movies', icon: 'film', href: '#/movies' },
-  { key: 'shows', label: 'Shows', icon: 'tv', href: '#/shows' },
+  { key: 'library', label: 'Library', icon: 'film', href: '#/movies' },
   { key: 'requests', label: 'Requests', icon: 'inbox', href: '#/requests' },
   { key: 'saved', label: 'Saved', icon: 'plane' }, // placeholder: not built yet
 ];

@@ -13,7 +13,7 @@ export function renderTabs(slot: HTMLElement, spec: TabsSpec): TabsController {
   nav.setAttribute('role', 'tablist');
   nav.setAttribute('aria-label', spec.label);
   nav.innerHTML = spec.tabs.map(t =>
-    `<button type="button" role="tab" id="tab-${esc(t.id)}" data-tab="${esc(t.id)}" aria-selected="false" tabindex="-1"${spec.panelId ? ` aria-controls="${esc(spec.panelId)}"` : ''}>${esc(t.label)}</button>`,
+    `<button type="button" role="tab" id="tab-${esc(t.id)}" data-tab="${esc(t.id)}" aria-selected="false" tabindex="-1"${spec.panelId ? ` aria-controls="${esc(spec.panelId)}"` : ''}>${esc(t.label)}${t.count != null ? ` <small class="tab-n">${t.count}</small>` : ''}</button>`,
   ).join('') + '<span class="tab-ind" aria-hidden="true"></span>';
   slot.replaceChildren(nav);
 

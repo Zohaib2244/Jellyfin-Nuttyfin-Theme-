@@ -7,7 +7,7 @@
 - Keep the established warm palette and typography. Use compact accessible disclosure, tab, and menu patterns.
 - Short on time and the weekly calendar (On TV this week) now live in the Explore tab, not Home. Mood navigation must have visible, keyboard-accessible controls and no overlapping buttons.
 - The Newly Added tab (renamed from "New films" 2026-11-16) is its own tab and is the What's-new page (whats-new.html just redirects to home.html#new): summary hero, recently added with filters, on the way. Tabs: Home, Continue Watching, Explore (was Recommendations), Newly Added, Requests. No Stats tab.
-- Navigation: left icon rail (Home/Movies/Shows/Requests/Saved) on desktop; section tabs sit in the top bar beside search; phones use the bottom tab bar.
+- Navigation: left icon rail (Home/Library/Requests/Saved) on desktop; section tabs sit in the top bar beside search; phones use the bottom tab bar (the same four items).
 - Section tabs share one row with the date and Arrange (no separate date row); the tab bar scrolls sideways on phones.
 - Home = NutBot + Next episode beside the Keep watching hero, which holds the recommendations (a rail that swaps the hero); then New this week beside a compact Continue watching list (all in-progress items, "See all" opens the tab); No separate Picked for you or full Continue watching strip on Home.
 - Every tile belongs to exactly one tab; never show the same tile in two tabs.
@@ -37,3 +37,7 @@
 - Home: "New this week" is now "Recently added": always the newest additions whatever their date (never empty unless the library is), a list of up to 9 (small poster, name, "Film/Show · 6 days ago") beside the still tilted collage, no big count; "See all" opens Newly Added.
 - Newly Added banner shows ONLY when something was added since the last visit (first visit: the last 7 days); when nothing is new it is not rendered and the tiles below move up. The last visit is stored only after the banner has been on screen for a moment (a refresh before that keeps the news); the X marks it as seen until something new arrives.
 - Newly Added "On the way": the person's own open requests with the Requests page's stages (one plain status line, a pill in the Requests chip colours, a progress bar only for a real download), "See all requests" to #/requests, an empty state that links to Discover.
+
+## Owner update — 21 November 2026 (one navigation model)
+- Rail = places (Home, Library, Requests, Saved). Top-bar tabs = the sections of a place (Library: Movies, Shows, 4K Movies, Collections). No in-page tab bars, switch blocks or duplicate Movies/Shows links anywhere; Movies and Shows are reached only through Library.
+- Page header: the tab names the page, so the h1 is screen-reader only and the visible header is one `.page-head` lede line (optional chips on the right). Home has none.

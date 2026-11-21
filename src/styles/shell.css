@@ -36,6 +36,7 @@ body { padding-left: var(--rail-w); }
 .section-nav [role="tab"]:focus-visible { outline-offset: -3px; }
 .toptabs .section-nav [role="tab"] { min-height: var(--top-h); }
 .toptabs .section-nav [role="tab"]:first-child { margin-left: -12px; }
+.section-nav .tab-n { font-family: var(--font-mono); font-weight: 400; font-size: 12px; color: var(--num); }
 .tab-ind { position: absolute; left: 0; bottom: 0; height: 3px; width: 0; border-radius: 3px 3px 0 0; background: var(--accent); pointer-events: none; transition: transform var(--d-med) var(--ease-out), width var(--d-med) var(--ease-out); }
 
 /* the one search */
@@ -149,7 +150,7 @@ body[data-shell="none"] main { max-width: none; padding: 0; }
 
   .rail { top: auto; left: 0; right: 0; bottom: 0; width: auto; z-index: 60; flex-direction: row; gap: 0; padding: 4px 4px calc(4px + env(safe-area-inset-bottom)); border-right: 0; border-top: var(--bw) solid var(--line); background: var(--panel); }
   .rbrand { display: none; }
-  .nav { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; }
+  .nav { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0; } /* one column per rail item, whatever the count */
   .nav .ni { min-height: 56px; gap: 2px; border-radius: 10px; border-color: transparent; color: var(--muted); font-size: 12.5px; }
   .nav .ni svg { width: 24px; height: 24px; }
   .nav .ni:hover { background: none; }

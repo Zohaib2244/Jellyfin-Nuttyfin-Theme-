@@ -14,11 +14,13 @@ export interface Page {
 }
 
 /** Highlight in the left rail / bottom bar. */
-export type NavKey = 'home' | 'movies' | 'shows' | 'requests' | 'saved';
+export type NavKey = 'home' | 'library' | 'requests' | 'saved';
 
 export interface Tab {
   id: string;
   label: string;
+  /** small number shown after the label (e.g. how many films); omitted while unknown */
+  count?: number;
 }
 
 export interface TabsSpec {

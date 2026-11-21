@@ -23,6 +23,7 @@ import {
   type Group, type LibKind, type LibState, type OrderId, type ViewId,
 } from './filters';
 import { openSurprise } from './surprise';
+import { libTabList, libTabOf, LIB_TABS, type LibCounts, type LibTab } from './tabs';
 
 const LETTERS = '#ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const DEFAULT_PAGE = 60;
@@ -54,7 +55,8 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
   let collections: Collection[] = [];
   let seasons = new Map<string, Season[]>();
   let nextUp = new Map<string, Episode>();
-  let counts: { movies?: number; shows?: number; fourK?: number; unseen?: number } = {};
+  // the last known counts paint the tabs at once (no 4K tab popping in later); fresh ones replace them as they arrive
+  let counts: LibCounts = store.get<LibCounts>('libcounts', {});
   let loading = false;
   let failed = false;
   let rendered = 0;
@@ -72,10 +74,10 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
   const root = document.createElement('section');
   root.className = 'page lib';
   setHtml(root, html`
-    <div class="head">
-      <div><h1 id="libTitle" data-autofocus></h1><p class="lede" id="lede"></p></div>
-      <nav class="seg libtabs" id="libtabs" aria-label="Library"></nav>
-    </div>
+    <header class="page-head">
+      <h1 class="sr" id="libTitle" data-autofocus></h1>
+      <p class="page-sub" id="lede"></p>
+    </header>
     <section class="bot" aria-label="NutBot">
       <span aria-hidden="true">${nutbot(46, 'happy')}</span>
       <p class="say" id="say" aria-live="polite"></p>
@@ -432,20 +434,28 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
     paintDesk(desk);
     for (const r of sheetRoots()) { paintDesk(r.querySelector<HTMLElement>('.desk') as HTMLElement); syncSheet(r); }
 
-    const only4k = st.sel.xtra?.size === 1 && st.sel.xtra.has('4k') && act.length === 1;
-    const tab: 'movies' | 'shows' | '4k' | 'sets' = kind === 'shows' ? 'shows' : st.view === 'shelves' ? 'sets' : only4k ? '4k' : 'movies';
-    const tabTitle = { movies: 'Movies', shows: 'Shows', '4k': '4K Movies', sets: 'Collections' }[tab];
+    const tab = currentTab();
+    const tabTitle = LIB_TABS[tab].title;
     q('#libTitle').textContent = tabTitle;
     ctx.shell.setTitle(tabTitle);
-    const tabs: Array<[typeof tab, string, string, 'film' | 'tv' | 'k4' | 'stack', number | undefined]> = [
-      ['movies', '/movies', 'Movies', 'film', counts.movies], ['shows', '/shows', 'Shows', 'tv', counts.shows],
-      ['4k', '/movies?xtra=4k', '4K Movies', 'k4', counts.fourK], ['sets', '/movies?view=shelves', 'Collections', 'stack', undefined],
-    ];
-    q('#libtabs').innerHTML = tabs.map(([k, href, t, i, c]) => `<a href="${router.href(href)}"${k === tab ? ' aria-current="page"' : ''}>${ic(i).value}${t}${c != null ? ` <small>${c}</small>` : ''}</a>`).join('');
+    paintTabs(tab);
     q('#lede').innerHTML = ledeHtml(tab);
     q('#foldBtn').setAttribute('aria-expanded', String(!desk.hidden));
     paintRail();
     paintBot();
+  }
+
+  /** Which section tab this URL state belongs to (the same state the tabs' links write). */
+  function currentTab(): LibTab { return libTabOf(kind, st, groups); }
+
+  /** The section tabs live in the top bar. They are rebuilt only when their labels or counts change. */
+  let tabsSig = '';
+  function paintTabs(tab: LibTab): void {
+    const list = libTabList(counts, tab);
+    const sig = JSON.stringify(list);
+    if (sig === tabsSig) { ctx.shell.selectTab(tab); return; }
+    tabsSig = sig;
+    ctx.shell.setTabs({ label: 'Library sections', tabs: list, selected: tab, onSelect: id => router.navigate(LIB_TABS[id as LibTab].path) });
   }
 
   function ledeHtml(tab: string): string {
@@ -710,6 +720,7 @@ async function render(ctx: PageContext, kind: LibKind): Promise<HTMLElement> {
   const cnt = async (extra: ItemsQuery): Promise<number | undefined> => (await backend.items({ start: 0, limit: 0, ...extra }, ctx.signal).catch(() => null))?.total;
   void Promise.all([cnt({ kind: 'movie' }), cnt({ kind: 'series' }), cnt({ kind: 'movie', is4k: true }), cnt({ kind: 'movie', played: false })]).then(([movies, shows, fourK, unseen]) => {
     counts = { movies, shows, fourK, unseen };
+    store.set('libcounts', counts);
     paintChrome();
   });
   void refreshBot();

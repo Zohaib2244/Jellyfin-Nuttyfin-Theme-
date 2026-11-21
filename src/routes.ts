@@ -18,9 +18,9 @@ export const routes: readonly RouteDef[] = [
   { name: 'login', pattern: '/login', auth: false, chrome: 'none', load: () => import('./pages/login') },
   { name: 'home', pattern: '/', nav: 'home', load: () => import('./pages/home') },
   { name: 'home', pattern: '/home/:tab?', nav: 'home', load: () => import('./pages/home') },
-  { name: 'movies', pattern: '/movies', nav: 'movies', load: () => import('./pages/library/movies') },
-  { name: 'shows', pattern: '/shows', nav: 'shows', load: () => import('./pages/library/shows') },
-  { name: 'title', pattern: '/title/:id', load: () => import('./pages/details') },
+  { name: 'movies', pattern: '/movies', nav: 'library', load: () => import('./pages/library/movies') },
+  { name: 'shows', pattern: '/shows', nav: 'library', load: () => import('./pages/library/shows') },
+  { name: 'title', pattern: '/title/:id', nav: 'library', load: () => import('./pages/details') },
   { name: 'requests', pattern: '/requests/:tab?', nav: 'requests', load: () => import('./pages/requests') },
   { name: 'watch', pattern: '/watch/:id', chrome: 'none', load: () => import('./pages/watch') },
 ];

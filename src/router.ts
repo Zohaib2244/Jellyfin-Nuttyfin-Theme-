@@ -161,6 +161,8 @@ export class Router implements RouterApi {
     if (!m) { this.navigate('/', { replace: true }); return; }
 
     const token = ++this.token;
+    // switching a section tab in the top bar re-renders the page: keep keyboard focus on the (new) selected tab
+    const tabFocus = !!document.activeElement?.closest('.toptabs');
     this.leave();
     this.current = m;
     this.abort = new AbortController();
@@ -192,7 +194,7 @@ export class Router implements RouterApi {
 
     await this.swap(el, restoreY);
     view.removeAttribute('aria-busy');
-    this.focusPage(el);
+    if (tabFocus) this.focusSelectedTab(el); else this.focusPage(el);
   }
 
   private async swap(el: HTMLElement, restoreY: number | null): Promise<void> {
@@ -230,6 +232,11 @@ export class Router implements RouterApi {
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
+  }
+
+  private focusSelectedTab(el: HTMLElement): void {
+    const tab = document.querySelector<HTMLElement>('.toptabs [role="tab"][aria-selected="true"]');
+    if (tab) tab.focus({ preventScroll: true }); else this.focusPage(el);
   }
 
   private focusPage(el: HTMLElement): void {
