@@ -35,7 +35,7 @@
   --shadow-c: #070604;
   --text: #e8dfc8;
   --muted: #b5b0a3;
-  --dim: #8b8576;
+  --dim: #9b9689;
   --accent: #ff6b2b;
   --accent-ink: #13100c;
   --num: #00b4c8;
@@ -64,15 +64,15 @@
   :root:not([data-theme="dark"]) {
     color-scheme: light;
     --bg: #d8cfbc; --panel: #f5f0e6; --nested: #faf6f0; --line: #7a6a52; --shadow-c: #a89878;
-    --text: #1c1810; --muted: #514739; --dim: #796856; --accent: #e05a18; --accent-ink: #f5f0e6;
-    --num: #00768a; --ok: #1f6b33; --info: #2d62a6; --warn: #8f6400; --bad: #a3271a;
+    --text: #1c1810; --muted: #514739; --dim: #645647; --accent: #a14111; --accent-ink: #f5f0e6;
+    --num: #006171; --ok: #1f6b33; --info: #285a9b; --warn: #7a5600; --bad: #a3271a;
   }
 }
 :root[data-theme="light"] {
   color-scheme: light;
   --bg: #d8cfbc; --panel: #f5f0e6; --nested: #faf6f0; --line: #7a6a52; --shadow-c: #a89878;
-  --text: #1c1810; --muted: #514739; --dim: #796856; --accent: #e05a18; --accent-ink: #f5f0e6;
-  --num: #00768a; --ok: #1f6b33; --info: #2d62a6; --warn: #8f6400; --bad: #a3271a;
+  --text: #1c1810; --muted: #514739; --dim: #645647; --accent: #a14111; --accent-ink: #f5f0e6;
+  --num: #006171; --ok: #1f6b33; --info: #285a9b; --warn: #7a5600; --bad: #a3271a;
 }
 :root[data-theme="dark"] { color-scheme: dark; }
 
@@ -83,7 +83,7 @@
   :root { --d-micro: 0ms; --d-small: 0ms; --d-med: 0ms; --d-large: 0ms; --d-hero: 0ms; --d-sky: 0ms; }
 }
 @media (min-width: 1360px) { :root { --row: 92px; } }
-@media (max-width: 760px) { :root { --top-h: 58px; } }
+@media (max-width: 760px), (max-height: 500px) { :root { --top-h: 58px; } }
 
 /* Time-of-day colours, registered so they cross-fade (Time of day background). Set by src/ui/shell/pagebg.ts */
 @property --sky-a { syntax: '<color>'; inherits: true; initial-value: #ff6b2b; }

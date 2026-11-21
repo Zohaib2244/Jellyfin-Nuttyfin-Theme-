@@ -22,10 +22,13 @@ export const onTheGoTile: TileDef = {
       render(rows) {
         if (!rows.length) return null;
         const going = rows.filter(r => r.kind === 'resume').length;
-        return html`${tileHead('onthego', 'clock', 'Continue watching', { count: going ? `${going} on the go${rows.length > going ? `, ${rows.length - going} up next` : ''}` : `${rows.length} up next` })}
+        // one honest total first, then what it is made of
+        const upNext = rows.length - going;
+        const count = going && upNext ? `${rows.length} to pick up: ${going} half-watched, ${upNext} up next` : going ? `${going} half-watched` : `${rows.length} up next`;
+        return html`${tileHead('onthego', 'clock', 'Continue watching', { count, arrows: rows.length > 4 })}
           <div class="hstrip">${rows.map((r, i) => html`<a class="og" href="#${playPath(r.item)}" aria-label="${r.kind === 'resume' ? 'Resume' : 'Play'} ${r.title}, ${r.sub}${r.percent ? `, ${r.percent}% watched` : ''}${leftText(r) ? `, ${leftText(r)}` : ''}">
             <span class="ogart ph" ${ph(r.item.id, r.title)}>${img(thumbUrl(r.item, 480))}${i === 0 ? html`<span class="first">Up first</span>` : r.kind === 'next' ? html`<span class="first next">Next</span>` : ''}<span class="pl">${icon('play')}</span>${r.percent != null ? html`<span class="bar"><i style="width:${r.percent}%"></i></span>` : ''}</span>
-            <span><b>${r.title}</b><small>${r.sub}${leftText(r) ? ` · ${leftText(r)}` : ''}</small></span></a>`)}</div>`;
+            <span><b>${r.title}</b><small>${leftText(r) ? html`<em>${leftText(r)}</em> · ` : ''}${r.sub}</small></span></a>`)}</div>`;
       },
       empty: html`<p class="quiet">Nothing half-watched and no shows waiting. Pick something in Explore and it will land here.</p>`,
     });

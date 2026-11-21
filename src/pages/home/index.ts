@@ -6,6 +6,7 @@
  */
 import './home.css';
 import { html } from '../../lib/html';
+import { countOpenRequests } from '../../state/openRequests';
 import type { Page } from '../types';
 import { HomeData } from './data';
 import { TAB_LABEL, type HomeCtx, type HomeTab, type TileDef } from './tile';
@@ -143,6 +144,12 @@ const page: Page = {
 
     // "See all" and similar links inside tiles
     root.addEventListener('click', e => {
+      const sc = (e.target as Element).closest<HTMLElement>('[data-hscroll]');
+      if (sc) { // the back / forward buttons of a sideways strip
+        const strip = sc.closest('.tile')?.querySelector<HTMLElement>('.hstrip');
+        strip?.scrollBy({ left: Number(sc.dataset.hscroll) * Math.max(220, strip.clientWidth * 0.85), behavior: reduced() ? 'auto' : 'smooth' });
+        return;
+      }
       const b = (e.target as Element).closest<HTMLElement>('[data-tab-link]');
       const id = b?.dataset.tabLink;
       if (b && isTab(id)) { e.preventDefault(); select(id, { focus: true }); }
@@ -162,7 +169,7 @@ const page: Page = {
     buildTab(tab);
 
     // the Requests badge in the rail: how many of your requests are still open (soft: nothing if Seerr is off)
-    void data.requestSummary().then(list => { if (!pc.signal.aborted) pc.shell.setRequestsBadge(list.filter(r => r.state !== 'available' && r.state !== 'declined').length); });
+    void data.myDeskRequests().then(list => { if (!pc.signal.aborted) pc.shell.setRequestsBadge(countOpenRequests(list)); });
     return root;
   },
 };

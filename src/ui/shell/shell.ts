@@ -19,6 +19,7 @@ import { mountSearch, searchMarkup, type SearchController } from './search';
 import { renderTabs, type TabsController } from './tabs';
 import { ARTWORK, artworkUrl } from '../../pages/login/artwork';
 import { nutbot } from '../nutbot';
+import { openRequestCount } from '../../state/openRequests';
 
 export interface Shell extends RouterShell {
   readonly view: HTMLElement;
@@ -26,12 +27,12 @@ export interface Shell extends RouterShell {
   setUser(u: User | null): void;
 }
 
-interface NavItem { key: NavKey; label: string; icon: IconName; href?: string }
+interface NavItem { key: NavKey; label: string; icon: IconName; href: string }
 const NAV: readonly NavItem[] = [
   { key: 'home', label: 'Home', icon: 'home', href: '#/' },
   { key: 'library', label: 'Library', icon: 'film', href: '#/movies' },
   { key: 'requests', label: 'Requests', icon: 'inbox', href: '#/requests' },
-  { key: 'saved', label: 'Saved', icon: 'plane' }, // placeholder: not built yet
+  { key: 'favourites', label: 'Favourites', icon: 'heart', href: '#/favourites' },
 ];
 
 export interface ShellOptions {
@@ -44,9 +45,8 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
   initPrefs();
   mountIconSprite(body);
 
-  const navItems = NAV.map(n => n.href
-    ? html`<a class="ni" href="${n.href}" data-nav="${n.key}">${icon(n.icon)}<span class="lbl">${n.label}</span>${n.key === 'requests' ? raw('<span class="badge" id="reqBadge"></span>') : ''}</a>`
-    : html`<button class="ni" type="button" data-soon="${n.label}">${icon(n.icon)}<span class="lbl">${n.label}</span></button>`);
+  const navItems = NAV.map(n =>
+    html`<a class="ni" href="${n.href}" data-nav="${n.key}">${icon(n.icon)}<span class="lbl">${n.label}</span>${n.key === 'requests' ? raw('<span class="badge" id="reqBadge"></span>') : ''}</a>`);
 
   const shellHtml = html`
     <div class="pagebg" id="pagebg" aria-hidden="true"></div>
@@ -57,15 +57,14 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
       <p class="rclock" id="rclock" aria-label="Time"></p>
     </aside>
     <header class="top" id="top">
-      <a class="brand" href="#/" aria-label="Nuttyfin home">${brandMark(38)}<span class="wm">Nutty<em>Fin</em></span></a>
+      <a class="brand" href="#/" aria-label="Nuttyfin home">${brandMark(38)}<span class="wm">Nutty<em>fin</em></span></a>
       <div class="toptabs" id="toptabs"></div>
       ${searchMarkup()}
-      <button class="iconbtn nbtop" type="button" id="nbTop" aria-label="Talk to NutBot" title="Talk to NutBot" hidden>${nutbot(30, 'happy')}</button>
+      <button class="iconbtn nbtop" type="button" id="nbTop" aria-label="Ask NutBot" title="Ask NutBot" hidden>${nutbot(30, 'happy')}</button>
       <button class="themesw" type="button" role="switch" id="themeSw" aria-checked="true" aria-label="Dark theme">${pixelIcon('moon', 'moon')}${pixelIcon('sun', 'sun')}</button>
       <div class="acct"><button class="avatar" type="button" id="avatarBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="acct-menu" hidden></button></div>
     </header>
     <main id="app"><div id="view"></div></main>
-    <button class="nbfab" type="button" id="nbFab" aria-label="Talk to NutBot" title="Talk to NutBot" hidden>${nutbot(38, 'happy')}</button>
     <div class="toasts" id="toasts" role="status" aria-live="polite"></div>`;
   body.insertAdjacentHTML('beforeend', shellHtml.value);
 
@@ -73,6 +72,15 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
   const view = q('#view');
   const top = q('#top');
   const tabsSlot = q('#toptabs');
+  /* On phones the section-tab strip sits UNDER the sticky top bar and scrolls away with the page (108px of fixed chrome was a
+     fifth of a small screen); everywhere else it shares the bar's row with the search. One element, moved when the width changes. */
+  const phone = matchMedia('(max-width: 760px)');
+  const placeTabs = (): void => {
+    if (phone.matches) { if (tabsSlot.parentElement === top) top.after(tabsSlot); }
+    else if (tabsSlot.parentElement !== top) top.insertBefore(tabsSlot, top.children[1] ?? null);
+  };
+  placeTabs();
+  phone.addEventListener('change', placeTabs);
   const avatarBtn = q<HTMLButtonElement>('#avatarBtn');
   const themeSw = q<HTMLButtonElement>('#themeSw');
   const toasts = q('#toasts');
@@ -96,14 +104,11 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
   window.setInterval(paintClock, 20_000);
 
   /* NutBot, reachable from every page */
-  const nbFab = q<HTMLButtonElement>('#nbFab');
   let currentUser: User | null = null;
-  const nbTop = q<HTMLButtonElement>('#nbTop'); // phones: NutBot lives in the top bar so it never covers content
-  for (const btn of [nbFab, nbTop]) {
-    btn.addEventListener('click', () => {
-      void import('../../pages/home/nutbot/launcher').then(m => m.openNutBot(backend, currentUser, btn));
-    });
-  }
+  const nbTop = q<HTMLButtonElement>('#nbTop'); // a button in the top bar on every size, so it never covers page content
+  nbTop.addEventListener('click', () => {
+    void import('../../pages/home/nutbot/launcher').then(m => m.openNutBot(backend, currentUser, nbTop));
+  });
 
   /* theme switch */
   const paintTheme = () => {
@@ -122,7 +127,9 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
     t.className = 'toast';
     t.innerHTML = `${icon(ic).value}<span>${esc(message)}</span>`;
     toasts.append(t);
-    setTimeout(() => { t.classList.add('leaving'); setTimeout(() => t.remove(), 200); }, 3500);
+    const gone = (): void => { if (t.classList.contains('leaving')) return; t.classList.add('leaving'); setTimeout(() => t.remove(), 200); };
+    t.addEventListener('click', gone); // a tap puts it away
+    setTimeout(gone, 3500);
   };
 
   /* search + account */
@@ -130,11 +137,13 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
   const account: AccountMenu = mountAccountMenu(avatarBtn, () => { void backend.signOut(); });
 
   /* rail */
-  q('#rail').addEventListener('click', e => {
-    const b = (e.target as Element).closest<HTMLElement>('[data-soon]');
-    if (b) toast(`${b.dataset.soon} is coming soon`, 'info');
+  // "Skip to content": the page's own heading (or the first thing it asks focus for), scrolled into view
+  q('#skip').addEventListener('click', () => {
+    const target = view.querySelector<HTMLElement>('[data-autofocus], [autofocus]') ?? view.querySelector<HTMLElement>('h1') ?? view;
+    if (!target.hasAttribute('tabindex') && !/^(INPUT|BUTTON|A|SELECT|TEXTAREA)$/.test(target.tagName)) target.setAttribute('tabindex', '-1');
+    target.focus();
+    target.scrollIntoView({ block: 'start' });
   });
-  q('#skip').addEventListener('click', () => { view.setAttribute('tabindex', '-1'); view.focus(); });
 
   /* tabs slot */
   let tabs: TabsController | null = null;
@@ -144,15 +153,26 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
     if (spec) tabs = renderTabs(tabsSlot, spec); else tabsSlot.replaceChildren();
   };
 
+  /* The Requests badge: one number (src/state/openRequests.ts) that the shell keeps fresh on every page, so it never
+     depends on which page happens to set it. Pages that already hold the list may set the same number sooner. */
+  const setBadge = (n: number): void => {
+    const b = body.querySelector<HTMLElement>('#reqBadge');
+    if (b) { b.textContent = n > 0 ? String(n) : ''; b.setAttribute('aria-label', n > 0 ? `${n} open` : ''); }
+  };
+  let badgeAt = 0;
+  const refreshBadge = (force = false): void => {
+    if (!currentUser || (!force && Date.now() - badgeAt < 30_000)) return;
+    badgeAt = Date.now();
+    const uid = currentUser.id;
+    void openRequestCount(backend, { fresh: force }).then(n => { if (currentUser?.id === uid) setBadge(n); });
+  };
+
   const hooks: ShellHooks = {
     setTabs,
     selectTab: id => tabs?.select(id),
     tabsSlot,
     setTitle(title) { document.title = title ? `${title} · Nuttyfin` : 'Nuttyfin'; },
-    setRequestsBadge(n) {
-      const b = body.querySelector<HTMLElement>('#reqBadge');
-      if (b) { b.textContent = n > 0 ? String(n) : ''; b.setAttribute('aria-label', n > 0 ? `${n} open` : ''); }
-    },
+    setRequestsBadge: setBadge,
     setAmbient: url => pagebg.setAmbientImage(url),
     setWallImages: urls => pagebg.setWallImages(urls),
     toast,
@@ -164,6 +184,7 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
     pagebg,
     hooks,
     setNav(key) {
+      refreshBadge();
       for (const a of body.querySelectorAll<HTMLElement>('.nav .ni')) {
         if (a.dataset.nav === key) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
       }
@@ -173,7 +194,9 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
     setUser(u) {
       if (currentUser && (!u || u.id !== currentUser.id)) void import('../../pages/home/nutbot/launcher').then(m => m.closeNutBot());
       currentUser = u;
-      nbFab.hidden = !u;
+      badgeAt = 0;
+      setBadge(0);
+      if (u) refreshBadge(true);
       nbTop.hidden = !u;
       account.setUser(u);
       avatarBtn.hidden = !u;

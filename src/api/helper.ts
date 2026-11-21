@@ -9,9 +9,13 @@ import type {
   CalendarEntry, DeleteMode, DeletePlan, DeleteResult, HelperApi, HelperHealth, NutbotReply, NutbotTurn,
 } from './desk-types';
 import { createHttp, type Http } from './http';
+import { tabStore } from '../lib/storage';
 
 export const HELPER_BASE = '/nutfin-api';
 const RECHECK_MS = 60_000;
+/** When the helper did not answer, do not ask again for this long (across page loads in this tab): no red 502 line on every visit. */
+const DOWN_MS = 10 * 60_000;
+const DOWN_KEY = 'helperDownAt';
 
 export class HelperClient implements HelperApi {
   private readonly http: Http;
@@ -22,14 +26,20 @@ export class HelperClient implements HelperApi {
   }
 
   /** Forget the cached health (after sign-out / sign-in). */
-  reset(): void { this.probed = null; }
+  reset(): void { this.probed = null; tabStore.remove(DOWN_KEY); }
 
   health(): Promise<HelperHealth | null> {
     const now = Date.now();
     if (!this.probed || now - this.probed.at > RECHECK_MS) {
+      const downAt = tabStore.get<number>(DOWN_KEY, 0);
+      if (!this.probed && downAt && now - downAt < DOWN_MS) { // a fresh page load right after a failed probe: stay quiet
+        this.probed = { at: now, value: Promise.resolve(null) };
+        return this.probed.value;
+      }
       const value = this.http<HelperHealth>('/health', { timeoutMs: 4000 })
         .then(h => (h && h.ok === true ? h : null))
-        .catch(() => null);
+        .catch(() => null)
+        .then(h => { if (h) tabStore.remove(DOWN_KEY); else tabStore.set(DOWN_KEY, Date.now()); return h; });
       this.probed = { at: now, value };
     }
     return this.probed.value;

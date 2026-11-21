@@ -99,7 +99,7 @@ input[type="checkbox"]:active, input[type="radio"]:active { transform: scale(.85
 :root dialog.nbc:not([open])::backdrop { opacity: 0; }
 @media (max-width: 760px) { :root dialog.nbc:not([open]) { transform: translateY(100%); } }
 /* NutBot button: pops in when the person signs in, presses in */
-.nbfab:not([hidden]) { animation: m-pop-in var(--d-med) var(--ease-spring) backwards; transition: transform var(--d-micro) var(--ease), border-color var(--d-micro); }
+.nbtop:not([hidden]) { animation: m-pop-in var(--d-med) var(--ease-spring) backwards; }
 
 /* ── 6. Numbers and progress ── */
 :where(.prog i, .pbar i, .sprog i, .cwr .bar i, .og .ogart .bar i) { transform-origin: 0 50%; animation: m-grow 600ms var(--ease-out) 120ms backwards; }

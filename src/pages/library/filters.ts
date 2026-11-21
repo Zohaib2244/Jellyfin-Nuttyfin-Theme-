@@ -121,6 +121,11 @@ export const VIEWS: Record<LibKind, Array<[ViewId, string, XIconName]>> = {
   movies: [['posters', 'Posters', 'vposter'], ['wall', 'Wall of pictures', 'vwall'], ['list', 'List with details', 'vlist'], ['shelves', 'Shelves by collection', 'vshelf']],
   shows: [['progress', 'Progress', 'vprog'], ['posters', 'Posters', 'vposter'], ['wall', 'Wall of pictures', 'vwall'], ['list', 'List with details', 'vlist']],
 };
+/** What the view switch offers. "Shelves" is the Collections tab (one navigation model), so it is not a second way in. */
+export const VIEW_CHOICES: Record<LibKind, Array<[ViewId, string, XIconName]>> = {
+  movies: VIEWS.movies.filter(v => v[0] !== 'shelves'),
+  shows: VIEWS.shows,
+};
 export const DEFAULT_VIEW: Record<LibKind, ViewId> = { movies: 'posters', shows: 'progress' };
 export const DEFAULT_ORDER: Record<LibKind, OrderId> = { movies: 'added', shows: 'added' };
 

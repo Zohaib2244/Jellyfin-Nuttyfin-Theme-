@@ -8,7 +8,7 @@
  * matchRoute() is pure and unit-tested.
  */
 import type { Backend } from './api';
-import type { RouteDef } from './routes';
+import { notFoundRoute, type RouteDef } from './routes';
 import type { Page, PageContext, RouteMatch, RouterApi, ShellHooks } from './pages/types';
 import type { NavKey } from './pages/types';
 import { noteSwap, routeDone, routeStart } from './lib/motion';
@@ -42,6 +42,7 @@ export function matchRoute(routes: readonly RouteDef[], hash: string): Matched |
       if (name) { try { params[name] = decodeURIComponent(seg); } catch { ok = false; } }
       else if (seg !== p) ok = false;
     }
+    if (ok && route.tabs && params.tab !== undefined && !route.tabs.includes(params.tab)) ok = false; // an unknown tab is an unknown page
     if (ok && segs.length <= pat.length) return { route, name: route.name, path, params, query };
   }
   return null;
@@ -76,6 +77,7 @@ export class Router implements RouterApi {
   private readonly scrollByKey = new Map<string, number>();
   private readonly modules = new Map<RouteDef['load'], Page>();
   private hasContent = false;
+  private focused = false;
 
   constructor(private readonly deps: RouterDeps) {}
 
@@ -146,8 +148,10 @@ export class Router implements RouterApi {
 
   private async go(hash: string, restoreY: number | null): Promise<void> {
     const { backend, shell, view, routes } = this.deps;
-    const m = matchRoute(routes, hash);
     const signedIn = !!backend.currentUser();
+    // an address nothing matches gets the friendly "not found" page (after the sign-in guard below), never Home
+    const sp = splitHash(hash);
+    const m: Matched = matchRoute(routes, hash) ?? { route: notFoundRoute, name: notFoundRoute.name, path: sp.path, params: {}, query: sp.query };
 
     // guards
     if (m && m.route.auth !== false && !signedIn) {
@@ -159,8 +163,6 @@ export class Router implements RouterApi {
       this.navigate(next && next.startsWith('/') && !next.startsWith('/login') ? next : '/', { replace: true });
       return;
     }
-    if (!m) { this.navigate('/', { replace: true }); return; }
-
     const token = ++this.token;
     // switching a section tab in the top bar re-renders the page: keep keyboard focus on the (new) selected tab
     const tabFocus = !!document.activeElement?.closest('.toptabs');
@@ -197,7 +199,10 @@ export class Router implements RouterApi {
     await this.swap(el, restoreY);
     view.removeAttribute('aria-busy');
     routeDone();
-    if (tabFocus) this.focusSelectedTab(el); else this.focusPage(el);
+    // the very first page of a visit keeps focus at the top of the document, so the first Tab reaches "Skip to content"
+    const firstOfVisit = !this.focused;
+    this.focused = true;
+    if (tabFocus) this.focusSelectedTab(el); else if (!firstOfVisit) this.focusPage(el);
   }
 
   private async swap(el: HTMLElement, restoreY: number | null): Promise<void> {

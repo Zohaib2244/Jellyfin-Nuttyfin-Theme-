@@ -1,0 +1,6 @@
+/* "We could not find that page" */
+.nf404 { display: grid; place-items: center; min-height: 52vh; }
+.nf404-card { display: flex; align-items: center; gap: 22px; max-width: 640px; padding: 28px; border-radius: var(--r-tile); border: var(--bw) dashed var(--line); background: var(--panel); }
+.nf404-card .page-sub { margin-bottom: 16px; }
+.nf404 .acts { display: flex; gap: 10px; flex-wrap: wrap; }
+@media (max-width: 520px) { .nf404-card { flex-direction: column; align-items: flex-start; padding: 20px; } }

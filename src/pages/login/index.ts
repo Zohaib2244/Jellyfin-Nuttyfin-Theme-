@@ -37,15 +37,13 @@ const page: Page = {
     const root = document.createElement('div');
     root.className = 'lg';
     setHtml(root, html`
-      <a class="lg-brand" href="#/login" aria-label="NuttyFin">${brandMark(40)}<span>Nutty<em>Fin</em></span></a>
+      <a class="lg-brand" href="#/login" aria-label="Nuttyfin">${brandMark(40)}<span>Nutty<em>fin</em></span></a>
       <div class="lg-art" id="lgArt" aria-hidden="true">${raw(artMarkup())}</div>
       <div class="lg-shade"></div>
       <section class="lg-content" aria-labelledby="lgH">
         <div class="lg-copy"><h1 id="lgH" data-autofocus tabindex="-1">Your next good watch.</h1><p>Pick up where you left off. Find something worth staying in for.</p></div>
         <div class="lg-card">
-          <h2>Sign in to Nuttyfin</h2>
-          <p class="lg-lede">Use the account your server owner created for you.</p>
-          <form id="lgForm" novalidate>
+          <form id="lgForm" novalidate aria-label="Sign in">
             <label for="lgUser">Username</label>
             <input id="lgUser" name="username" autocomplete="username" required placeholder="Your username" autocapitalize="none" spellcheck="false">
             <label for="lgPass">Password</label>

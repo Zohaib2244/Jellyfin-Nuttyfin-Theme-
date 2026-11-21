@@ -30,7 +30,7 @@ export default page;
 ## ShellHooks (what a page may ask of the shell)
 - `setTabs({ label, tabs, selected, onSelect, panelId? })` (a tab may carry a small `count`; a page whose tabs are separate URLs, like Library, does `router.navigate` in `onSelect` and calls `selectTab` as its state changes) / `setTabs(null)`: section tabs in the top bar (keyboard-accessible tablist). The router empties the slot on every navigation, so set tabs at the start of `render`. `selectTab(id)` moves the selection without `onSelect`. `tabsSlot` is the raw element for anything fancier.
 - `setTitle(text)`: `document.title` = "text · Nuttyfin".
-- `setRequestsBadge(n)`: number on the Requests rail item.
+- `setRequestsBadge(n)`: number on the Requests rail item. Pages never compute `n` themselves: use `openRequestCount()` from `src/api/openRequests.ts` (one definition for the badge, Home, Requests and Newly Added).
 - `setAmbient(url)` / `setWallImages(urls)`: feed the "Ambient colour" and "Poster wall" page backgrounds (picker entries appear once `wired: true` in `src/ui/shell/pagebg.ts`).
 - `toast(msg, icon?)`, `focusSearch()`.
 
@@ -41,7 +41,7 @@ Pages never render navigation, search, or a different header. The only header is
 - Old page stays visible until `render` resolves, then a View Transition (or CSS fade) swaps the content.
 - After a swap, focus goes to `[data-autofocus]`/`[autofocus]`, else the first `h1`: give every page an `h1`.
 - Back/forward restores scroll; new navigations start at the top. Lists that fill in late are fine (restore retries for ~1.5 s).
-- A throw/reject in `render` shows a friendly "Something went wrong / Try again" page.
+- A throw/reject in `render` shows a friendly "Something went wrong / Try again" page. An address no route matches (or a `:tab` outside the route's `tabs` list) shows the friendly 404 page (`src/pages/notfound`).
 
 ## Styling
 Use tokens from `src/styles/tokens.css` and the classes in `base.css` (`.btn`, `.card`, `.chip`, `.prog`, `.ph`, `.page-h`, `.page-sub`, `.empty`). Per-page CSS: put a `*.css` next to the page and `import './x.css'` from the page module (it loads lazily with the page). Icons: `icon('name')` from `src/ui/icons.ts`. Markup: `html` from `src/lib/html.ts` (escapes; nest templates freely).

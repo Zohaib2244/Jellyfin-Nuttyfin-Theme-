@@ -14,10 +14,20 @@ const THEMES: ReadonlyArray<[ThemePref, string, 'auto' | 'sunsm' | 'moonsm']> = 
 /** Jellyfin's own web app lives at /web/ on the same host in production (the dev server proxies it under /jf). */
 const JF_WEB = import.meta.env.DEV ? '/jf/web/' : '/web/';
 const jf = (route: string): string => `${JF_WEB}#/${route}`;
-/** Seerr's own site, for its admin settings. */
-const seerrSite = (): string => (location.hostname.endsWith('avns.site') ? 'https://jellyseerr.avns.site' : 'http://jellyseerr.avns.nut');
+/**
+ * Seerr's own site (its admin settings), worked out from the address this app is served from: `nuttyfin.avns.nut` ->
+ * `http://jellyseerr.avns.nut`, `nuttyfin.avns.site` -> `https://jellyseerr.avns.site` (same scheme, sibling name). null when
+ * that cannot be known (localhost, a bare IP, a one-word host): the link is then left out instead of guessing.
+ * (`/seerr/` on this origin only carries Seerr's API for the app, not its web pages.)
+ */
+export function seerrSiteUrl(loc: { protocol: string; hostname: string } = location): string | null {
+  const host = loc.hostname;
+  if (!host || host === 'localhost' || /^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.includes(':')) return null;
+  const labels = host.split('.');
+  return labels.length >= 3 ? `${loc.protocol}//jellyseerr.${labels.slice(1).join('.')}` : null;
+}
 
-interface SettingLink { label: string; hint: string; href: (u: User) => string; ic: Parameters<typeof icon>[0]; admin?: boolean }
+interface SettingLink { label: string; hint: string; href: (u: User) => string | null; ic: Parameters<typeof icon>[0]; admin?: boolean }
 const SETTINGS: readonly SettingLink[] = [
   { label: 'Profile & password', hint: 'Picture, password', href: u => jf(`userprofile?userId=${encodeURIComponent(u.id)}`), ic: 'user' },
   { label: 'Playback', hint: 'Quality, audio language, skip intros', href: () => jf('mypreferencesplayback'), ic: 'play' },
@@ -25,7 +35,7 @@ const SETTINGS: readonly SettingLink[] = [
   { label: 'Quick Connect', hint: 'Sign in a TV or phone with a code', href: () => jf('quickconnect'), ic: 'tv' },
   { label: 'All Jellyfin settings', hint: 'Display, home screen, controls', href: () => jf('mypreferencesmenu'), ic: 'gear' },
   { label: 'Server dashboard', hint: 'Users, libraries, scheduled tasks', href: () => jf('dashboard'), ic: 'server', admin: true },
-  { label: 'Requests settings', hint: 'Seerr: who can ask, quotas', href: () => seerrSite(), ic: 'inbox', admin: true },
+  { label: 'Requests settings', hint: 'Who can ask, quotas', href: () => seerrSiteUrl(), ic: 'inbox', admin: true },
 ];
 
 export const initialOf = (name: string): string => (name.trim()[0] ?? '?').toUpperCase();
@@ -114,10 +124,18 @@ export function mountAccountMenu(trigger: HTMLButtonElement, onSignOut: () => vo
       </section>
       <section class="pm-view" data-view="settings" hidden aria-label="Settings">
         <div class="pm-sub"><button type="button" class="iconbtn" data-go="main" aria-label="Back">${icon('back')}</button><h2>Settings</h2></div>
-        <nav class="pm-links" aria-label="Settings">${SETTINGS.filter(l => !l.admin || u.isAdmin).map(l =>
-          html`<a href="${l.href(u)}" target="_blank" rel="noopener">${icon(l.ic)}<span>${l.label}<small>${l.hint}</small></span>${icon('ext')}</a>`)}</nav>
+        <nav class="pm-links" aria-label="Settings">${SETTINGS.filter(l => !l.admin || u.isAdmin).flatMap(l => {
+          const href = l.href(u);
+          return href ? [html`<a href="${href}" target="_blank" rel="noopener">${icon(l.ic)}<span>${l.label}<small>${l.hint}</small></span>${icon('ext')}</a>`] : [];
+        })}</nav>
       </section>`);
     document.body.append(menu);
+    // a short screen scrolls the panel: a soft fade at the bottom edge says there is more
+    const pop = menu;
+    const edge = () => { const more = pop.scrollHeight - pop.clientHeight - pop.scrollTop > 4; if (more) pop.dataset.more = ''; else delete pop.dataset.more; };
+    pop.addEventListener('scroll', edge, { passive: true });
+    new MutationObserver(edge).observe(pop, { attributes: true, subtree: true, attributeFilter: ['hidden'] });
+    requestAnimationFrame(edge);
     trigger.setAttribute('aria-expanded', 'true');
     sync();
     menu.querySelector<HTMLElement>('[data-go="look"]')?.focus();

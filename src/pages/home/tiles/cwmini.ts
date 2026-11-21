@@ -33,7 +33,7 @@ function row(r: WatchRow, i: number): SafeHtml {
   const left = leftText(r);
   return html`<li><a class="cwr${i === 0 ? ' first' : ''}" href="#${playPath(r.item)}" aria-label="${r.kind === 'resume' ? 'Resume' : 'Play'} ${r.title}, ${r.sub}${r.percent ? `, ${r.percent}% watched` : ''}${left ? `, ${left}` : ''}">
     <span class="ph" ${ph(r.item.id, r.title)}>${img(thumbUrl(r.item, 320))}</span>
-    <span class="w"><b><span class="tt">${r.title}</span>${i === 0 ? html`<span class="first">Up first</span>` : ''}</b><small>${r.sub}${left ? html` · <em>${left}</em>` : ''}</small>
+    <span class="w"><b><span class="tt">${r.title}</span>${i === 0 ? html`<span class="first">Up first</span>` : ''}</b><small>${left ? html`<em>${left}</em> · ` : ''}${r.sub}</small>
       ${r.percent != null ? html`<span class="bar" aria-hidden="true"><i style="width:${r.percent}%"></i></span>` : ''}</span>
     <span class="go" aria-hidden="true">${icon('play')}</span></a></li>`;
 }
