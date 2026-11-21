@@ -29,7 +29,7 @@ export function freedSentence(p: DeletePlan, mode: DeleteMode): string {
   const seeding = p.torrents.some(t => t.seeding);
   const holds = mode !== 'arr-and-files-and-torrent' && p.torrents.length > 0;
   const lead = m.freedBytes === 0 ? 'Frees 0 GB' : 'Frees almost nothing';
-  if (holds) return seeding ? `${lead} because the torrent is still seeding and keeps the file.` : `${lead} because a finished torrent still keeps the file.`;
+  if (holds) return seeding ? `${lead} because the downloaded copy is still being shared and keeps the file.` : `${lead} because the finished download still keeps the file.`;
   return `${lead} because another copy of the file exists elsewhere.`;
 }
 
@@ -48,4 +48,15 @@ export function outcomeText(r: { ok: boolean; steps: Array<{ label: string; stat
     title: 'It stopped part-way',
     detail: `${bad ? `"${bad.label}" did not work${bad.detail ? ` (${bad.detail})` : ''}.` : 'A step did not work.'}${left ? ` The ${left === 1 ? 'step after it was' : `${left} steps after it were`} not run.` : ''}`,
   };
+}
+
+/** App names are for the owner's small "details" line only; everything else says "the downloader". */
+export function plainText(text: string): string {
+  return text
+    .replace(/\bqBittorrent\b/gi, 'the downloader')
+    .replace(/\b(Radarr|Sonarr)\b/g, 'the downloader')
+    .replace(/\btorrents\b/gi, 'downloads')
+    .replace(/\btorrent\b/gi, 'download')
+    .replace(/\bseeding\b/gi, 'being shared')
+    .replace(/the downloader and the downloader/g, 'the downloader');
 }

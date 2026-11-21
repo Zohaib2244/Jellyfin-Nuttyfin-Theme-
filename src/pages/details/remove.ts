@@ -3,7 +3,8 @@
  * which Radarr/Sonarr entry and which torrent hold the files, and how much space each choice would really give back
  * (imports are hardlinks, so deleting the library copy alone often frees nothing while the torrent is still seeding).
  * Then: choose, confirm, optionally preview with a dry run, and watch each step finish.
- * Without the helper it is the plain "remove from Jellyfin only" dialog, and the other options say why they are off.
+ * Without the helper it is the plain "delete it from the library" dialog: the options that cannot work are left out, not explained.
+ * Wording is for people, not apps: "the downloader" and "the downloaded copy"; the app names appear only in a small details line.
  */
 import { imageUrl } from '../../api';
 import type { Backend } from '../../api/backend';
@@ -14,7 +15,7 @@ import { html, raw, type SafeHtml } from '../../lib/html';
 import { nutbot } from '../../ui/nutbot';
 import { openDialog, type DialogHandle } from '../common/dialog';
 import { ic } from '../common/icons';
-import { fmtBytes, freedSentence, freesTag, hasTorrent, modeOf, outcomeText, showsNoSpace, type Choice } from './removeModel';
+import { fmtBytes, freedSentence, freesTag, hasTorrent, modeOf, outcomeText, plainText, showsNoSpace, type Choice } from './removeModel';
 import './remove.css';
 
 export interface RemoveInput {
@@ -45,8 +46,8 @@ export function openRemove(r: RemoveInput): DialogHandle {
     if (state.s === 'loading') return 'Checking what is on the drive...';
     if (state.s === 'none') return state.why;
     const p = state.plan;
-    if (!p.arr) return `${apps} does not list this ${what}.`;
-    if (!p.deleteEnabled) return 'Deleting through the helper is switched off. The server owner turns it on in the helper settings (NUTFIN_ALLOW_DELETE).';
+    if (!p.arr) return `The downloader does not list this ${what}.`;
+    if (!p.deleteEnabled) return 'Removing from the downloader is switched off on this server.';
     return '';
   };
   const mode = (): DeleteMode => modeOf({ arr: choice.arr && canArr(), torrent: choice.torrent && choice.arr && canArr() });
@@ -57,51 +58,59 @@ export function openRemove(r: RemoveInput): DialogHandle {
     const p = ready();
     const torrents = p?.torrents.length ?? 0;
     return html`<ul class="plan">
-      ${m !== 'jellyfin-only' && torrents && m === 'arr-and-files-and-torrent' ? html`<li><span class="app qbit">qB</span><span>Remove ${torrents === 1 ? 'the torrent' : `${torrents} torrents`} and ${torrents === 1 ? 'its' : 'their'} data from qBittorrent.</span></li>` : html`<li class="skip"><span class="app qbit">qB</span><span>qBittorrent: left as it is.</span></li>`}
-      ${m !== 'jellyfin-only' ? html`<li><span class="app ${r.isSeries ? 'sonarr' : 'radarr'}">${r.isSeries ? 'So' : 'Ra'}</span><span>Remove <b>${item.name}</b> from ${apps} and delete ${r.isSeries ? 'its files' : 'its file'}.</span></li>` : html`<li class="skip"><span class="app ${r.isSeries ? 'sonarr' : 'radarr'}">${r.isSeries ? 'So' : 'Ra'}</span><span>${apps}: left as it is.</span></li>`}
-      <li><span class="app jf">Jf</span><span>Delete <b>${item.name}</b> in Jellyfin${m === 'jellyfin-only' ? `, including the file${r.isSeries ? 's' : ''} on disk` : ''}.</span></li></ul>`;
+      ${m === 'arr-and-files-and-torrent' && torrents ? html`<li>${ic('trash')}<span>Delete the downloaded ${torrents === 1 ? 'copy' : 'copies'}.</span></li>` : m !== 'jellyfin-only' && torrents ? html`<li class="skip">${ic('x')}<span>Leave the downloaded copy as it is.</span></li>` : ''}
+      ${m !== 'jellyfin-only' ? html`<li>${ic('trash')}<span>Remove <b>${item.name}</b> from the downloader and delete ${r.isSeries ? 'its files' : 'its file'}.</span></li>` : ''}
+      <li>${ic('trash')}<span>Delete <b>${item.name}</b> from the library${m === 'jellyfin-only' ? `, including the file${r.isSeries ? 's' : ''} on the drive` : ''}.</span></li></ul>
+      ${m !== 'jellyfin-only' ? html`<p class="rmdetails">Details: ${apps}${torrents ? ', qBittorrent' : ''} and Jellyfin.</p>` : ''}`;
   };
   const freeBox = (): SafeHtml => {
     const p = ready();
-    if (!p) return html`<p class="rmfree muted">${state.s === 'loading' ? html`<span class="spin sm" aria-hidden="true"></span>Checking what is on the drive...` : html`${ic('info')}How much space comes back is only known when the Nuttyfin helper is running.`}</p>`;
+    if (!p) return html`<p class="rmfree muted">${state.s === 'loading' ? html`<span class="spin sm" aria-hidden="true"></span>Checking what is on the drive...` : html`${ic('info')}Only the library copy can be removed right now.`}</p>`;
     const m = mode();
     const bad = showsNoSpace(p, m);
     return html`<div class="rmfree ${bad ? 'warn' : 'good'}">${ic(bad ? 'warn' : 'drive')}<div><b>${freedSentence(p, m)}</b>
-      ${bad && hasTorrent(p) && m !== 'arr-and-files-and-torrent' && canArr() ? html`<span>To get it back, choose "Also remove it from ${apps}" and tick the torrent too.</span>` : ''}
-      ${p.notes.filter(n => !/space/i.test(n)).map(n => html`<span>${n}</span>`)}</div></div>`;
+      ${bad && hasTorrent(p) && m !== 'arr-and-files-and-torrent' && canArr() ? html`<span>To get it back, choose "Also remove from the downloader" and tick the downloaded copy too.</span>` : ''}
+      ${p.notes.filter(n => !/space/i.test(n)).map(n => html`<span>${plainText(n)}</span>`)}</div></div>`;
+  };
+
+  const togText = (p: DeletePlan): SafeHtml => {
+    const t = p.torrents[0];
+    return !choice.arr ? html`Choose "Also remove from the downloader" first.`
+      : html`${p.torrents.length === 1 ? 'One download shares' : `${p.torrents.length} downloads share`} these files${p.torrents.length === 1 ? (t?.seeding ? ', still being shared' : ', finished') : ''}. <small class="app-name">(qBittorrent: ${t?.name ?? ''})</small>`;
   };
 
   const step1 = (): SafeHtml => {
     const p = ready();
     const t = p?.torrents[0];
+    const more = canArr();
+    const files = r.isSeries ? 'the show and its episode files' : 'the film and its file';
     return html`
-    <div class="head">${poster(item)}<div><h2 id="rmh">Remove ${item.name}?</h2><p class="lead">Choose how far it goes. Nothing changes until you confirm on the next step.</p></div></div>
-    <div class="blk" role="radiogroup" aria-labelledby="hl-how"><span class="lbl" id="hl-how">How far should it go?</span>
+    <div class="head">${poster(item)}<div><h2 id="rmh">Remove ${item.name}?</h2><p class="lead">${more ? 'Choose how far it goes. Nothing changes until you confirm on the next step.' : `This deletes ${files} from the server's drive. Nothing changes until you confirm on the next step.`}</p></div></div>
+    ${more ? html`<div class="blk" role="radiogroup" aria-labelledby="hl-how"><span class="lbl" id="hl-how">How far should it go?</span>
       <div class="rmopts">
-        <label class="rmopt"><input type="radio" name="rmmode" value="jf" ${choice.arr ? '' : raw('checked')} data-autofocus><span class="dot" aria-hidden="true"></span><span class="tt">Remove from Jellyfin only${p ? html` <small class="tag">(${freesTag(p, 'jellyfin-only')})</small>` : ''}</span>
-          <span class="dd">Deletes ${r.isSeries ? 'the show and its episode files' : 'the film and its file'} from the media drive and from Nuttyfin. ${apps} and the download are not told, so ${apps} may still list it.</span></label>
-        <label class="rmopt"><input type="radio" name="rmmode" value="arr" ${choice.arr ? raw('checked') : ''} ${canArr() ? '' : raw('disabled')}><span class="dot" aria-hidden="true"></span><span class="tt">Also remove it from ${apps}${p && canArr() ? html` <small class="tag">(${freesTag(p, 'arr-and-files')})</small>` : ''}</span>
-          <span class="dd">${apps} stops watching for it and will not fetch it again, and deletes its files.</span>${canArr() ? '' : html`<span class="why3">${arrWhy()}</span>`}</label>
+        <label class="rmopt"><input type="radio" name="rmmode" value="jf" ${choice.arr ? '' : raw('checked')} data-autofocus><span class="dot" aria-hidden="true"></span><span class="tt">Delete from the library${p ? html` <small class="tag">(${freesTag(p, 'jellyfin-only')})</small>` : ''}</span>
+          <span class="dd">Deletes ${files} from the drive and from Nuttyfin. The downloader is not told, so it may still list it.</span></label>
+        <label class="rmopt"><input type="radio" name="rmmode" value="arr" ${choice.arr ? raw('checked') : ''}><span class="dot" aria-hidden="true"></span><span class="tt">Also remove from the downloader${p ? html` <small class="tag">(${freesTag(p, 'arr-and-files')})</small>` : ''}</span>
+          <span class="dd">It will not be fetched again, and its files are deleted. <small class="app-name">(${apps})</small></span></label>
       </div></div>
-    <div class="blk"><span class="lbl">Afterwards</span>
-      <label class="tog" id="rmtog" aria-disabled="${String(!(choice.arr && canArr() && !!p && hasTorrent(p)))}"><span class="tt">Also remove the download in qBittorrent${p && choice.arr && canArr() && hasTorrent(p) ? html` <small class="tag">(${freesTag(p, 'arr-and-files-and-torrent')})</small>` : ''}</span>
-        <span class="dd" id="rmtogd">${!p ? arrWhy() : !hasTorrent(p) ? 'No download shares these files, so there is nothing to remove there.' : !choice.arr ? 'Choose "Also remove it from ' + apps + '" first.' : t ? `${p.torrents.length === 1 ? 'One download shares' : `${p.torrents.length} downloads share`} these files: ${t.name}${p.torrents.length === 1 ? (t.seeding ? ', still seeding' : ', finished') : ''}.` : ''}</span>
-        <input type="checkbox" id="rmtorrent" ${choice.torrent ? raw('checked') : ''} ${choice.arr && canArr() && p && hasTorrent(p) ? '' : raw('disabled')}><span class="sw" aria-hidden="true"></span></label>
-    </div>
+    ${p && hasTorrent(p) ? html`<div class="blk"><span class="lbl">Afterwards</span>
+      <label class="tog" id="rmtog" aria-disabled="${String(!choice.arr)}"><span class="tt">Also delete the downloaded copy${choice.arr ? html` <small class="tag">(${freesTag(p, 'arr-and-files-and-torrent')})</small>` : ''}</span>
+        <span class="dd" id="rmtogd">${togText(p)}</span>
+        <input type="checkbox" id="rmtorrent" ${choice.torrent ? raw('checked') : ''} ${choice.arr ? '' : raw('disabled')}><span class="sw" aria-hidden="true"></span></label>
+    </div>` : ''}` : html`<input type="radio" name="rmmode" value="jf" checked hidden>`}
     <div class="blk" id="rmfreeblk" aria-live="polite">${freeBox()}</div>
     <div class="blk"><span class="lbl">Exactly what will happen</span><div id="rmplan">${planList()}</div></div>
-    <div class="acts sticky"><button class="btn" type="button" data-close>Cancel</button><button class="btn danger" type="button" data-next>${ic('trash')}Continue...</button></div>`;
+    <div class="acts sticky"><button class="btn" type="button" data-close>Cancel</button><button class="btn danger" type="button" data-next ${more ? '' : raw('data-autofocus')}>${ic('trash')}Continue</button></div>`;
   };
 
   /* ── step 2: type the title ── */
   const step2 = (preview: SafeHtml | null = null): SafeHtml => {
     const m = mode();
-    const label = m === 'jellyfin-only' ? 'Remove from Jellyfin' : m === 'arr-and-files' ? `Remove from ${apps} and Jellyfin` : 'Remove everything';
+    const label = m === 'jellyfin-only' ? 'Delete from the library' : m === 'arr-and-files' ? 'Delete and remove from the downloader' : 'Delete everything';
     return html`
-    <div class="head">${poster(item)}<div><h2 id="rmh">Are you sure?</h2><p class="lead">This deletes ${r.isSeries ? 'every episode of ' : ''}<b>${item.name}</b> from the server${m === 'jellyfin-only' ? '' : `, and from ${apps}${m === 'arr-and-files-and-torrent' ? ' and qBittorrent' : ''}`}.</p></div></div>
-    <div class="confirmbox blk"><div class="perm" id="permnote">${ic('warn')}<span>Are you sure? The file${r.isSeries ? 's are' : ' is'} deleted for good. There is no undo.</span></div></div>
+    <div class="head">${poster(item)}<div><h2 id="rmh">Delete ${item.name}?</h2><p class="lead">${r.isSeries ? 'Every episode' : 'The file'} will be deleted${m === 'jellyfin-only' ? '' : ', and it will be removed from the downloader'}. There is no undo.</p></div></div>
     ${preview ? html`<div class="blk" id="rmprevbox" role="status">${preview}</div>` : ''}
-    <div class="acts sticky"><button class="btn" type="button" data-back>Back</button>${ready() ? html`<button class="btn" type="button" id="rmprev">${ic('eye')}Preview only</button>` : ''}<button class="btn danger" type="button" id="rmgo" data-autofocus>${ic('trash')}${label}</button></div>`;
+    <div class="acts sticky"><button class="btn" type="button" data-back>Back</button>${ready() ? html`<button class="btn" type="button" id="rmprev">${ic('eye')}Preview</button>` : ''}<button class="btn danger" type="button" id="rmgo" data-autofocus>${ic('trash')}${label}</button></div>`;
   };
 
   const dlg = openDialog(step1(), { label: `Remove ${item.name}`, className: 'wide rm', canClose: () => !busy });
@@ -136,14 +145,14 @@ export function openRemove(r: RemoveInput): DialogHandle {
       if (tog) { tog.disabled = !on; tog.checked = choice.torrent; }
       dlg.el.querySelector('#rmtog')?.setAttribute('aria-disabled', String(!on));
       const d = dlg.el.querySelector('#rmtogd');
-      if (d && p && hasTorrent(p)) d.textContent = on ? `${p.torrents.length === 1 ? 'One download shares' : `${p.torrents.length} downloads share`} these files: ${p.torrents[0]?.name ?? ''}${p.torrents.length === 1 ? (p.torrents[0]?.seeding ? ', still seeding' : ', finished') : ''}.` : `Choose "Also remove it from ${apps}" first.`;
+      if (d && p && hasTorrent(p)) d.innerHTML = togText(p).value;
       paintDynamic();
     } else if (t.id === 'rmtorrent') { choice.torrent = t.checked; paintDynamic(); }
   });
 
   const stepList = (steps: Array<{ label: string; status: string; detail?: string }>, dry: boolean): SafeHtml =>
     html`<ol class="rmsteps">${steps.map(s => html`<li class="${s.status}"><span class="st" aria-hidden="true">${s.status === 'done' ? ic('check') : s.status === 'failed' ? ic('x') : s.status === 'running' ? raw('<span class="spin sm"></span>') : s.status === 'skipped' ? ic('back') : s.status === 'dry-run' ? ic('eye') : raw('<i></i>')}</span>
-      <span class="tx"><b>${dry && s.status === 'dry-run' ? `Would: ${s.label}` : s.label}</b>${s.detail ? html`<small>${s.detail}</small>` : ''}</span>
+      <span class="tx"><b>${dry && s.status === 'dry-run' ? `Would: ${plainText(s.label)}` : plainText(s.label)}</b>${s.detail ? html`<small>${plainText(s.detail)}</small>` : ''}</span>
       <span class="sr">${s.status === 'dry-run' ? 'would run' : s.status}</span></li>`)}</ol>`;
 
   const helperRun = async (dryRun: boolean): Promise<DeleteResult> =>
@@ -182,7 +191,7 @@ export function openRemove(r: RemoveInput): DialogHandle {
     const p = ready();
     const viaHelper = !!p && p.deleteEnabled;
     const labels = (p?.modes[m].steps ?? ['Delete it in Jellyfin']).map((label, i) => ({ label, status: i === 0 ? 'running' : 'pending' }));
-    dlg.body.innerHTML = html`<div class="head">${poster(item)}<div><h2 id="rmh">Removing...</h2><p class="lead">Please keep this open. It goes step by step and stops if anything fails.</p></div></div>
+    dlg.body.innerHTML = html`<div class="head">${poster(item)}<div><h2 id="rmh">Removing</h2><p class="lead">Please keep this open. It goes step by step and stops if anything fails.</p></div></div>
       <div class="blk" role="status" aria-live="polite" id="rmprog">${stepList(labels, false)}</div>`.value;
 
     const finish = (res: DeleteResult): void => {
@@ -190,13 +199,13 @@ export function openRemove(r: RemoveInput): DialogHandle {
       const out = outcomeText(res);
       const freed = res.ok && m === 'arr-and-files-and-torrent' && p?.measured ? `About ${fmtBytes(res.freedBytes ?? 0)} came back on the drive.` : res.ok && p?.measured ? freedSentence(p, m) : '';
       dlg.body.innerHTML = res.ok
-        ? html`<div class="head">${poster(item)}<div><h2 id="rmh" tabindex="-1" data-autofocus>${item.name} is gone</h2><p class="lead">${m === 'jellyfin-only' ? `${apps} and the download were not touched.` : 'Every step finished.'}</p></div></div>
+        ? html`<div class="head">${poster(item)}<div><h2 id="rmh" tabindex="-1" data-autofocus>${item.name} is gone</h2><p class="lead">${m === 'jellyfin-only' ? 'The downloader and the downloaded copy were not touched.' : 'Every step finished.'}</p></div></div>
           <div class="blk">${stepList(res.steps, false)}</div>
           <div class="result" role="status">${nutbot(40, 'happy')}<div><b>Removed</b><span>${freed || 'It no longer shows up in Nuttyfin.'}</span></div></div>
           <div class="acts"><button class="btn primary" type="button" data-done>Back to the library</button></div>`.value
         : html`<div class="head">${poster(item)}<div><h2 id="rmh" tabindex="-1" data-autofocus>${out.title}</h2><p class="lead">${out.detail}</p></div></div>
           <div class="blk">${stepList(res.steps, false)}</div>
-          <div class="result bad" role="alert">${nutbot(40, 'sleepy')}<div><b>Not everything was removed</b><span>You can try again, or fix it in ${apps} or qBittorrent by hand.</span></div></div>
+          <div class="result bad" role="alert">${nutbot(40, 'sleepy')}<div><b>Not everything was removed</b><span>You can try again, or finish it by hand in the downloader.</span></div></div>
           <div class="acts"><button class="btn" type="button" data-close>Close</button><button class="btn" type="button" data-back>Try again</button></div>`.value;
       dlg.body.querySelector<HTMLElement>('[data-autofocus]')?.focus();
       dlg.body.querySelector('[data-done]')?.addEventListener('click', () => { dlg.close(); r.onRemoved(); });

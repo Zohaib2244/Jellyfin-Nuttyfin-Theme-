@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { DeletePlan } from '../src/api/desk-types';
 import { calendarToEpisodes } from '../src/pages/home/calendar';
-import { fmtBytes, freedSentence, freesTag, modeOf, outcomeText, showsNoSpace } from '../src/pages/details/removeModel';
+import { fmtBytes, freedSentence, freesTag, modeOf, outcomeText, plainText, showsNoSpace } from '../src/pages/details/removeModel';
 
 const GB = 1024 ** 3;
 const plan = (o: Partial<DeletePlan> = {}): DeletePlan => ({
@@ -35,8 +35,8 @@ describe('choices to modes', () => {
 
 describe('the space sentence', () => {
   it('seeding torrent: says exactly why nothing comes back', () => {
-    expect(freedSentence(plan(), 'jellyfin-only')).toBe('Frees 0 GB because the torrent is still seeding and keeps the file.');
-    expect(freedSentence(plan(), 'arr-and-files')).toMatch(/still seeding/);
+    expect(freedSentence(plan(), 'jellyfin-only')).toBe('Frees 0 GB because the downloaded copy is still being shared and keeps the file.');
+    expect(freedSentence(plan(), 'arr-and-files')).toMatch(/still being shared/);
   });
   it('removing the torrent too gives it back', () => {
     expect(freedSentence(plan(), 'arr-and-files-and-torrent')).toBe('About 8 GB comes back on the drive.');
@@ -44,7 +44,7 @@ describe('the space sentence', () => {
     expect(freesTag(plan(), 'jellyfin-only')).toBe('frees 0 GB');
   });
   it('finished torrent, no torrent, extra copy, unmeasured', () => {
-    expect(freedSentence(plan({ torrents: [{ hash: 'h', name: 'n', state: 'pausedUP', seeding: false, ratio: 1, sizeBytes: 1, sharedFiles: 1 }] }), 'jellyfin-only')).toMatch(/finished torrent still keeps/);
+    expect(freedSentence(plan({ torrents: [{ hash: 'h', name: 'n', state: 'pausedUP', seeding: false, ratio: 1, sizeBytes: 1, sharedFiles: 1 }] }), 'jellyfin-only')).toMatch(/finished download still keeps/);
     const free = plan({ torrents: [], modes: { ...plan().modes, 'jellyfin-only': { freedBytes: 6.4 * GB, keptBytes: 0, steps: [] } } });
     expect(freedSentence(free, 'jellyfin-only')).toBe('About 6.4 GB comes back on the drive.');
     expect(freedSentence(plan({ torrents: [], modes: { ...plan().modes, 'jellyfin-only': { freedBytes: 0, keptBytes: GB, steps: [] } } }), 'jellyfin-only')).toMatch(/another copy/);
@@ -54,7 +54,7 @@ describe('the space sentence', () => {
   });
   it('leftover extras do not count as space: "frees almost nothing"', () => {
     const real = plan({ modes: { ...plan().modes, 'jellyfin-only': { freedBytes: 11 * 1024 ** 2, keptBytes: 2.4 * GB, steps: [] } } });
-    expect(freedSentence(real, 'jellyfin-only')).toBe('Frees almost nothing because the torrent is still seeding and keeps the file.');
+    expect(freedSentence(real, 'jellyfin-only')).toBe('Frees almost nothing because the downloaded copy is still being shared and keeps the file.');
     expect(freesTag(real, 'jellyfin-only')).toBe('frees almost nothing');
     expect(showsNoSpace(real, 'jellyfin-only')).toBe(true);
   });
@@ -87,5 +87,14 @@ describe('calendar to episodes (On TV tile)', () => {
     expect(eps[1]?.seriesImageTags.backdrop).toBeDefined();
     expect(eps[2]).toMatchObject({ seriesId: '', missing: true, seriesImageTags: {} });
     expect(new Set(eps.map(e => e.id)).size).toBe(3);
+  });
+});
+
+describe('plain words for members and the owner', () => {
+  it('app names become "the downloader"', () => {
+    expect(plainText('Remove it from Radarr')).toBe('Remove it from the downloader');
+    expect(plainText('Remove the torrent from qBittorrent')).toBe('Remove the download from the downloader');
+    expect(plainText('Sonarr and qBittorrent did not answer')).toBe('the downloader and the downloader did not answer'.replace('the downloader and the downloader', 'the downloader'));
+    expect(plainText('2 torrents share these files')).toBe('2 downloads share these files');
   });
 });

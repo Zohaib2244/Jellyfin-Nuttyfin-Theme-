@@ -30,3 +30,17 @@
 .dialog.rm .tog input:checked + .sw { background: var(--accent-soft); border-color: var(--accent); }
 .dialog.rm .tog input:checked + .sw::after { left: auto; right: 3px; background: var(--accent); }
 .dialog.rm .tog input:focus-visible + .sw { outline: 2px solid var(--accent); outline-offset: 3px; }
+/* plain-words plan list: an icon and a sentence; app names live only in the small details line */
+.dialog.rm .plan li { grid-template-columns: 20px minmax(0, 1fr); }
+.dialog.rm .plan li svg { width: 18px; height: 18px; margin-top: 1px; color: var(--bad); }
+.dialog.rm .plan li.skip svg { color: var(--dim); }
+.dialog.rm .rmdetails { margin: 8px 2px 0; font-family: var(--font-read); font-size: 13px; color: var(--muted); }
+.dialog.rm .app-name { font-family: var(--font-read); font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+/* landscape phones: leave room to read the options (no poster or lead, a compact footer) */
+@media (max-height: 520px) {
+  .dialog.rm .head { grid-template-columns: minmax(0, 1fr); padding-right: 44px; }
+  .dialog.rm .head .ph, .dialog.rm .head .lead { display: none; }
+  .dialog.rm .blk { margin-top: 14px; }
+  .dialog.rm .acts.sticky { flex-wrap: nowrap; margin-top: 14px; padding-top: 10px; padding-bottom: 10px; }
+  .dialog.rm .acts.sticky .btn { flex: 1 1 0; min-height: 44px; }
+}
