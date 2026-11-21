@@ -25,7 +25,7 @@ import { assess, bestVersion, browserCanPlay, defaultAudio, defaultSubtitle, typ
 import { groupSeasons, pickTarget, validPrefs, type PlayPrefs } from './target';
 import { pickTrailer } from './trailer';
 import {
-  aboutSection, castSection, chaptersSection, endsAtText, episodesSection, footnote, guestSection, hero, howLine, howPanel,
+  aboutSection, castSection, chaptersSection, endsAtText, episodesSection, footnote, guestSection, hero, howPanel,
   moreSection, playExtra, playRow, versionSeg, subLabel, audioShort, favTip, watchedTip, type HeroModel, type PlayState,
 } from './views';
 
@@ -202,15 +202,13 @@ async function render(ctx: PageContext): Promise<HTMLElement> {
   }
 
   function paintHow(): void {
-    const a = assessment();
-    q('#howline').innerHTML = howLine(playState(), a).value;
-    if (howOpen()) renderHowPanel();
+    renderHowPanel();
   }
 
   function renderHowPanel(): void {
     const a = assessment();
     const pop = howRoot();
-    const heading = isSeries && target ? `How it plays · S${target.season} E${target.episode}` : 'How it plays';
+    const heading = isSeries && target ? `Audio & subtitles · S${target.season} E${target.episode}` : 'Audio & subtitles';
     const activeId = document.activeElement instanceof HTMLElement ? document.activeElement.id : '';
     const hadFocus = pop.contains(document.activeElement);
     pop.innerHTML = howPanel(playState(), a, { owner, heading, hasChapters: !isSeries && !!main.chapters?.length }).value;
@@ -351,36 +349,8 @@ async function render(ctx: PageContext): Promise<HTMLElement> {
     if (refocus) q('#moreBtn').focus();
   }
 
-  /* how it plays: a popover on wide screens, a real modal sheet on phones */
-  let howDlg: DialogHandle | null = null;
-  const howRoot = (): HTMLElement => howDlg?.body ?? q('#howPop');
-  const howOpen = (): boolean => !!howDlg || !q('#howPop').hidden;
-  function openHow(): void {
-    q('#howBtn').setAttribute('aria-expanded', 'true');
-    if (PHONE()) {
-      howDlg = openDialog(document.createElement('div'), { label: 'How it plays', noClose: true, onClose: () => { howDlg = null; q('#howBtn').setAttribute('aria-expanded', 'false'); } });
-      howDlg.el.classList.add('dt', 'howsheet');
-      howDlg.el.addEventListener('click', onClick);
-      howDlg.el.addEventListener('change', onChange);
-      howDlg.el.addEventListener('keydown', onKey);
-      renderHowPanel();
-      howDlg.body.querySelector<HTMLElement>('#pickAudio, [data-howdone]')?.focus();
-      return;
-    }
-    const pop = q('#howPop');
-    pop.hidden = false;
-    renderHowPanel();
-    pop.querySelector<HTMLElement>('#verseg [aria-checked="true"], #pickAudio, [data-howdone]')?.focus();
-    pop.scrollIntoView({ block: 'nearest', behavior: RM() ? 'auto' : 'smooth' });
-  }
-  function closeHow(refocus = true): void {
-    if (howDlg) { howDlg.close(); return; }
-    const pop = q('#howPop');
-    if (pop.hidden) return;
-    pop.hidden = true;
-    q('#howBtn').setAttribute('aria-expanded', 'false');
-    if (refocus) q('#howBtn').focus();
-  }
+  /* audio, subtitles and version: an always-visible card in the About section (no popover) */
+  const howRoot = (): HTMLElement => q('#howPop');
 
   function pickVersion(vid: string): void {
     if (vid === verId) return;
@@ -437,9 +407,7 @@ async function render(ctx: PageContext): Promise<HTMLElement> {
       openRemove({ backend, item: main, isSeries, onRemoved: () => router.navigate(isSeries ? '/shows' : '/movies', { replace: true }) });
       return;
     }
-    if (has('#howBtn')) { if (!howOpen()) openHow(); else closeHow(); return; }
-    if (has('[data-howdone]')) { closeHow(); return; }
-    if (has('[data-howchap]')) { closeHow(false); const ch = root.querySelector<HTMLElement>('#chapters'); ch?.scrollIntoView({ block: 'start', behavior: RM() ? 'auto' : 'smooth' }); root.querySelector<HTMLElement>('#chaps a')?.focus({ preventScroll: true }); return; }
+    if (has('[data-howchap]')) { const ch = root.querySelector<HTMLElement>('#chapters'); ch?.scrollIntoView({ block: 'start', behavior: RM() ? 'auto' : 'smooth' }); root.querySelector<HTMLElement>('#chaps a')?.focus({ preventScroll: true }); return; }
     if (has('[data-howreset]')) {
       const all = store.get<Record<string, PlayPrefs>>('playprefs', {});
       delete all[prefKey];
@@ -477,7 +445,6 @@ async function render(ctx: PageContext): Promise<HTMLElement> {
       return;
     }
     if (!t.closest('.morewrap')) closeMenu(false);
-    if (!t.closest('#howPop') && !t.closest('#howline') && howOpen() && !howDlg) closeHow(false);
   }
 
   function selectSeason(n: number, focus: boolean): void {
@@ -494,7 +461,6 @@ async function render(ctx: PageContext): Promise<HTMLElement> {
     if (!(t instanceof Element)) return;
     if (e.key === 'Escape') {
       if (!menu().hidden) { e.preventDefault(); closeMenu(true); return; }
-      if (howOpen() && !howDlg) { e.preventDefault(); closeHow(true); return; }
     }
     // menu: arrows move between items
     if (t.closest('#moreMenu') && ['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) {
@@ -532,11 +498,10 @@ async function render(ctx: PageContext): Promise<HTMLElement> {
   root.addEventListener('click', onClick);
   root.addEventListener('change', onChange);
   root.addEventListener('keydown', onKey);
-  // Esc closes the popover / menu wherever focus happens to be (it can be on the page after a mouse click)
+  // Esc closes the menu wherever focus happens to be (it can be on the page after a mouse click)
   const onDocKey = (e: KeyboardEvent): void => {
     if (e.key !== 'Escape' || e.defaultPrevented || document.querySelector('.scrim')) return;
     if (!menu().hidden) closeMenu(true);
-    else if (howOpen() && !howDlg) closeHow(true);
   };
   document.addEventListener('keydown', onDocKey);
   ctx.onDispose(() => { document.removeEventListener('keydown', onDocKey); closeAllDialogs(); });

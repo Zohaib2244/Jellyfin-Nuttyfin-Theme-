@@ -87,20 +87,12 @@
 .dt .menu .who { padding: 2px 10px 4px; font-size: 12.5px; color: var(--num); font-family: var(--font-mono); }
 
 /* how it plays: a quiet line under Play; the panel opens on request (popover wide, sheet on phones) */
-.dt .howline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.dt .howline .chip { font-size: 13.5px; white-space: normal; }
-.dt .howbtn { display: inline-flex; align-items: center; gap: 8px; min-height: 46px; max-width: 100%; padding: 4px 12px 4px 10px; border-radius: 999px; border: var(--bw) solid color-mix(in srgb, var(--line) 80%, transparent); background: color-mix(in srgb, var(--panel) 72%, transparent); backdrop-filter: blur(6px); cursor: pointer; font-family: var(--font-read); font-size: 14.5px; color: var(--text); text-align: left; transition: border-color var(--d-micro) var(--ease), background var(--d-micro) var(--ease); }
-.dt .howbtn:hover, .dt .howbtn[aria-expanded="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--panel) 92%, transparent); }
-.dt .howbtn > svg { color: var(--muted); width: 18px; height: 18px; }
-.dt .howbtn .sum { min-width: 0; }
-.dt .howbtn .sum i { font-style: normal; color: var(--dim); padding: 0 5px; }
-.dt .howbtn .chg { font-weight: 700; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
-.dt .howbtn .chg svg { width: 16px; height: 16px; vertical-align: -3px; margin-left: 2px; transition: transform var(--d-small) var(--ease-out); }
-.dt .howbtn[aria-expanded="true"] .chg svg { transform: rotate(180deg); }
-.dt .howbtn .mem { display: inline-flex; align-items: center; gap: 4px; padding: 0 7px; border-radius: 999px; background: var(--num-soft); color: var(--num); font-size: 12px; font-weight: 700; white-space: nowrap; }
-.dt .howbtn .mem svg { width: 13px; height: 13px; }
-.dt .howpop { position: absolute; z-index: 90; left: 0; top: 100%; margin-top: 8px; width: 400px; max-width: 100%; color: var(--text); animation: dt-pop var(--d-med) var(--ease-spring) both; }
-.dt .howpop[hidden] { display: none; }
+.dt .howpop { position: static; width: 100%; color: var(--text); }
+.dt .wp .wphead { flex-wrap: wrap; }
+.dt .wp .hint { margin: 0; font-family: var(--font-read); font-size: 14px; color: var(--muted); }
+.dt .wp .onecopy { display: flex; align-items: flex-start; gap: 8px; min-width: 0; font-family: var(--font-read); font-size: 14px; color: var(--text); }
+.dt .wp .onecopy svg { flex: none; width: 17px; height: 17px; margin-top: 2px; color: var(--muted); }
+.dt .wp .onecopy span { min-width: 0; overflow-wrap: anywhere; }
 .dt .wp { background: var(--panel); border: var(--bw) solid var(--line); border-radius: 16px; padding: 18px; display: grid; gap: 14px; }
 .dt .wp .wphead { display: flex; align-items: center; gap: 8px; }
 .dt .wp .wphead h2 { flex: 1; }
@@ -128,7 +120,6 @@
 .dt .why summary { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; cursor: pointer; font-family: var(--font-read); font-size: 14px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; list-style: none; }
 .dt .why summary::-webkit-details-marker { display: none; }
 .dt .why div { font-family: var(--font-mono); font-size: 12.5px; color: var(--num); padding: 4px 0 2px 12px; border-left: 3px solid var(--line); overflow-wrap: anywhere; }
-.dt .howscrim { display: none; }
 
 /* ── sections ── */
 .dt .wrap { max-width: none; margin: 0; }
@@ -325,11 +316,6 @@
   .dt .intro { margin-top: 22px; gap: 20px; }
   .dt .ir { padding: 16px; }
   .dt .menu { left: auto; right: 0; width: 260px; }
-  .dt .howbtn { font-size: 14px; border-radius: 14px; }
-  .dt .howpop { position: fixed; left: 0; right: 0; top: auto; bottom: 0; width: auto; max-width: none; margin: 0; z-index: 430; max-height: calc(100dvh - 40px); overflow: auto; border-radius: 18px 18px 0 0; animation: dlgsheet var(--d-med) var(--ease-spring) both; }
-  .dt .howpop .wp { border-radius: 18px 18px 0 0; padding-bottom: calc(22px + env(safe-area-inset-bottom)); }
-  .dt .howscrim { display: block; position: fixed; inset: 0; z-index: 425; background: rgba(8, 6, 4, .6); }
-  .dt .howscrim[hidden] { display: none; }
   .dt .section { margin-top: 30px; }
   .dt .sechead h2 { font-size: 19px; }
   .dt .sechead h2 small { display: block; margin: 2px 0 0; }
@@ -353,7 +339,4 @@
   .dialog.rm .acts.sticky #rmgo { flex: 1 1 0; min-width: 0; padding: 0 10px; font-size: 14px; letter-spacing: 0; gap: 6px; }
 }
 
-.dialog.howsheet { padding: 0; }
-.dialog.howsheet .wp { border: 0; border-radius: 0; padding: 18px 20px 22px; }
-.dialog.howsheet .wphead { padding-right: 0; }
 @media (prefers-reduced-motion: reduce) { .dt .dh .bd img, .dt .playmeta .bar i { animation: none; } }

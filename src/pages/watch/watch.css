@@ -40,11 +40,13 @@ html.pl-lock, html.pl-lock body { overflow: hidden; }
 .pl[data-ui="on"] .pl-subs { transform: translateY(-92px); }
 
 /* centre glyph + double-tap ripples */
-.pl-flash { position: absolute; left: 50%; top: 50%; width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; display: grid; place-items: center; background: rgba(16, 13, 10, .46); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: #fbf6ea; opacity: 0; pointer-events: none; }
-.pl-flash svg.i { width: 34px; height: 34px; }
-.pl-flash .t { position: absolute; top: 100%; margin-top: 10px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 14px; color: #f3ecdc; text-shadow: 0 1px 6px rgba(0, 0, 0, .7); }
-.pl-flash.go { animation: pl-flash 760ms var(--ease-out) both; }
-@keyframes pl-flash { 0% { opacity: 0; transform: scale(.9); } 22% { opacity: 1; transform: scale(1); } 70% { opacity: 1; } 100% { opacity: 0; transform: scale(1.04); } }
+.pl-flash { position: absolute; left: 50%; top: 84px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px 0 12px; border-radius: 999px; background: rgba(16, 13, 10, .62); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: #fbf6ea; opacity: 0; pointer-events: none; white-space: nowrap; font-size: 14px; }
+.pl-flash svg.i { width: 20px; height: 20px; flex: none; }
+.pl-flash .t { color: #f3ecdc; }
+.pl-flash .t:empty { display: none; }
+.pl-flash:has(.t:empty) { padding: 0 12px; }
+.pl-flash.go { animation: pl-flash 900ms var(--ease-out) both; }
+@keyframes pl-flash { 0% { opacity: 0; transform: translate(-50%, -6px); } 18% { opacity: 1; transform: translate(-50%, 0); } 75% { opacity: 1; } 100% { opacity: 0; } }
 .pl-rip { position: absolute; top: 0; bottom: 0; width: 42%; display: grid; place-items: center; pointer-events: none; opacity: 0; color: #fbf6ea; font-size: 14px; }
 .pl-rip.l { left: 0; border-radius: 0 50% 50% 0 / 0 50% 50% 0; }
 .pl-rip.r { right: 0; border-radius: 50% 0 0 50% / 50% 0 0 50%; }
@@ -278,7 +280,7 @@ html.pl-lock, html.pl-lock body { overflow: hidden; }
   .pl-center .pl-ibtn { width: 54px; height: 54px; } .pl-center .pl-ibtn.play { width: 68px; height: 68px; }
   .pl-pause { bottom: auto; top: calc(24% + 56.25vw + 26px); }
   .pl-pause h2 { font-size: 26px; }
-  .pl-flash { width: 72px; height: 72px; margin: -36px 0 0 -36px; }
+  .pl-flash { top: 72px; }
   .pl-top { align-items: flex-start; }
 }
 /* phone on its side: keep everything in thumb reach and out of the way */
@@ -311,4 +313,4 @@ html.pl-lock, html.pl-lock body { overflow: hidden; }
   .pl[data-busy="on"] .pl-spin { animation-duration: 2.4s; }
   .pl[data-ui="on"] .pl-subs { transition: none; }
 }
-@keyframes pl-flashrm { 0% { opacity: 0; } 15% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes pl-flashrm { 0% { opacity: 0; transform: translateX(-50%); } 15% { opacity: 1; transform: translateX(-50%); } 75% { opacity: 1; transform: translateX(-50%); } 100% { opacity: 0; transform: translateX(-50%); } }

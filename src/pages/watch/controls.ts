@@ -399,7 +399,16 @@ export class PlayerUI {
   }
 
   /* ───────── state paints ───────── */
-  setBusy(on: boolean): void { this.root.dataset.busy = on ? 'on' : 'off'; }
+  /** The spinner only appears if the wait lasts (no flicker on a quick seek) and always clears when playback moves again. */
+  private busyTimer = 0;
+  setBusy(on: boolean): void {
+    window.clearTimeout(this.busyTimer);
+    if (!on) { this.root.dataset.busy = 'off'; return; }
+    this.busyTimer = window.setTimeout(() => { this.root.dataset.busy = 'on'; }, 450);
+  }
+
+  /** What the controls currently show (the video element is the truth: index.ts reconciles the two). */
+  get showsPaused(): boolean { return this.paused; }
 
   setPlaying(on: boolean, silent = false): void {
     this.paused = !on;

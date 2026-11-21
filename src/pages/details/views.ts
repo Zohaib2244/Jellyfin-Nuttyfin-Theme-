@@ -44,21 +44,13 @@ export function chip(a: Assessment): SafeHtml {
   return html`<span class="chip ${a.tone}">${ic(icon)}${a.badge}</span>`;
 }
 
-export function howLine(p: PlayState, a: Assessment): SafeHtml {
-  const sum = [p.versionsCount > 1 ? p.version?.name : '', audioShort(p.audio), subLabel(p.version, p.sub)].filter(Boolean) as string[];
-  return html`${chip(a)}
-    <button class="howbtn" type="button" id="howBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="howPop" aria-label="How it plays: ${sum.join(', ')}. Change">
-      ${ic(p.versionsCount > 1 ? 'layers' : 'chat')}<span class="sum">${sum.map((s, i) => html`${i ? html`<i aria-hidden="true">·</i>` : ''}${s}`)}</span>${p.remembered ? html`<span class="mem">${ic('check')}Your usual</span>` : ''}<span class="chg">Change${ic('down')}</span>
-    </button>`;
-}
-
 export function howPanel(p: PlayState, a: Assessment, o: { owner: boolean; heading: string; hasChapters: boolean }): SafeHtml {
   const v = p.version;
   const multi = (p.versionsCount ?? 0) > 1;
-  return html`<div class="wp" role="dialog" aria-modal="false" aria-labelledby="howH">
-    <div class="wphead"><h2 id="howH">${ic('tv')}${o.heading}</h2><button class="iconbtn" type="button" data-howdone aria-label="Close">${ic('x')}</button></div>
-    <div class="herechip"><span class="lbl">Will it play here?</span>${chip(a)}<p class="hint">${a.why}</p></div>
-    ${multi ? html`<div><span class="lbl" id="verlbl">Version</span><div class="vseg" role="radiogroup" aria-labelledby="verlbl" id="verseg"></div></div>` : html`<div><span class="lbl">Version</span><span class="chip plain">${ic('layers')}${v?.name || 'The only copy'} · the only copy</span></div>`}
+  return html`<div class="wp" role="group" aria-labelledby="howH">
+    <div class="wphead"><h2 id="howH">${ic('chat')}${o.heading}</h2>${chip(a)}</div>
+    <p class="hint">${a.why}</p>
+    ${multi ? html`<div><span class="lbl" id="verlbl">Version</span><div class="vseg" role="radiogroup" aria-labelledby="verlbl" id="verseg"></div></div>` : html`<div><span class="lbl">Version</span><span class="onecopy">${ic('layers')}<span>${v?.name || 'The only copy'}</span></span></div>`}
     <div class="two">
       <label><span class="lbl">Sound</span><span class="select"><select data-pick="audio" id="pickAudio" aria-label="Sound">${(v?.audio ?? []).map(t => html`<option value="${t.index}" ${t.index === p.audio?.index ? raw('selected') : ''}>${audioShort(t)}</option>`)}${v?.audio.length ? '' : html`<option value="-1">No sound info</option>`}</select>${ic('down')}</span></label>
       <label><span class="lbl">Subtitles</span><span class="select"><select data-pick="sub" id="pickSub" aria-label="Subtitles"><option value="-1" ${p.sub < 0 ? raw('selected') : ''}>Off</option>${(v?.subtitles ?? []).map(s => html`<option value="${s.index}" ${s.index === p.sub ? raw('selected') : ''}>${s.label}</option>`)}</select>${ic('down')}</span></label>
@@ -192,8 +184,7 @@ function intro(m: HeroModel): SafeHtml {
         ${links.length ? html`<div class="extlinks">${links.map(l => html`<a class="btn sm" href="${l.url}" target="_blank" rel="noopener noreferrer">${l.name}${ic('ext')}<span class="sr"> (opens in a new tab)</span></a>`)}</div>` : ''}</div>` : ''}
     </div>
     <div class="ir">
-      <h3 class="ilbl">${ic('tv')}How it plays</h3>
-      <div class="howwrap"><div class="howline" id="howline"></div><div class="howpop" id="howPop" hidden></div></div>
+      <div class="howpop" id="howPop"></div>
       <div class="playextra" id="playextra">${playExtra(m)}</div>
     </div>
   </section>`;

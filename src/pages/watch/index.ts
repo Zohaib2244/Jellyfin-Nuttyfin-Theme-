@@ -261,15 +261,27 @@ class Player {
       this.upStamp = performance.now();
       this.startLoop();
     });
+    this.on('play', () => { if (this.reachedPlaying && this.ui.showsPaused) this.ui.setPlaying(true, true); });
     this.on('pause', () => {
       if (this.video.ended || this.disposed || !this.reachedPlaying) return;
+      if (!this.video.paused) return; // a stale event (the video already carried on): do not show "Paused"
       this.ui.setPlaying(false); this.reporter?.event('pause'); this.showPauseSoon(); this.paintAll(true);
     });
     this.on('waiting', () => this.ui.setBusy(true));
     this.on('canplay', () => this.ui.setBusy(false));
+    this.on('canplaythrough', () => this.ui.setBusy(false));
+    this.on('loadeddata', () => { if (this.video.readyState >= 3) this.ui.setBusy(false); });
     this.on('seeked', () => { this.ui.setBusy(false); this.reporter?.event('seek'); this.paintAll(true); });
     this.on('seeking', () => this.paintAll(true));
-    this.on('timeupdate', () => this.paintAll());
+    this.on('timeupdate', () => {
+      // 'waiting' can fire without a matching 'canplay' (HLS hiccups): if the picture is moving, we are not waiting
+      if (!this.video.paused && !this.video.seeking && this.video.readyState >= 3) {
+        this.ui.setBusy(false);
+        // the video element is the truth: if the controls still say "Paused" while it plays, fix them
+        if (this.ui.showsPaused) this.ui.setPlaying(true, true);
+      }
+      this.paintAll();
+    });
     this.on('progress', () => this.paintAll());
     this.on('durationchange', () => { this.creditsAt = creditsStart(this.segments, this.duration); this.ui.setTicks(chapterTicks(this.item?.chapters ?? [], this.duration)); this.paintAll(true); });
     this.on('ended', () => this.finish());
