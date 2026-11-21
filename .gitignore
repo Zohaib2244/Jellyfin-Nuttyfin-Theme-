@@ -4,3 +4,4 @@ dist
 *.local
 test-results
 .claude/worktrees
+.vitest
