@@ -1,6 +1,6 @@
 /* Login: its own opaque page with moving artwork (ported from design/mockups/login.html).
    Always the dark Ember palette, whatever the app theme is. Class names are prefixed lg- to stay clear of the shell. */
-.lg { --lg-bg: #13100c; --lg-text: #f6f0e4; --lg-muted: #bdb6aa; --lg-accent: #ff6b2b; --lg-line: #534337;
+.lg { --lg-bg: #13100c; --lg-text: #f6f0e4; --lg-muted: #bdb6aa; --lg-accent: var(--accent, #ff6b2b); --lg-line: #534337;
   position: relative; min-height: 100svh; isolation: isolate; overflow: hidden; display: grid; place-items: center; padding: 110px 7% 80px;
   background: var(--lg-bg); color: var(--lg-text); color-scheme: dark; font-family: var(--font-read); }
 .lg :focus-visible { outline: 2px solid var(--lg-accent); outline-offset: 4px; }

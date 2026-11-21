@@ -1,8 +1,9 @@
-/** Avatar menu: who you are, settings (Jellyfin's own pages for the deep stuff), light/dark, Sign out. A small dialog under the avatar. */
+/** Avatar menu: who you are, light/dark, colour theme, background, settings (Jellyfin's own pages for the deep stuff), Sign out. A small dialog under the avatar. */
 import type { User } from '../../api';
 import { userImageUrl } from '../../api';
 import { esc, html, raw, setHtml } from '../../lib/html';
-import { getThemePref, setThemePref, type ThemePref } from '../../state/prefs';
+import { BACKGROUND_CHOICES, PALETTES, getBackgroundPref, getPalette, getThemePref, setBackgroundPref, setPalette, setThemePref, type PaletteId, type ThemePref } from '../../state/prefs';
+import { BACKGROUNDS, type BackgroundId } from './pagebg';
 import { icon } from '../icons';
 
 const THEMES: ReadonlyArray<[ThemePref, string, 'auto' | 'sunsm' | 'moonsm']> = [
@@ -56,6 +57,18 @@ export function mountAccountMenu(trigger: HTMLButtonElement, onSignOut: () => vo
   const sync = () => {
     if (!menu) return;
     const theme = getThemePref();
+    const pal = getPalette();
+    const bg = getBackgroundPref();
+    for (const b of menu.querySelectorAll<HTMLElement>('[data-pal-set]')) {
+      const on = b.dataset.palSet === pal;
+      b.setAttribute('aria-checked', String(on));
+      b.tabIndex = on ? 0 : -1;
+    }
+    for (const b of menu.querySelectorAll<HTMLElement>('[data-bg-set]')) {
+      const on = b.dataset.bgSet === bg;
+      b.setAttribute('aria-checked', String(on));
+      b.tabIndex = on ? 0 : -1;
+    }
     for (const b of menu.querySelectorAll<HTMLElement>('[data-theme-set]')) {
       const on = b.dataset.themeSet === theme;
       b.setAttribute('aria-checked', String(on));
@@ -76,6 +89,14 @@ export function mountAccountMenu(trigger: HTMLButtonElement, onSignOut: () => vo
       <h3 class="pm-h">Light or dark</h3>
       <div class="seg3" role="radiogroup" aria-label="Theme">${THEMES.map(([k, l, i]) =>
         html`<button type="button" role="radio" aria-checked="false" data-theme-set="${k}">${icon(i)}${l}</button>`)}</div>
+      <h3 class="pm-h">Colour theme</h3>
+      <div class="palopts" role="radiogroup" aria-label="Colour theme">${PALETTES.map(p =>
+        html`<button type="button" class="palopt" role="radio" aria-checked="false" data-pal-set="${p.id}" title="${p.label}"><span class="sw" aria-hidden="true" style="--s0:${p.swatch[0]};--s1:${p.swatch[1]};--s2:${p.swatch[2]}"><i></i><i></i></span><span class="pl">${p.label}</span></button>`)}</div>
+      <h3 class="pm-h">Background</h3>
+      <div class="seg2" role="radiogroup" aria-label="Page background">${BACKGROUND_CHOICES.map(id => {
+        const b = BACKGROUNDS.find(x => x.id === id);
+        return html`<button type="button" role="radio" aria-checked="false" data-bg-set="${id}"><span class="thumbbg" data-v="${id}" aria-hidden="true"></span><span>${b?.label ?? id}</span></button>`;
+      })}</div>
       <h3 class="pm-h">Settings</h3>
       <nav class="pm-links" aria-label="Settings">${SETTINGS.filter(l => !l.admin || u.isAdmin).map(l =>
         html`<a href="${l.href(u)}" target="_blank" rel="noopener">${icon(l.ic)}<span>${l.label}<small>${l.hint}</small></span>${icon('ext')}</a>`)}</nav>
@@ -90,6 +111,10 @@ export function mountAccountMenu(trigger: HTMLButtonElement, onSignOut: () => vo
       const t = e.target as Element;
       const th = t.closest<HTMLElement>('[data-theme-set]');
       if (th) { setThemePref(th.dataset.themeSet as ThemePref); sync(); return; }
+      const pl = t.closest<HTMLElement>('[data-pal-set]');
+      if (pl) { setPalette(pl.dataset.palSet as PaletteId); sync(); return; }
+      const bgb = t.closest<HTMLElement>('[data-bg-set]');
+      if (bgb) { setBackgroundPref(bgb.dataset.bgSet as BackgroundId); sync(); return; }
       if (t.closest('[data-signout]')) { close(); onSignOut(); }
     });
     menu.addEventListener('keydown', e => {

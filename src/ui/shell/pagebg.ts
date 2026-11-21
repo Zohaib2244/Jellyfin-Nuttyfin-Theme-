@@ -18,15 +18,15 @@ export interface BackgroundDef {
 export const BACKGROUNDS: readonly BackgroundDef[] = [
   { id: 'beam', label: 'Projector', hint: 'A slow beam of light with drifting dust', wired: true },
   { id: 'plain', label: 'Plain', hint: 'Just the warm base colour', wired: true },
-  { id: 'dots', label: 'Dot grid', hint: 'Quiet dots, fades down the page', wired: true },
+  { id: 'dots', label: 'Dot grid', hint: 'Quiet dots (default)', wired: true },
   { id: 'grain', label: 'Film grain', hint: 'Warm vignette and soft grain', wired: true },
   { id: 'sky', label: 'Time of day', hint: 'Sky colours follow the clock', wired: true },
   { id: 'pixel', label: 'NutBot pixels', hint: 'Tiny NutBots, tiled', wired: true },
   { id: 'ambient', label: 'Ambient colour', hint: 'Glow from what you are watching', wired: false },
-  { id: 'wall', label: 'Poster wall', hint: 'Your library, tilted and very faint', wired: true },
+  { id: 'wall', label: 'Scrolling posters', hint: 'Your library, tilted, drifting slowly', wired: true },
 ];
 
-export const DEFAULT_BACKGROUND: BackgroundId = 'wall';
+export const DEFAULT_BACKGROUND: BackgroundId = 'dots';
 
 export function isBackgroundId(v: unknown): v is BackgroundId {
   return typeof v === 'string' && BACKGROUNDS.some(b => b.id === v);

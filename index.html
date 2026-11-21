@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#13100c">
 <title>Nuttyfin</title>
 <link rel="icon" type="image/svg+xml" href="/src/assets/nuttyfin.svg">
-<script>try{var t=JSON.parse(localStorage.getItem('nutfin.theme')||'"auto"');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>try{var d=document.documentElement,t=JSON.parse(localStorage.getItem('nutfin.theme')||'"auto"'),p=JSON.parse(localStorage.getItem('nutfin.palette')||'"ember"');if(t==='light'||t==='dark')d.dataset.theme=t;d.dataset.eff=t==='auto'?(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):t;if(p&&p!=='ember')d.dataset.palette=p}catch(e){}</script>
 </head>
 <body data-bg="beam" data-shell="full">
 <noscript>Nuttyfin needs JavaScript.</noscript>

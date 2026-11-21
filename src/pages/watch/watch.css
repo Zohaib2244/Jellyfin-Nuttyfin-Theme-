@@ -3,7 +3,7 @@
 .pl {
   --pl-ink: #0b0907; --pl-panel: #1e1a14; --pl-line: #3d3220;
   --pl-text: #e8dfc8; --pl-muted: #b5b0a3; --pl-dim: #8b8576;
-  --pl-accent: #ff6b2b; --pl-num: #00b4c8;
+  --pl-accent: var(--accent, #ff6b2b); --pl-num: #00b4c8;
   --pl-glass: color-mix(in srgb, #1e1a14 88%, transparent);
   --pl-hair: rgba(232, 223, 200, .14); --pl-wash: rgba(232, 223, 200, .08);
   --pl-gut: 40px;

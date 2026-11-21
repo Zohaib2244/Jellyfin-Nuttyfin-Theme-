@@ -29,3 +29,6 @@
 - Account menu holds Settings links to Jellyfin's own pages (profile, playback, subtitles, Quick Connect, all settings; owner: server dashboard and Seerr settings).
 - Sign-in page: no Pause button; the poster wall shows at once and each poster fades in as it loads (small, cached images).
 - Details: full-bleed, tall banner; hero holds only title/logo, one meta line, Play/Resume and a few icon buttons; overview, playability, audio/subtitles and credits sit below the banner.
+- (21 Nov, later) Brand mark = the "Sticker" play tile (design/icon-variations/round-3/sticker.svg); inline copies follow the colour theme, favicon stays orange.
+- Colour themes: AVN Hub's eight packs (Ember default, Slate, Moss, Plum, Reef, Berry, Circuit, Graphite), each with light and dark, picked in the account menu next to Light/Dark/Auto.
+- Background: a choice of two — Dot grid (default) or Scrolling posters (the tilted wall, drifting slowly; stops under reduced motion). This replaces the "still wall only" line above.
