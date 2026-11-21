@@ -340,3 +340,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) { .dt .dh .bd img, .dt .playmeta .bar i { animation: none; } }
+/* trailer: a spinner sits in the black box until the video paints over it */
+.dialog .vid .spin { position: absolute; left: calc(50% - 15px); top: calc(50% - 15px); width: 30px; height: 30px; border: 3px solid #f2ead8; border-top-color: transparent; border-radius: 50%; animation: dt-spin 800ms linear infinite; }
+.dialog .vid iframe { z-index: 1; background: transparent; }

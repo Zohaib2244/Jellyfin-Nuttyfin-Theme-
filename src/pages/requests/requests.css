@@ -370,7 +370,8 @@
 .dialog.rq-dlg .acts .btn { flex: 1 1 160px; }
 .dialog.rq-dlg .btn.danger { background: var(--bad); border-color: var(--bad); color: var(--accent-ink); }
 .dialog.rq-dlg .rq-vid { position: relative; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; border: var(--bw) solid var(--line); background: var(--bg); }
-.dialog.rq-dlg .rq-vid iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.dialog.rq-dlg .rq-vid iframe { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; border: 0; background: transparent; }
+.dialog.rq-dlg .rq-vid .spin { position: absolute; left: calc(50% - 12px); top: calc(50% - 12px); }
 
 /* report-a-problem dialog (problems.ts) */
 .dialog.rq-dlg .rq-bigicon { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 16px; border: var(--bw) solid var(--line); background: var(--nested); color: var(--accent); }

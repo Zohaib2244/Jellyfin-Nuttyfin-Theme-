@@ -35,7 +35,7 @@ export interface SheetTarget { tmdbId: number; mediaType: 'movie' | 'tv'; title?
 
 /** Trailer in its own dialog (youtube-nocookie embed). */
 export function openTrailer(title: string, key: string): DialogHandle {
-  return openDialog(html`<div class="rq-vid"><iframe src="${embedUrl(key)}" title="${title} trailer" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`, {
+  return openDialog(html`<div class="rq-vid"><span class="spin" aria-hidden="true"></span><iframe src="${embedUrl(key)}" title="${title} trailer" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`, {
     label: `${title} trailer`, className: 'video rq-dlg',
   });
 }

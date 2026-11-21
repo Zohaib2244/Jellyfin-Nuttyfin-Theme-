@@ -35,7 +35,7 @@ export function openProblemDialog(env: ProblemEnv): DialogHandle {
   let timer = 0;
   let token = 0;
   const dlg = openDialog(html`<div id="rpwrap">
-    <div class="head"><span class="rq-bigicon" aria-hidden="true">${ic('flag')}</span><div><h2>Report a problem</h2><p class="lead">${env.isOwner ? 'It goes in your problems list.' : `${env.ownerName} gets it and will take a look.`}</p></div></div>
+    <div class="head"><span class="rq-bigicon" aria-hidden="true">${ic('flag')}</span><div><h2>Report a problem</h2><p class="lead">Pick the film or show, say what is wrong, and we will look into it.</p></div></div>
     <div class="blk"><label class="lbl" for="rpq">Which film or show?</label>
       <div class="rq-pick" id="rppick" hidden></div>
       <input id="rpq" class="rq-text" type="search" autocomplete="off" maxlength="60" placeholder="Start typing a title" data-autofocus>
@@ -111,7 +111,7 @@ export function openProblemDialog(env: ProblemEnv): DialogHandle {
         message: `${text}${note ? `: ${note}` : ''}\n${t.name}${t.year ? ` (${t.year})` : ''}`,
       });
       if (!ok) { failed(`Could not send it from here right now. Please tell ${env.ownerName} directly.`); return; }
-      dlg.body.innerHTML = html`<div class="okview">${nutbot(72, 'happy')}<h2 tabindex="-1" data-autofocus>Thanks, got it</h2><p>${env.isOwner ? 'It is in your problems list.' : `${env.ownerName} will take a look.`}</p><div class="acts"><button class="btn primary" type="button" data-close>Done</button></div></div>`.value;
+      dlg.body.innerHTML = html`<div class="okview">${nutbot(72, 'happy')}<h2 tabindex="-1" data-autofocus>Thanks, got it</h2><p>We will take a look.</p><div class="acts"><button class="btn primary" type="button" data-close>Done</button></div></div>`.value;
       dlg.body.querySelector<HTMLElement>('[data-autofocus]')?.focus();
       env.onSent();
     } catch {
