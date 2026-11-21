@@ -57,7 +57,7 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
       <p class="rclock" id="rclock" aria-label="Time"></p>
     </aside>
     <header class="top" id="top">
-      <a class="brand" href="#/" aria-label="Nuttyfin home">${brandMark(38)}<span class="wm">Nutty<em>Fin</em></span></a>
+      <a class="brand" href="#/" aria-label="Nuttyfin home">${brandMark(38)}<span class="wm">Nutty<em>fin</em></span></a>
       <div class="toptabs" id="toptabs"></div>
       ${searchMarkup()}
       <button class="iconbtn nbtop" type="button" id="nbTop" aria-label="Ask NutBot" title="Ask NutBot" hidden>${nutbot(30, 'happy')}</button>
