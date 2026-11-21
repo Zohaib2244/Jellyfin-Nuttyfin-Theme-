@@ -10,7 +10,7 @@ import { html } from '../../lib/html';
 import { nutbot } from '../../ui/nutbot';
 import { ic } from '../common/icons';
 import type { PageContext } from '../types';
-import { isOpen } from './model';
+import { countOpenRequests } from '../../state/openRequests';
 import { openProblemDialog } from './problems';
 import { GROUPS, requestStage, type Stage, type StageGroup } from './stage';
 import { issueRow, requestRow, skeletonRows } from './ui';
@@ -169,7 +169,7 @@ export function mountList(el: HTMLElement, env: ListEnv): ListPanel {
     st.loaded = true;
     paintPeople();
     paint();
-    ctx.shell.setRequestsBadge(st.items.filter(r => r.requestedById === caps.userId && isOpen(r)).length);
+    ctx.shell.setRequestsBadge(countOpenRequests(st.items, caps.userId));
   }
 
   async function loadIssues(): Promise<void> {

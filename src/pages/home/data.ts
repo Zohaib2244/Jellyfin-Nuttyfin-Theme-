@@ -7,6 +7,7 @@ import type { DeskRequest } from '../../api/desk-types';
 import type { CollectionProgress, Episode, MediaItem, SeerrRequest, Title } from '../../api/types';
 import { calendarToEpisodes } from './calendar'; // phase5-7
 import { limitConcurrency } from '../../lib/concurrency';
+import { myRequests } from '../../state/openRequests';
 import { byClosestToDone, seasonProgress, startedCollections, type SeasonProgress } from './model';
 
 export class HomeData {
@@ -75,16 +76,12 @@ export class HomeData {
 
   /* ── Seerr (never rejects: fails soft to "off" / empty) ── */
   seerrOn(): Promise<boolean> { return this.get('seerrOn', () => this.backend.seerr.available().catch(() => false)); }
-  /** The rail badge needs states, never thirty separate title lookups. */
-  requestSummary(): Promise<SeerrRequest[]> {
-    return this.get('requestSummary', async () => ((await this.seerrOn()) ? this.backend.seerr.requests({ mine: true, take: 30, includeTitles: false }).catch(() => []) : []));
-  }
   myRequests(): Promise<SeerrRequest[]> {
     return this.get('myRequests', async () => ((await this.seerrOn()) ? this.backend.seerr.requests({ mine: true, take: 30 }).catch(() => []) : []));
   }
   /** This person's own requests with Seerr's raw stage numbers (On the way), no per-row title lookups. */
   myDeskRequests(): Promise<DeskRequest[]> {
-    return this.get('myDesk', async () => ((await this.seerrOn()) ? (await this.backend.seerr.allRequests({ scope: 'mine', max: 100 }).catch(() => ({ items: [] as DeskRequest[] }))).items : []));
+    return this.get('myDesk', () => myRequests(this.backend)); // the same list the rail badge counts (src/state/openRequests.ts)
   }
   allRequests(): Promise<SeerrRequest[]> {
     return this.get('allRequests', async () => ((await this.seerrOn()) ? this.backend.seerr.requests({ take: 30 }).catch(() => []) : []));

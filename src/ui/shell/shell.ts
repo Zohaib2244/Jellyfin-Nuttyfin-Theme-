@@ -19,6 +19,7 @@ import { mountSearch, searchMarkup, type SearchController } from './search';
 import { renderTabs, type TabsController } from './tabs';
 import { ARTWORK, artworkUrl } from '../../pages/login/artwork';
 import { nutbot } from '../nutbot';
+import { openRequestCount } from '../../state/openRequests';
 
 export interface Shell extends RouterShell {
   readonly view: HTMLElement;
@@ -135,15 +136,26 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
     if (spec) tabs = renderTabs(tabsSlot, spec); else tabsSlot.replaceChildren();
   };
 
+  /* The Requests badge: one number (src/state/openRequests.ts) that the shell keeps fresh on every page, so it never
+     depends on which page happens to set it. Pages that already hold the list may set the same number sooner. */
+  const setBadge = (n: number): void => {
+    const b = body.querySelector<HTMLElement>('#reqBadge');
+    if (b) { b.textContent = n > 0 ? String(n) : ''; b.setAttribute('aria-label', n > 0 ? `${n} open` : ''); }
+  };
+  let badgeAt = 0;
+  const refreshBadge = (force = false): void => {
+    if (!currentUser || (!force && Date.now() - badgeAt < 30_000)) return;
+    badgeAt = Date.now();
+    const uid = currentUser.id;
+    void openRequestCount(backend, { fresh: force }).then(n => { if (currentUser?.id === uid) setBadge(n); });
+  };
+
   const hooks: ShellHooks = {
     setTabs,
     selectTab: id => tabs?.select(id),
     tabsSlot,
     setTitle(title) { document.title = title ? `${title} · Nuttyfin` : 'Nuttyfin'; },
-    setRequestsBadge(n) {
-      const b = body.querySelector<HTMLElement>('#reqBadge');
-      if (b) { b.textContent = n > 0 ? String(n) : ''; b.setAttribute('aria-label', n > 0 ? `${n} open` : ''); }
-    },
+    setRequestsBadge: setBadge,
     setAmbient: url => pagebg.setAmbientImage(url),
     setWallImages: urls => pagebg.setWallImages(urls),
     toast,
@@ -155,6 +167,7 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
     pagebg,
     hooks,
     setNav(key) {
+      refreshBadge();
       for (const a of body.querySelectorAll<HTMLElement>('.nav .ni')) {
         if (a.dataset.nav === key) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
       }
@@ -164,6 +177,9 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
     setUser(u) {
       if (currentUser && (!u || u.id !== currentUser.id)) void import('../../pages/home/nutbot/launcher').then(m => m.closeNutBot());
       currentUser = u;
+      badgeAt = 0;
+      setBadge(0);
+      if (u) refreshBadge(true);
       nbTop.hidden = !u;
       account.setUser(u);
       avatarBtn.hidden = !u;

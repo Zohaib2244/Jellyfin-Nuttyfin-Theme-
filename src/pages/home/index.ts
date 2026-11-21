@@ -6,6 +6,7 @@
  */
 import './home.css';
 import { html } from '../../lib/html';
+import { countOpenRequests } from '../../state/openRequests';
 import type { Page } from '../types';
 import { HomeData } from './data';
 import { TAB_LABEL, type HomeCtx, type HomeTab, type TileDef } from './tile';
@@ -162,7 +163,7 @@ const page: Page = {
     buildTab(tab);
 
     // the Requests badge in the rail: how many of your requests are still open (soft: nothing if Seerr is off)
-    void data.requestSummary().then(list => { if (!pc.signal.aborted) pc.shell.setRequestsBadge(list.filter(r => r.state !== 'available' && r.state !== 'declined').length); });
+    void data.myDeskRequests().then(list => { if (!pc.signal.aborted) pc.shell.setRequestsBadge(countOpenRequests(list)); });
     return root;
   },
 };

@@ -10,6 +10,7 @@ import { detailsPath, img, ph, posterUrl, seerrPoster, thumbUrl } from '../art';
 import { buildWeek, comingRows, epLabel, freshSince, nextLastSeen, seenGate, showNewBanner, type ComingRow, type Fresh } from '../model';
 import { loadInto, quiet, skPosters, skRows, skStrip, tileHead, type TileDef } from '../tile';
 import { clock, runtime } from '../../../lib/format';
+import { countOpenRequests } from '../../../state/openRequests';
 
 const LAST_SEEN = 'home.lastSeen';
 const WORDS = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
@@ -193,7 +194,7 @@ export const comingTile: TileDef = {
         });
         const week = buildWeek(upcoming, [], now.getTime());
         const eps = week.mode === 'upcoming' ? week.days.flatMap(d => d.episodes).filter(e => new Date(e.premiered ?? 0).getTime() > now.getTime()).slice(0, 3) : [];
-        return { rows: shown, total: rows.length, eps, on };
+        return { rows: shown, total: countOpenRequests(list), eps, on };
       },
       render(d) {
         const more = d.total > d.rows.length ? `${d.total} open` : '';
