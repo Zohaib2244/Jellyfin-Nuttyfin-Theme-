@@ -18,6 +18,8 @@ export interface DialogOptions {
   scrimClass?: string;
   /** hide the corner close button (the dialog supplies its own) */
   noClose?: boolean;
+  /** Where focus goes on close when the opener is gone or hidden (a menu item, say). Defaults to the menu's own button. */
+  returnFocus?: HTMLElement | null | (() => HTMLElement | null);
   /** Called after the dialog has closed and focus has moved back. */
   onClose?: () => void;
   /** Return false to veto closing (e.g. while a delete is running). */
@@ -31,8 +33,31 @@ export interface DialogHandle {
   close(): void;
 }
 
-const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]';
+const FOCUSABLE = 'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]';
 const open: DialogHandle[] = [];
+
+const shown = (el: HTMLElement): boolean => el.getClientRects().length > 0;
+
+/** What Tab can reach inside `root`, in order: visible, enabled, tabindex >= 0, and one stop per radio group. */
+export function tabbables(root: HTMLElement): HTMLElement[] {
+  const list = Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(x => x.tabIndex >= 0 && shown(x));
+  return list.filter(x => {
+    if (!(x instanceof HTMLInputElement) || x.type !== 'radio' || !x.name) return true;
+    const group = list.filter((y): y is HTMLInputElement => y instanceof HTMLInputElement && y.type === 'radio' && y.name === x.name && y.form === x.form);
+    const on = group.find(y => y.checked);
+    return on ? on === x : group[0] === x;
+  });
+}
+
+/** The element that should get focus back: the opener, or (when it was a menu item that has since closed) the button that owns that menu. */
+function returnTarget(opener: HTMLElement | null, wanted?: DialogOptions['returnFocus']): HTMLElement | null {
+  const given = typeof wanted === 'function' ? wanted() : wanted;
+  if (given?.isConnected && shown(given)) return given;
+  if (opener?.isConnected && shown(opener)) return opener;
+  const menu = opener?.closest<HTMLElement>('[role="menu"]');
+  const owner = menu?.id ? document.querySelector<HTMLElement>(`[aria-controls="${CSS.escape(menu.id)}"]`) : null;
+  return owner && shown(owner) ? owner : null;
+}
 
 export function openDialog(content: SafeHtml | HTMLElement, opts: DialogOptions): DialogHandle {
   const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -70,7 +95,7 @@ export function openDialog(content: SafeHtml | HTMLElement, opts: DialogOptions)
       for (const el of inerted) el.inert = false;
       const i = open.indexOf(handle);
       if (i >= 0) open.splice(i, 1);
-      if (opener?.isConnected) opener.focus({ preventScroll: true });
+      returnTarget(opener, opts.returnFocus)?.focus({ preventScroll: true });
       opts.onClose?.();
     },
   };
@@ -80,13 +105,14 @@ export function openDialog(content: SafeHtml | HTMLElement, opts: DialogOptions)
     if (open[open.length - 1] !== handle) return; // only the top-most dialog reacts
     if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); handle.close(); return; }
     if (e.key !== 'Tab') return;
-    const items = Array.from(dlg.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(x => x.getClientRects().length > 0);
-    if (!items.length) { e.preventDefault(); return; }
+    const items = tabbables(dlg);
+    if (!items.length) { e.preventDefault(); dlg.focus(); return; }
     const first = items[0] as HTMLElement;
     const last = items[items.length - 1] as HTMLElement;
     const active = document.activeElement;
-    if (e.shiftKey && (active === first || active === dlg)) { e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && active === last) { e.preventDefault(); first.focus(); }
+    // a real loop: also catches focus that is on the dialog itself or somehow outside it
+    if (e.shiftKey && (active === first || active === dlg || !dlg.contains(active))) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && (active === last || !dlg.contains(active))) { e.preventDefault(); first.focus(); }
   }
   document.addEventListener('keydown', onKey, true);
 
