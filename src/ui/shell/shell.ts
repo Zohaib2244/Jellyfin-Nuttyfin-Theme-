@@ -61,6 +61,7 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
       <a class="brand" href="#/" aria-label="Nuttyfin home">${brandMark(38)}<span class="wm">Nutty<em>Fin</em></span></a>
       <div class="toptabs" id="toptabs"></div>
       ${searchMarkup()}
+      <button class="iconbtn nbtop" type="button" id="nbTop" aria-label="Talk to NutBot" title="Talk to NutBot" hidden>${nutbot(30, 'happy')}</button>
       <button class="themesw" type="button" role="switch" id="themeSw" aria-checked="true" aria-label="Dark theme">${pixelIcon('moon', 'moon')}${pixelIcon('sun', 'sun')}</button>
       <div class="acct"><button class="avatar" type="button" id="avatarBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="acct-menu" hidden></button></div>
     </header>
@@ -98,9 +99,12 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
   /* NutBot, reachable from every page */
   const nbFab = q<HTMLButtonElement>('#nbFab');
   let currentUser: User | null = null;
-  nbFab.addEventListener('click', () => {
-    void import('../../pages/home/nutbot/launcher').then(m => m.openNutBot(backend, currentUser, nbFab));
-  });
+  const nbTop = q<HTMLButtonElement>('#nbTop'); // phones: NutBot lives in the top bar so it never covers content
+  for (const btn of [nbFab, nbTop]) {
+    btn.addEventListener('click', () => {
+      void import('../../pages/home/nutbot/launcher').then(m => m.openNutBot(backend, currentUser, btn));
+    });
+  }
 
   /* theme switch */
   const paintTheme = () => {
@@ -171,6 +175,7 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
       if (currentUser && (!u || u.id !== currentUser.id)) void import('../../pages/home/nutbot/launcher').then(m => m.closeNutBot());
       currentUser = u;
       nbFab.hidden = !u;
+      nbTop.hidden = !u;
       account.setUser(u);
       avatarBtn.hidden = !u;
       if (u) {

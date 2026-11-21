@@ -130,7 +130,7 @@ body[data-shell="none"] main { max-width: none; padding: 0; }
 /* ── Phone ── */
 @media (max-width: 760px) {
   body { padding-left: 0; }
-  .top { grid-template-columns: auto minmax(0, 1fr) auto auto auto; grid-template-areas: "brand . qopen theme acct" "tabs tabs tabs tabs tabs"; grid-template-rows: var(--top-h) auto; padding: 0 12px; column-gap: 8px; }
+  .top { grid-template-columns: auto minmax(0, 1fr) auto auto auto auto; grid-template-areas: "brand . qopen bot theme acct" "tabs tabs tabs tabs tabs tabs"; grid-template-rows: var(--top-h) auto; padding: 0 12px; column-gap: 8px; }
   .brand { display: flex; }
   .toptabs:empty { display: none; }
   .toptabs { margin: 0 -12px; padding: 0 4px 0 12px; border-top: 1px solid var(--line); }
@@ -235,3 +235,13 @@ body[data-shell="none"] main { max-width: none; padding: 0; }
 .pm-main button:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
 .pm-sub { display: flex; align-items: center; gap: 8px; margin: -2px 0 4px; }
 .pm-sub h2 { margin: 0; font-family: var(--font-px); font-weight: 400; font-size: 18px; letter-spacing: .04em; }
+
+/* NutBot button in the top bar: phones only (desktop keeps the floating button) */
+.nbtop { grid-area: bot; display: none; }
+.nbtop svg { width: 30px; height: 30px; }
+@media (max-width: 760px) {
+  .nbtop:not([hidden]) { display: inline-grid; }
+  .nbfab { display: none !important; }
+  main { padding-bottom: 96px; }
+}
+@media (max-width: 420px) { .brand .wm { display: none; } }
