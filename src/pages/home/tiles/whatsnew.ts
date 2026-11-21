@@ -30,7 +30,7 @@ function view(list: Title[], now: Date): SafeHtml {
   // enough posters to fill 3 / 5 / 7 columns, repeating when the library is small
   const pool = list.filter(t => posterUrl(t));
   const base = pool.length ? pool : list;
-  const col = (c: number): Title[] => [0, 1, 2, 3].map(j => base[(c * 2 + j * 3) % base.length] as Title);
+  const col = (c: number): Title[] => [0, 1, 2, 3, 4, 5, 6].map(j => base[(c * 2 + j * 3) % base.length] as Title);
   const poster = (t: Title): SafeHtml => html`<span class="pst ph" ${ph(t.id, t.name)}>${isFresh(t, now) ? html`<span class="pday">New</span>` : ''}${img(posterUrl(t, 300))}</span>`;
   const when = (t: Title): string => (t.added ? relativeTime(t.added, now) : '');
   return html`
