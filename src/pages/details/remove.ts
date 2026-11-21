@@ -2,7 +2,7 @@
  * Remove a film or show (owner only). With the Nuttyfin helper service running, the dialog first asks it for a PLAN (read-only):
  * which Radarr/Sonarr entry and which torrent hold the files, and how much space each choice would really give back
  * (imports are hardlinks, so deleting the library copy alone often frees nothing while the torrent is still seeding).
- * Then: choose, type the title to confirm, optionally preview with a dry run, and watch each step finish.
+ * Then: choose, confirm, optionally preview with a dry run, and watch each step finish.
  * Without the helper it is the plain "remove from Jellyfin only" dialog, and the other options say why they are off.
  */
 import { imageUrl } from '../../api';
@@ -30,7 +30,6 @@ const poster = (t: { id: string; name: string; imageTags: { primary?: string } }
 
 type PlanState = { s: 'loading' } | { s: 'none'; why: string } | { s: 'ready'; plan: DeletePlan };
 
-const norm = (s: string): string => s.trim().toLowerCase();
 
 export function openRemove(r: RemoveInput): DialogHandle {
   const { item } = r;
@@ -95,16 +94,14 @@ export function openRemove(r: RemoveInput): DialogHandle {
   };
 
   /* ── step 2: type the title ── */
-  const step2 = (typed: string, preview: SafeHtml | null = null): SafeHtml => {
+  const step2 = (preview: SafeHtml | null = null): SafeHtml => {
     const m = mode();
     const label = m === 'jellyfin-only' ? 'Remove from Jellyfin' : m === 'arr-and-files' ? `Remove from ${apps} and Jellyfin` : 'Remove everything';
     return html`
-    <div class="head">${poster(item)}<div><h2 id="rmh">Last check</h2><p class="lead">This deletes ${r.isSeries ? 'every episode of ' : ''}<b>${item.name}</b> from the server${m === 'jellyfin-only' ? '' : `, and from ${apps}${m === 'arr-and-files-and-torrent' ? ' and qBittorrent' : ''}`}.</p></div></div>
-    <div class="confirmbox blk"><label for="rmtype">This can't be undone. Type <b>${item.name}</b> to confirm.</label>
-      <input id="rmtype" autocomplete="off" autocapitalize="off" spellcheck="false" value="${typed}" aria-describedby="permnote" data-autofocus>
-      <div class="perm" id="permnote">${ic('warn')}<span>The file${r.isSeries ? 's are' : ' is'} deleted for good. There is no undo.</span></div></div>
+    <div class="head">${poster(item)}<div><h2 id="rmh">Are you sure?</h2><p class="lead">This deletes ${r.isSeries ? 'every episode of ' : ''}<b>${item.name}</b> from the server${m === 'jellyfin-only' ? '' : `, and from ${apps}${m === 'arr-and-files-and-torrent' ? ' and qBittorrent' : ''}`}.</p></div></div>
+    <div class="confirmbox blk"><div class="perm" id="permnote">${ic('warn')}<span>Are you sure? The file${r.isSeries ? 's are' : ' is'} deleted for good. There is no undo.</span></div></div>
     ${preview ? html`<div class="blk" id="rmprevbox" role="status">${preview}</div>` : ''}
-    <div class="acts sticky"><p class="gohint" id="gohint">${ic('lock')}Type the title above to unlock the button.</p><button class="btn" type="button" data-back>Back</button>${ready() ? html`<button class="btn" type="button" id="rmprev" disabled>${ic('eye')}Preview only</button>` : ''}<button class="btn danger" type="button" id="rmgo" disabled>${ic('trash')}${label}</button></div>`;
+    <div class="acts sticky"><button class="btn" type="button" data-back>Back</button>${ready() ? html`<button class="btn" type="button" id="rmprev">${ic('eye')}Preview only</button>` : ''}<button class="btn danger" type="button" id="rmgo" data-autofocus>${ic('trash')}${label}</button></div>`;
   };
 
   const dlg = openDialog(step1(), { label: `Remove ${item.name}`, className: 'wide rm', canClose: () => !busy });
@@ -127,14 +124,6 @@ export function openRemove(r: RemoveInput): DialogHandle {
     set(step1());
   })();
 
-  dlg.el.addEventListener('input', e => {
-    if (!(e.target instanceof HTMLInputElement) || e.target.id !== 'rmtype') return;
-    const ok = norm(e.target.value) === norm(item.name);
-    e.target.classList.toggle('match', ok);
-    for (const id of ['#rmgo', '#rmprev']) { const b = dlg.el.querySelector<HTMLButtonElement>(id); if (b) b.disabled = !ok; }
-    const hint = dlg.el.querySelector<HTMLElement>('#gohint');
-    if (hint) hint.hidden = ok;
-  });
   dlg.el.addEventListener('change', e => {
     const t = e.target;
     if (!(t instanceof HTMLInputElement)) return;
@@ -165,35 +154,29 @@ export function openRemove(r: RemoveInput): DialogHandle {
     const code = ((err as { body?: { error?: string } } | null)?.body?.error) ?? '';
     if (status === 403 && code === 'delete-disabled') return 'Deleting through the helper is switched off. Nothing was changed.';
     if (status === 403) return 'This account is not allowed to delete things.';
-    if (status === 400) return 'The helper did not accept the typed title. Nothing was changed.';
+    if (status === 400) return 'The helper did not accept that. Nothing was changed.';
     return 'The helper could not be reached, or did not accept it. Nothing was changed.';
   };
 
   dlg.el.addEventListener('click', e => {
     if (!(e.target instanceof Element)) return;
-    if (e.target.closest('[data-next]')) { set(step2('')); return; }
+    if (e.target.closest('[data-next]')) { set(step2()); return; }
     if (e.target.closest('[data-back]')) { set(step1()); return; }
 
     const prev = e.target.closest<HTMLButtonElement>('#rmprev');
     if (prev && !prev.disabled) {
-      const typed = dlg.el.querySelector<HTMLInputElement>('#rmtype')?.value ?? '';
-      if (norm(typed) !== norm(item.name)) return;
       prev.disabled = true;
       void helperRun(true).then(res => {
-        set(step2(typed, html`<span class="lbl">Preview: nothing was deleted</span>${stepList(res.steps, true)}<p class="rmfree good">${ic('drive')}<span><b>${ready() ? freedSentence(ready() as DeletePlan, res.mode) : ''}</b></span></p>`));
-        const t = dlg.el.querySelector<HTMLInputElement>('#rmtype');
-        if (t) { t.value = typed; t.dispatchEvent(new Event('input', { bubbles: true })); t.focus(); }
+        set(step2(html`<span class="lbl">Preview: nothing was deleted</span>${stepList(res.steps, true)}<p class="rmfree good">${ic('drive')}<span><b>${ready() ? freedSentence(ready() as DeletePlan, res.mode) : ''}</b></span></p>`));
       }).catch((err: unknown) => {
         prev.disabled = false;
-        set(step2(typed, html`<p class="rmfree warn">${ic('warn')}<span><b>${errorText(err)}</b></span></p>`));
+        set(step2(html`<p class="rmfree warn">${ic('warn')}<span><b>${errorText(err)}</b></span></p>`));
       });
       return;
     }
 
     const go = e.target.closest<HTMLButtonElement>('#rmgo');
     if (!go || go.disabled || busy) return;
-    const typed = dlg.el.querySelector<HTMLInputElement>('#rmtype')?.value ?? '';
-    if (norm(typed) !== norm(item.name)) return; // the second confirm: the button alone is not enough
     busy = true;
     const m = mode();
     const p = ready();
