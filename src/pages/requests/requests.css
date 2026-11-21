@@ -348,7 +348,10 @@
 .dialog.rq-dlg .rq-fail[hidden] { display: none; }
 .dialog.rq-dlg .rq-fail svg { flex: none; color: var(--bad); margin-top: 1px; }
 
-.dialog.rq-dlg .rq-step2 .head .pst { width: 72px; }
+.dialog.rq-dlg .rq-step2 .head .pst { width: 100%; } /* the column (72px, 52px on phones) sets the size; a fixed width here pushed the poster over the heading */
+.dialog.rq-dlg .rq-step2 .head { min-width: 0; }
+.dialog.rq-dlg .rq-step2 .head > div { min-width: 0; }
+.dialog.rq-dlg .rq-profile { color: var(--muted); font-size: 12.5px; }
 .dialog.rq-dlg .rq-stepno { margin: 0 0 2px; font: 400 12.5px var(--font-px); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
 .dialog.rq-dlg .rq-step2 h2:focus { outline: none; }
 .dialog.rq-dlg .rq-plain { display: flex; gap: 10px; align-items: center; margin: 20px 0 0; font-family: var(--font-read); font-size: 15px; color: var(--muted); }

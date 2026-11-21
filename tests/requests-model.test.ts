@@ -4,7 +4,7 @@ import { permsFrom } from '../src/api/seerr-desk';
 import type { SeerrRequest } from '../src/api/types';
 import {
   askLabel, blockedReason, canCancel, canDecide, cannotRequest, flowSteps, isOpen, quotaLeft, quotaSummary, quotaText, requestableSeasons, seasonsText, seasonsToAsk,
-  statusLine,
+  friendlyQuality, qualityChoices, statusLine,
 } from '../src/pages/requests/model';
 
 const caps = (mask: number, over: Partial<SeerrCapabilities> = {}): SeerrCapabilities => ({
@@ -133,5 +133,25 @@ describe('blocked reasons', () => {
   it('show with nothing left to ask', () => {
     expect(blockedReason(show(['available', 'approved']), caps(32), null)?.text).toMatch(/Every season/);
     expect(blockedReason(show(['available', undefined]), caps(32), null)).toBeNull();
+  });
+});
+
+describe('quality choices in plain words', () => {
+  it('maps profile names to friendly labels without release-group tags', () => {
+    expect(friendlyQuality('Ultra-HD')).toBe('Ultra HD (4K)');
+    expect(friendlyQuality('HD-1080p')).toBe('HD 1080p');
+    expect(friendlyQuality('HD - 720p/1080p')).toBe('HD 720p/1080p');
+    expect(friendlyQuality('720p x265 (MeGusta > ELiTE)')).toBe('HD 720p (smaller files)');
+    expect(friendlyQuality('SD')).toBe('Smaller picture (SD)');
+    expect(friendlyQuality('Any')).toBe('Any quality');
+    expect(friendlyQuality('Remux (Group)')).toBe('Remux');
+  });
+  it('lists the default once as Standard and keeps labels unique', () => {
+    const list = [{ id: 1, name: 'Any' }, { id: 4, name: 'HD - 720p/1080p' }, { id: 6, name: '1080p x265 (MeGusta > ELiTE)' }, { id: 7, name: '1080p x265 (Other)' }];
+    const c = qualityChoices(list, 4);
+    expect(c.map(x => x.label)).toEqual(['Standard', 'Any quality', 'HD 1080p (smaller files) (1)', 'HD 1080p (smaller files) (2)']);
+    expect(c[0]).toEqual({ value: '', label: 'Standard', profile: 'HD - 720p/1080p' });
+    expect(c.some(x => x.value === '4')).toBe(false);
+    for (const x of c) expect(/MeGusta|ELiTE|Sonarr|Radarr/.test(x.label)).toBe(false);
   });
 });

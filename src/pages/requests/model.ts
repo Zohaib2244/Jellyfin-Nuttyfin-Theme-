@@ -127,3 +127,41 @@ export function askLabel(mediaType: 'movie' | 'tv', seasons: number[] | 'all'): 
   if (seasons === 'all') return 'Ask for the whole show';
   return seasons.length === 0 ? 'Pick a season' : seasons.length === 1 ? 'Ask for 1 season' : `Ask for ${seasons.length} seasons`;
 }
+
+/* ── quality choices in plain words ── */
+export interface QualityChoice {
+  /** profile id as text; '' = the server's usual choice */
+  value: string;
+  label: string;
+  /** the real profile name, for the owner's small details line only */
+  profile: string;
+}
+
+/** "Ultra-HD" -> "Ultra HD (4K)", "HD-1080p" -> "HD 1080p", "720p x265 (MeGusta > ELiTE)" -> "HD 720p (smaller files)". Never shows release-group tags. */
+export function friendlyQuality(name: string): string {
+  const small = /x265|hevc|h\.?265/i.test(name) ? ' (smaller files)' : '';
+  if (/ultra|2160|4k|uhd/i.test(name)) return `Ultra HD (4K)${small}`;
+  if (/720.*1080|1080.*720/.test(name)) return `HD 720p/1080p${small}`;
+  if (/1080/.test(name)) return `HD 1080p${small}`;
+  if (/720/.test(name)) return `HD 720p${small}`;
+  if (/\bsd\b|480|576/i.test(name)) return `Smaller picture (SD)${small}`;
+  if (/^\s*any\s*$/i.test(name)) return 'Any quality';
+  if (/\bhd\b/i.test(name)) return `HD${small}`;
+  return name.replace(/\s*\([^)]*\)/g, '').trim() || name;
+}
+
+/** The Quality list: "Standard" first (the server's default, listed once), then the others by friendly name. */
+export function qualityChoices(list: ReadonlyArray<{ id: number; name: string }>, defaultId?: number): QualityChoice[] {
+  const def = list.find(p => p.id === defaultId);
+  const others = list.filter(p => p.id !== defaultId);
+  const labels = others.map(p => friendlyQuality(p.name));
+  const seen = new Map<string, number>();
+  const out: QualityChoice[] = [{ value: '', label: 'Standard', profile: def?.name ?? '' }];
+  others.forEach((p, i) => {
+    let label = labels[i] as string;
+    const dup = labels.filter(l => l === label).length > 1 || label === 'Standard';
+    if (dup) { const n = (seen.get(label) ?? 0) + 1; seen.set(label, n); label = `${label} (${n})`; }
+    out.push({ value: String(p.id), label, profile: p.name });
+  });
+  return out;
+}

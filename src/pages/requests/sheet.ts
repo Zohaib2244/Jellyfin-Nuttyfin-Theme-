@@ -16,7 +16,7 @@ import { openDialog, type DialogHandle } from '../common/dialog';
 import { morphHeight } from '../../lib/morph';
 import { ic } from '../common/icons';
 import { embedUrl } from '../details/trailer';
-import { askLabel, blockedReason, quotaLeft, quotaText, requestableSeasons, seasonList, seasonsToAsk, takenText } from './model';
+import { askLabel, blockedReason, qualityChoices, quotaLeft, quotaText, requestableSeasons, seasonList, seasonsToAsk, takenText } from './model';
 import { longDate, titleStatus } from './stage';
 import { metaOf, posterOf, tmdbBackdrop } from './ui';
 
@@ -149,6 +149,8 @@ export function openTitleSheet(env: SheetEnv, target: SheetTarget): DialogHandle
     const open = d.mediaType === 'tv' ? requestableSeasons(d, specials) : [];
     const all = d.mediaType === 'tv' ? seasonList(d, specials) : [];
     const profiles = caps?.profiles[d.mediaType === 'movie' ? 'movie' : 'tv'];
+    const choices = profiles ? qualityChoices(profiles.list, profiles.defaultId) : [];
+    const isAdmin = !!caps?.perms.isAdmin;
     const showFourK = !!caps?.fourK[d.mediaType === 'movie' ? 'movie' : 'tv'];
     const canPick = d.mediaType === 'tv' && (caps?.partialRequests ?? true) && open.length > 1;
     const st = { mode: 'all' as 'all' | 'pick', picked: new Set<number>(open.map(s => s.number)), profile: '', fourK: false };
@@ -169,8 +171,9 @@ export function openTitleSheet(env: SheetEnv, target: SheetTarget): DialogHandle
       <div class="head">${posterOf(d, 185)}<div><p class="rq-stepno">Step 2 of 2</p><h2 id="rq2h" tabindex="-1" data-autofocus>Request ${d.title}</h2><p class="lead">${metaOf(d.mediaType, d.year)}</p></div></div>
       ${d.mediaType === 'tv' ? seasonsBlock() : html`<p class="rq-plain">${ic('film')}<span>The film will be added to the library once it can be downloaded.</span></p>`}
       ${profiles ? html`<div class="blk"><label class="lbl" for="rq-q">Quality</label>
-        <select id="rq-q" class="rq-select"><option value="">Standard${profiles.defaultId != null ? ` (${profiles.list.find(p => p.id === profiles.defaultId)?.name ?? 'default'})` : ''}</option>${profiles.list.map(p => html`<option value="${p.id}">${p.name}</option>`)}</select>
-        <p class="note">Standard is right for almost everything. Bigger files take longer and may need converting to play here.</p></div>` : ''}
+        <select id="rq-q" class="rq-select">${choices.map(c => html`<option value="${c.value}">${c.label}</option>`)}</select>
+        <p class="note">Standard is right for almost everything. Bigger files take longer and may need converting to play here.</p>
+        ${isAdmin ? html`<p class="note rq-profile" id="rq-prof">Server profile: ${choices[0]?.profile || 'default'}</p>` : ''}</div>` : ''}
       ${showFourK ? html`<div class="blk"><div class="opts"><label><input type="checkbox" id="rq-4k">Ask for the 4K version instead</label></div>
         <p class="note">4K files are very large, and this server often has to convert them to play.</p></div>` : ''}
       ${qt && !qt.startsWith('No limit') ? html`<p class="rq-quota">${ic('info')}<span>${qt}.</span></p>` : ''}
@@ -205,7 +208,11 @@ export function openTitleSheet(env: SheetEnv, target: SheetTarget): DialogHandle
       if (!(t instanceof HTMLInputElement) && !(t instanceof HTMLSelectElement)) return;
       if (t.name === 'smode') { st.mode = t.value === 'pick' ? 'pick' : 'all'; if (st.mode === 'pick') st.picked = new Set(); sync(); }
       else if (t.name === 'season' && t instanceof HTMLInputElement) { if (t.checked) st.picked.add(Number(t.value)); else st.picked.delete(Number(t.value)); sync(); }
-      else if (t.id === 'rq-q') st.profile = t.value;
+      else if (t.id === 'rq-q') {
+        st.profile = t.value;
+        const prof = dlg.body.querySelector<HTMLElement>('#rq-prof');
+        if (prof) prof.textContent = `Server profile: ${choices.find(c => c.value === t.value)?.profile || 'default'}`;
+      }
       else if (t.id === 'rq-4k' && t instanceof HTMLInputElement) st.fourK = t.checked;
     };
     dlg.body.onclick = e => {
