@@ -47,10 +47,12 @@ export interface TileDef {
 }
 
 /** A tile heading. `more` adds a "See all" link that opens another tab. */
-export function tileHead(id: string, ic: IconName, title: string, opts: { count?: string; more?: { label: string; tab: HomeTab } } = {}): SafeHtml {
+export function tileHead(id: string, ic: IconName, title: string, opts: { count?: string; more?: { label: string; tab: HomeTab }; arrows?: boolean } = {}): SafeHtml {
+  // `arrows`: back / forward buttons for the sideways strip in this tile (index.ts scrolls its .hstrip)
+  const arrows = opts.arrows ? html`<span class="hbtns"><button class="iconbtn" type="button" data-hscroll="-1" aria-label="Scroll back">${icon('back')}</button><button class="iconbtn" type="button" data-hscroll="1" aria-label="Scroll forward">${icon('next')}</button></span>` : '';
   const more = opts.more
     ? html`<span class="more"><button class="linkbtn" type="button" data-tab-link="${opts.more.tab}" aria-label="${opts.more.label}: open ${TAB_LABEL[opts.more.tab]}">${opts.more.label}${icon('next')}</button></span>`
-    : '';
+    : arrows ? html`<span class="more">${arrows}</span>` : '';
   return html`<h2 class="tl" id="h-${id}">${icon(ic)}${title}${opts.count ? html`<span class="cnt">${opts.count}</span>` : ''}${more}</h2>`;
 }
 

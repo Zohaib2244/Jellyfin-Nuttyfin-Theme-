@@ -39,7 +39,7 @@ svg.px { shape-rendering: crispEdges; flex: none; }
 .btn.primary:hover { border-color: var(--text); }
 .btn.sm { min-height: 44px; padding: 0 14px; font-size: 14.5px; gap: 8px; }
 .btn.ghost { background: transparent; box-shadow: none; }
-.btn.glass { background: rgba(19, 16, 12, .45); border-color: rgba(246, 240, 228, .45); color: var(--on-img); backdrop-filter: blur(6px); box-shadow: none; }
+.btn.glass { background: rgba(19, 16, 12, .66); border-color: rgba(246, 240, 228, .45); color: var(--on-img); backdrop-filter: blur(6px); box-shadow: none; }
 .btn.glass:hover { border-color: var(--on-img); }
 .btn.req { background: var(--num-soft); border-color: var(--num); }
 .btn.req svg { color: var(--num); }

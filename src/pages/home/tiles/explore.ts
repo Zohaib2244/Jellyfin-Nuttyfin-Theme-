@@ -6,7 +6,7 @@ import { icon } from '../../../ui/icons';
 import { nutbot } from '../../../ui/nutbot';
 import { slotOf } from '../copy';
 import { detailsPath, img, ph, playPath, posterUrl, thumbUrl } from '../art';
-import { bestFits, buildWeek, epLabel, firstBusyDay, startOfDay, type FitCandidate, type Week } from '../model';
+import { bestFits, buildWeek, epLabel, firstBusyDay, groupByShow, startOfDay, type FitCandidate, type ShowGroup, type Week } from '../model';
 import { MOODS, moodPicks, whyFor } from '../nutbot/moods';
 import { openNutBot } from '../nutbot/launcher';
 import { loadInto, quiet, skPosters, skRows, skStrip, tileHead, type TileDef } from '../tile';
@@ -56,7 +56,7 @@ export const recsTile: TileDef = {
       fetch: async () => (await ctx.data.suggestions()).slice(0, 12),
       render(list) {
         if (!list.length) return null;
-        return html`${tileHead('recs', 'bot', 'Picked for you', { count: 'Why each one, in a line' })}
+        return html`${tileHead('recs', 'bot', 'Picked for you', { arrows: list.length > 3 })}
           <div class="hstrip" role="list" aria-labelledby="h-recs">${list.map(t => html`<div class="rc" role="listitem">
             <a class="rcart ph" ${ph(t.id, t.name)} href="#${detailsPath(t)}" aria-label="${t.name}, ${metaOf(t)}. ${whyFor(t)}">${img(thumbUrl(t, 480))}<span class="src">${icon('bot')}For you</span></a>
             <span><b>${t.name}</b><small>${metaOf(t)}</small></span>
@@ -108,7 +108,7 @@ export const moodTile: TileDef = {
     function paint(lib: Title[]): SafeHtml {
       const mood = MOODS.find(m => m.key === sel) ?? (MOODS[0] as (typeof MOODS)[number]);
       const picks = moodPicks(lib, mood, 14);
-      return html`${tileHead('mood', 'smile', 'What are you in the mood for?', { count: picks.length ? `${picks.length} for "${mood.chip.toLowerCase()}"` : '' })}
+      return html`${tileHead('mood', 'smile', 'What are you in the mood for?', { count: picks.length ? `${picks.length} for "${mood.chip.toLowerCase()}"` : '', arrows: picks.length > 5 })}
         <div class="moodrow">${chips('Mood', MOOD_CHIPS.map(m => ({ key: m.key, label: m.chip, icon: m.icon })), sel)}
           <button class="btn sm" type="button" data-ask-bot>${icon('chat')}Ask NutBot</button></div>
         ${picks.length ? posterStrip(picks, t => `${whyFor(t, mood)}`) : quiet(`Nothing in the library fits "${mood.chip.toLowerCase()}" yet. Try another mood.`)}`;
@@ -222,35 +222,65 @@ export const tvTile: TileDef = {
       const title = aired ? 'Aired this week' : 'On TV this week';
       const day = w.days[sel] ?? (w.days[0] as Week['days'][number]);
       const dd = new Date(day.day);
-      const others = w.days.map((d, i) => ({ d, i })).filter(x => x.i !== sel && x.d.episodes.length);
-      const when = (e: Episode): SafeHtml => {
-        if (aired) return html`${icon('check')}Added ${new Date(e.added ?? e.premiered ?? day.day).toLocaleDateString('en-GB', { weekday: 'long' })}`;
-        return e.missing ? html`${icon('clock')}Not here yet · airs ${DAY_LONG[dd.getDay()]}` : html`${icon('check')}Arrived and ready`;
-      };
-      const item = (e: Episode): SafeHtml => html`<div class="tvi">
+      const dayName = (d: Date): string => DAY_LONG[d.getDay()] as string;
+      const others = w.days.map((d, i) => ({ d, i, groups: groupByShow(d.episodes) })).filter(x => x.i !== sel && x.d.episodes.length);
+
+      /** One episode, in full: still, title, synopsis, status, Play. */
+      const single = (e: Episode, date: Date): SafeHtml => {
+        const when = aired ? html`${icon('check')}Added ${dayName(new Date(e.added ?? e.premiered ?? date.getTime()))}`
+          : e.missing ? html`${icon('clock')}Not here yet · airs ${dayName(date)}` : html`${icon('check')}Arrived and ready`;
+        return html`<div class="tvi">
         <a class="still ph" ${ph(e.seriesId, e.seriesName)} href="#${detailsPath(e)}" aria-label="${e.seriesName}, ${epLabel(e)}${e.name ? `, ${e.name}` : ''}. Details">${img(thumbUrl(e, 360))}${!e.missing ? html`<span class="pl" aria-hidden="true">${icon('play')}</span>` : ''}</a>
         <div class="w">
           <p class="t1"><b>${e.seriesName}</b>${e.episode === 1 ? html`<span class="tg premiere">${e.season === 1 ? 'Premiere' : 'New season'}</span>` : ''}</p>
           <p class="t2"><em>${epLabel(e)}</em>${e.name ? ` · ${e.name}` : ''}</p>
           ${e.overview ? html`<p class="syn">${e.overview}</p>` : ''}
-          <p class="t3">${when(e)}</p>
+          <p class="t3">${when}</p>
         </div>
         ${!e.missing ? html`<a class="minibtn go" href="#${playPath(e)}" aria-label="Play ${e.seriesName} ${epLabel(e)}">${icon('play')}Play</a>` : ''}
       </div>`;
+      };
+      /** A show with several episodes that day: ONE row ("Prehistoric Planet · 5 new episodes"), one Play to the next unwatched. */
+      const grouped = (g: ShowGroup, date: Date): SafeHtml => {
+        const n = g.episodes.length;
+        const ready = g.episodes.filter(e => !e.missing).length;
+        const first = g.playable ?? (g.episodes[0] as Episode);
+        const when = aired ? html`${icon('check')}Added ${dayName(new Date(first.added ?? first.premiered ?? date.getTime()))}`
+          : g.allMissing ? html`${icon('clock')}Not here yet · airs ${dayName(date)}`
+            : ready === n ? html`${icon('check')}All arrived and ready` : html`${icon('clock')}${ready} ready, ${n - ready} airs ${dayName(date)}`;
+        return html`<div class="tvi grp">
+        <a class="still ph" ${ph(g.seriesId, g.seriesName)} href="#/title/${encodeURIComponent(g.seriesId)}" aria-label="${g.seriesName}, ${n} new episodes, ${g.range}. Details">${img(thumbUrl(first, 360))}${g.playable ? html`<span class="pl" aria-hidden="true">${icon('play')}</span>` : ''}</a>
+        <div class="w">
+          <p class="t1"><b>${g.seriesName}</b></p>
+          <p class="t2"><em>${n} new episodes</em> · ${g.range}</p>
+          <p class="t3">${when}</p>
+        </div>
+        ${g.playable ? html`<a class="minibtn go" href="#${playPath(g.playable)}" aria-label="Play ${g.seriesName} ${epLabel(g.playable)}">${icon('play')}Play ${epLabel(g.playable)}</a>` : ''}
+      </div>`;
+      };
+      const rows = (groups: ShowGroup[], date: Date): SafeHtml[] => groups.map(g => (g.episodes.length === 1 ? single(g.episodes[0] as Episode, date) : grouped(g, date)));
+
+      // a quiet day is not an empty panel: it shows the closest busy day underneath
+      const groups = groupByShow(day.episodes);
+      const near = day.episodes.length ? null
+        : (aired ? [...others].reverse().find(x => x.i < sel) ?? others.find(x => x.i > sel) : others.find(x => x.i > sel) ?? [...others].reverse().find(x => x.i < sel)) ?? null;
+      const nearDate = near ? new Date(near.d.day) : null;
       return html`${tileHead('tv', 'cal', title, { count: `${w.total} ${aired ? 'arrived' : 'new episode' + (w.total === 1 ? '' : 's')}` })}
         <div class="days" role="group" aria-label="Pick a day">${w.days.map((d, i) => {
     const dt = new Date(d.day);
     const isToday = d.day === today;
     const c = d.episodes.length;
-    return html`<button type="button" class="day ${c ? 'has' : ''} ${isToday ? 'today' : ''}" data-day="${i}" aria-pressed="${String(i === sel)}" aria-label="${isToday ? 'Today, ' : ''}${DAY_LONG[dt.getDay()]} ${dt.getDate()}${c ? `, ${c} ${aired ? 'arrived' : 'new'} episode${c > 1 ? 's' : ''}` : ', nothing new'}"><span>${isToday ? 'Today' : DAY_SHORT[dt.getDay()]}</span><b>${dt.getDate()}</b><i class="pips" aria-hidden="true">${raw('<s></s>'.repeat(Math.min(c, 3)))}</i></button>`;
+    const shows = new Set(d.episodes.map(e => e.seriesId)).size;
+    return html`<button type="button" class="day ${c ? 'has' : ''} ${isToday ? 'today' : ''}" data-day="${i}" aria-pressed="${String(i === sel)}" aria-label="${isToday ? 'Today, ' : ''}${DAY_LONG[dt.getDay()]} ${dt.getDate()}${c ? `, ${c} ${aired ? 'arrived' : 'new'} episode${c > 1 ? 's' : ''}` : ', nothing new'}"><span>${isToday ? 'Today' : DAY_SHORT[dt.getDay()]}</span><b>${dt.getDate()}</b><i class="pips" aria-hidden="true">${raw('<s></s>'.repeat(Math.min(shows, 3)))}</i></button>`;
   })}</div>
         <div class="tvb"><div class="tvday ${day.episodes.length <= 2 ? 'roomy' : ''}">
-          <p class="tvh"><b>${day.day === today ? 'Today' : DAY_LONG[dd.getDay()]}</b> · ${dd.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}<span>${day.episodes.length ? `${day.episodes.length} ${aired ? 'arrived' : 'new'}` : 'Nothing new'}</span></p>
-          ${day.episodes.length ? day.episodes.map(item) : html`<p class="quiet">${nutbot(34, 'look')}<span>Nothing new that day. A good night for a film.</span></p>`}
+          <p class="tvh"><b>${day.day === today ? 'Today' : DAY_LONG[dd.getDay()]}</b> · ${dd.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}${day.episodes.length ? html`<span>${day.episodes.length} ${aired ? 'arrived' : 'new'}</span>` : ''}</p>
+          ${day.episodes.length ? rows(groups, dd) : html`<p class="quiet">${nutbot(34, 'look')}<span>Nothing new that day. A good night for a film.</span></p>`}
+          ${near && nearDate ? html`<p class="tvh later"><b>${aired ? 'Latest' : 'Next'}</b> · ${dayName(nearDate)} ${nearDate.getDate()}</p>${rows(near.groups, nearDate)}` : ''}
         </div>
         ${others.length ? html`<div class="tvweek"><p class="tvh"><b>${aired ? 'Earlier this week' : 'Rest of the week'}</b></p>
-          <ul>${others.map(({ d, i }) => { const dt = new Date(d.day); return html`<li><button type="button" class="wk" data-day="${i}" aria-label="Show ${DAY_LONG[dt.getDay()]}: ${d.episodes.map(e => e.seriesName).join(', ')}">
-            <span class="wd">${DAY_SHORT[dt.getDay()]}<b>${dt.getDate()}</b></span><span class="wn">${d.episodes.slice(0, 2).map(e => html`<span>${e.seriesName}</span>`)}</span><span class="wc">${d.episodes.length}</span></button></li>`; })}</ul></div>` : ''}
+          <ul>${others.map(({ d, i, groups: gs }) => { const dt = new Date(d.day); return html`<li><button type="button" class="wk" data-day="${i}" aria-label="Show ${DAY_LONG[dt.getDay()]}: ${gs.map(g => g.seriesName).join(', ')}">
+            <span class="wd">${DAY_SHORT[dt.getDay()]}<b>${dt.getDate()}</b></span><span class="wn">${gs.slice(0, 2).map(g => html`<span>${g.seriesName}</span>`)}</span><span class="wc">${d.episodes.length}</span></button></li>`; })}</ul></div>` : ''}
         </div>`;
     }
   },
@@ -295,7 +325,7 @@ export const becauseTile: TileDef = {
         return html`${tileHead('because', 'eye', 'Top rated here', { count: 'Watch something and this turns personal' })}${d.list.length ? posterStrip(d.list) : quiet('Nothing to suggest yet. Watch something and I will line up more like it.')}`;
       }
       const seed = d.seeds.find(s => s.id === d.sel) ?? (d.seeds[0] as Title);
-      return html`${tileHead('because', 'eye', `Because you watched ${seed.name}`)}
+      return html`${tileHead('because', 'eye', `Because you watched ${seed.name}`, { arrows: d.list.length > 5 })}
         ${d.seeds.length > 1 ? chips('Watched recently', d.seeds.map(s => ({ key: s.id, label: s.name })), seed.id) : ''}
         ${d.list.length ? posterStrip(d.list, t => `Like ${seed.name}${t.genres[0] ? `, also ${t.genres[0].toLowerCase()}` : ''}`) : quiet(`Nothing else here is much like ${seed.name} yet.`)}`;
     }
@@ -340,7 +370,7 @@ export const genresTile: TileDef = {
       },
     });
     function paint(d: D): SafeHtml {
-      return html`${tileHead('genres', 'layers', `Best of ${d.sel.toLowerCase()}`, { count: d.list.length ? `${d.list.length} titles, best rated first` : '' })}
+      return html`${tileHead('genres', 'layers', `Best of ${d.sel.toLowerCase()}`, { count: d.list.length ? `${d.list.length} titles, best rated first` : '', arrows: d.list.length > 5 })}
         ${chips('Genre', d.genres.map(g => ({ key: g, label: g })), d.sel)}
         ${d.list.length ? posterStrip(d.list.sort((a, b) => Number(a.played) - Number(b.played) || (b.rating ?? 0) - (a.rating ?? 0)), t => (t.played ? 'You have seen this one' : t.rating ? `Rated ${t.rating.toFixed(1)}` : '')) : quiet(`Nothing under ${d.sel} yet.`)}`;
     }

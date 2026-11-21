@@ -144,6 +144,12 @@ const page: Page = {
 
     // "See all" and similar links inside tiles
     root.addEventListener('click', e => {
+      const sc = (e.target as Element).closest<HTMLElement>('[data-hscroll]');
+      if (sc) { // the back / forward buttons of a sideways strip
+        const strip = sc.closest('.tile')?.querySelector<HTMLElement>('.hstrip');
+        strip?.scrollBy({ left: Number(sc.dataset.hscroll) * Math.max(220, strip.clientWidth * 0.85), behavior: reduced() ? 'auto' : 'smooth' });
+        return;
+      }
       const b = (e.target as Element).closest<HTMLElement>('[data-tab-link]');
       const id = b?.dataset.tabLink;
       if (b && isTab(id)) { e.preventDefault(); select(id, { focus: true }); }

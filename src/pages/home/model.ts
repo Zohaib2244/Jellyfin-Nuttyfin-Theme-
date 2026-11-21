@@ -144,6 +144,40 @@ export function buildWeek(upcoming: readonly Episode[], recent: readonly Episode
   return { mode, days, total: days.reduce((a, d) => a + d.episodes.length, 0) };
 }
 
+/* ── one row per show ── */
+export interface ShowGroup {
+  seriesId: string;
+  seriesName: string;
+  /** the episodes of this show on that day, in order */
+  episodes: Episode[];
+  /** "S4 E1 to E26", "S2 E3", "S1 E1 to S2 E2" */
+  range: string;
+  /** what the one Play button plays: the first episode in the library that is not watched yet (else the first one there) */
+  playable?: Episode;
+  /** nothing here is in the library yet (all still to come) */
+  allMissing: boolean;
+}
+
+/**
+ * Fold a day's episodes into one row per show (a show that added 26 episodes is ONE row "26 new episodes", not 26 near
+ * identical rows). Shows keep the order of their first episode; episodes inside a show are in season/episode order.
+ */
+export function groupByShow(episodes: readonly Episode[]): ShowGroup[] {
+  const by = new Map<string, Episode[]>();
+  for (const e of episodes) by.set(e.seriesId, [...(by.get(e.seriesId) ?? []), e]);
+  return [...by.values()].map(list => {
+    const eps = [...list].sort((a, b) => a.season - b.season || a.episode - b.episode);
+    const first = eps[0] as Episode;
+    const last = eps[eps.length - 1] as Episode;
+    const range = eps.length === 1 ? epLabel(first)
+      : first.season === last.season ? `S${first.season} E${first.episode} to E${last.episodeEnd ?? last.episode}`
+        : `${epLabel(first)} to ${epLabel(last)}`;
+    const here = eps.filter(e => !e.missing);
+    const playable = here.find(e => !e.played) ?? here[0];
+    return { seriesId: first.seriesId, seriesName: first.seriesName, episodes: eps, range, ...(playable ? { playable } : {}), allMissing: !here.length };
+  });
+}
+
 /** Index of the day to open first: today if it has episodes, else the nearest busy day, else today. */
 export function firstBusyDay(w: Week, now: number = Date.now()): number {
   const today = startOfDay(now);

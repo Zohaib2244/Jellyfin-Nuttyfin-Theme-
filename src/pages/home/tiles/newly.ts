@@ -89,46 +89,25 @@ export const newHeroTile: TileDef = {
   },
 };
 
-/* ── new films ── */
+/* ── new films ── one fixed range (the last two months, newest first); each card says how long ago it came ── */
 export const newFilmsTile: TileDef = {
   id: 'newfilms', tab: 'new', title: 'New films', icon: 'film', place: [1, 4, 12, 4], minH: 0,
   mount(host, ctx) {
-    let f: 'week' | 'all' = 'all';
     loadInto<Title[]>(host, ctx, {
       head: tileHead('newfilms', 'film', 'New films'),
       skeleton: skPosters(7),
       padCls: 'nl',
       fetch: () => ctx.data.recent(60, 'movie'),
-      render: all => paint(all),
-      after(el, all) {
-        const ac = new AbortController();
-        el.addEventListener('click', e => {
-          const b = (e.target as Element).closest<HTMLElement>('[data-nlf]');
-          if (!b) return;
-          f = b.dataset.nlf === 'week' ? 'week' : 'all';
-          const wrap = el.querySelector('.pad') as HTMLElement;
-          wrap.innerHTML = paint(all).value;
-          wrap.querySelector<HTMLElement>(`[data-nlf="${f}"]`)?.focus({ preventScroll: true });
-        }, { signal: ac.signal });
-        el.addEventListener('keydown', e => {
-          const t = e.target as HTMLElement;
-          if (!t.matches('[data-nlf]') || !['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
-          e.preventDefault();
-          (t.parentElement?.querySelector<HTMLElement>(`[data-nlf]:not([data-nlf="${t.dataset.nlf}"])`))?.click();
-        }, { signal: ac.signal });
-        return () => ac.abort();
+      render(all) {
+        const now = ctx.now();
+        const list = all.filter(t => { const d = parseDate(t.added); return !!d && now.getTime() - d.getTime() <= 60 * 864e5; }).slice(0, 14);
+        return html`${tileHead('newfilms', 'film', 'New films', { count: `${list.length} in the last two months`, arrows: list.length > 5 })}
+          ${list.length ? html`<div class="nlrail">${list.map(t => html`<a class="nli" href="#${detailsPath(t)}" aria-label="${t.name}, film, ${t.year ?? ''}, added ${ago(t, now).toLowerCase()}">
+          <span class="pst ph" ${ph(t.id, t.name)}>${badge(t, now)}${img(posterUrl(t, 300))}</span>
+          <span><b>${t.name}</b><small>${[t.year, t.runtimeMin ? runtime(t.runtimeMin) : ''].filter(Boolean).join(' · ')}</small></span></a>`)}</div>` : quiet('No new films in the last two months.')}
+        <div class="nlfoot"><span>Newest first</span><a class="linkbtn" href="#/movies">Browse all movies${icon('next')}</a></div>`;
       },
     });
-    function paint(all: Title[]): SafeHtml {
-      const now = ctx.now();
-      const list = all.filter(t => { const d = parseDate(t.added); return !!d && now.getTime() - d.getTime() <= (f === 'week' ? 7 : 60) * 864e5; }).slice(0, 14);
-      return html`<div class="nlhead">${tileHead('newfilms', 'film', 'New films', { count: `${list.length} ${f === 'week' ? 'added this week' : 'in the last two months'}` })}
-          <div class="seg" role="radiogroup" aria-label="Show">${(['week', 'all'] as const).map(k => html`<button type="button" role="radio" aria-checked="${String(k === f)}" tabindex="${k === f ? 0 : -1}" data-nlf="${k}">${k === 'week' ? 'This week' : 'Last 2 months'}</button>`)}</div></div>
-        ${list.length ? html`<div class="nlrail">${list.map(t => html`<a class="nli" href="#${detailsPath(t)}" aria-label="${t.name}, film, ${t.year ?? ''}, added ${ago(t, now).toLowerCase()}">
-          <span class="pst ph" ${ph(t.id, t.name)}>${badge(t, now)}${img(posterUrl(t, 300))}</span>
-          <span><b>${t.name}</b><small>${[t.year, t.genres[0], t.runtimeMin ? runtime(t.runtimeMin) : ''].filter(Boolean).join(' · ')}</small></span></a>`)}</div>` : quiet('No new films in that time.')}
-        <div class="nlfoot"><span>Newest first</span><a class="linkbtn" href="#/movies">Browse all movies${icon('next')}</a></div>`;
-    }
   },
 };
 
@@ -148,7 +127,7 @@ export const newShowsTile: TileDef = {
         return html`${tileHead('newshows', 'tv', 'New shows', { count: `${shows.length} in the last two months` })}
           <div class="nsgrid">${shows.map(t => html`<a class="nsc ph" ${ph(t.id, t.name)} href="#${detailsPath(t)}" aria-label="${t.name}, show, ${t.year ?? ''}, added ${ago(t, now).toLowerCase()}">
             ${img(thumbUrl(t, 500))}<span class="nsshade"></span>${badge(t, now)}
-            <span class="nst"><b>${t.name}</b><small>${[t.year, t.genres[0], t.seasonCount ? `${t.seasonCount} season${t.seasonCount > 1 ? 's' : ''}` : ''].filter(Boolean).join(' · ')}</small></span></a>`)}</div>
+            <span class="nst"><b>${t.name}</b><small>${[t.year, t.seasonCount ? `${t.seasonCount} season${t.seasonCount > 1 ? 's' : ''}` : ''].filter(Boolean).join(' · ')}</small></span></a>`)}</div>
           <div class="nlfoot"><span>Newest first</span><a class="linkbtn" href="#/shows">Browse all shows${icon('next')}</a></div>`;
       },
       empty: html`${quiet('No new shows lately. A new series will appear here when it lands.')}`,
