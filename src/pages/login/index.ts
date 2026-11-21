@@ -55,7 +55,6 @@ const page: Page = {
             <p class="lg-notice" id="lgNotice" role="alert"></p>
           </form>
           <div id="lgQcSlot"></div>
-          <details class="lg-help"><summary>Need help signing in?</summary><div>Your server owner manages accounts and passwords.</div></details>
         </div>
       </section>
       <div class="lg-status" id="lgStatus" role="status" hidden></div>`);

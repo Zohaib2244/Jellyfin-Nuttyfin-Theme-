@@ -59,6 +59,8 @@ export function mountAccountMenu(trigger: HTMLButtonElement, onSignOut: () => vo
     const theme = getThemePref();
     const pal = getPalette();
     const bg = getBackgroundPref();
+    const sum = menu.querySelector<HTMLElement>('[data-look-sum]');
+    if (sum) sum.textContent = [THEMES.find(x => x[0] === theme)?.[1], PALETTES.find(p => p.id === pal)?.label, BACKGROUNDS.find(b => b.id === bg)?.label].filter(Boolean).join(' · ');
     for (const b of menu.querySelectorAll<HTMLElement>('[data-pal-set]')) {
       const on = b.dataset.palSet === pal;
       b.setAttribute('aria-checked', String(on));
@@ -85,30 +87,50 @@ export function mountAccountMenu(trigger: HTMLButtonElement, onSignOut: () => vo
     menu.setAttribute('role', 'dialog');
     menu.setAttribute('aria-label', 'Account');
     setHtml(menu, html`
-      <div class="pm-me">${raw(picMarkup(u))}<div><b>${u.name}</b><small>${roleOf(u)} · signed in</small></div></div>
-      <h3 class="pm-h">Light or dark</h3>
-      <div class="seg3" role="radiogroup" aria-label="Theme">${THEMES.map(([k, l, i]) =>
-        html`<button type="button" role="radio" aria-checked="false" data-theme-set="${k}">${icon(i)}${l}</button>`)}</div>
-      <h3 class="pm-h">Colour theme</h3>
-      <div class="palopts" role="radiogroup" aria-label="Colour theme">${PALETTES.map(p =>
-        html`<button type="button" class="palopt" role="radio" aria-checked="false" data-pal-set="${p.id}" title="${p.label}"><span class="sw" aria-hidden="true" style="--s0:${p.swatch[0]};--s1:${p.swatch[1]};--s2:${p.swatch[2]}"><i></i><i></i></span><span class="pl">${p.label}</span></button>`)}</div>
-      <h3 class="pm-h">Background</h3>
-      <div class="seg2" role="radiogroup" aria-label="Page background">${BACKGROUND_CHOICES.map(id => {
-        const b = BACKGROUNDS.find(x => x.id === id);
-        return html`<button type="button" role="radio" aria-checked="false" data-bg-set="${id}"><span class="thumbbg" data-v="${id}" aria-hidden="true"></span><span>${b?.label ?? id}</span></button>`;
-      })}</div>
-      <h3 class="pm-h">Settings</h3>
-      <nav class="pm-links" aria-label="Settings">${SETTINGS.filter(l => !l.admin || u.isAdmin).map(l =>
-        html`<a href="${l.href(u)}" target="_blank" rel="noopener">${icon(l.ic)}<span>${l.label}<small>${l.hint}</small></span>${icon('ext')}</a>`)}</nav>
-      <p class="pm-note">These open Jellyfin's own settings pages in a new tab.</p>
-      <button type="button" class="pm-out" data-signout>${icon('logout')}Sign out</button>`);
+      <section class="pm-view" data-view="main">
+        <div class="pm-me">${raw(picMarkup(u))}<div><b>${u.name}</b><small>${roleOf(u)} · signed in</small></div></div>
+        <nav class="pm-main" aria-label="Account">
+          <button type="button" data-go="look">${icon('palette')}<span>Appearance<small data-look-sum></small></span>${icon('next')}</button>
+          <button type="button" data-go="settings">${icon('gear')}<span>Settings<small>Profile, playback, subtitles${u.isAdmin ? ', server' : ''}</small></span>${icon('next')}</button>
+        </nav>
+        <button type="button" class="pm-out" data-signout>${icon('logout')}Sign out</button>
+      </section>
+      <section class="pm-view" data-view="look" hidden aria-label="Appearance">
+        <div class="pm-sub"><button type="button" class="iconbtn" data-go="main" aria-label="Back">${icon('back')}</button><h2>Appearance</h2></div>
+        <h3 class="pm-h">Light or dark</h3>
+        <div class="seg3" role="radiogroup" aria-label="Theme">${THEMES.map(([k, l, i]) =>
+          html`<button type="button" role="radio" aria-checked="false" data-theme-set="${k}">${icon(i)}${l}</button>`)}</div>
+        <h3 class="pm-h">Colour theme</h3>
+        <div class="palopts" role="radiogroup" aria-label="Colour theme">${PALETTES.map(p =>
+          html`<button type="button" class="palopt" role="radio" aria-checked="false" data-pal-set="${p.id}" title="${p.label}"><span class="sw" aria-hidden="true" style="--s0:${p.swatch[0]};--s1:${p.swatch[1]};--s2:${p.swatch[2]}"><i></i><i></i></span><span class="pl">${p.label}</span></button>`)}</div>
+        <h3 class="pm-h">Background</h3>
+        <div class="seg2" role="radiogroup" aria-label="Page background">${BACKGROUND_CHOICES.map(id => {
+          const b = BACKGROUNDS.find(x => x.id === id);
+          return html`<button type="button" role="radio" aria-checked="false" data-bg-set="${id}"><span class="thumbbg" data-v="${id}" aria-hidden="true"></span><span>${b?.label ?? id}</span></button>`;
+        })}</div>
+      </section>
+      <section class="pm-view" data-view="settings" hidden aria-label="Settings">
+        <div class="pm-sub"><button type="button" class="iconbtn" data-go="main" aria-label="Back">${icon('back')}</button><h2>Settings</h2></div>
+        <nav class="pm-links" aria-label="Settings">${SETTINGS.filter(l => !l.admin || u.isAdmin).map(l =>
+          html`<a href="${l.href(u)}" target="_blank" rel="noopener">${icon(l.ic)}<span>${l.label}<small>${l.hint}</small></span>${icon('ext')}</a>`)}</nav>
+        <p class="pm-note">These open Jellyfin's own settings pages in a new tab.</p>
+      </section>`);
     document.body.append(menu);
     trigger.setAttribute('aria-expanded', 'true');
     sync();
-    menu.querySelector<HTMLElement>('[role="radio"][tabindex="0"]')?.focus();
+    menu.querySelector<HTMLElement>('[data-go="look"]')?.focus();
 
     menu.addEventListener('click', e => {
       const t = e.target as Element;
+      const go = t.closest<HTMLElement>('[data-go]');
+      if (go && menu) {
+        const to = go.dataset.go ?? 'main';
+        const from = menu.querySelector<HTMLElement>('.pm-view:not([hidden])')?.dataset.view;
+        for (const v of menu.querySelectorAll<HTMLElement>('.pm-view')) v.hidden = v.dataset.view !== to;
+        // focus: into the panel, or back onto the row you came from
+        (to === 'main' ? menu.querySelector<HTMLElement>(`[data-go="${from}"]`) : menu.querySelector<HTMLElement>(`[data-view="${to}"] [data-go="main"]`))?.focus();
+        return;
+      }
       const th = t.closest<HTMLElement>('[data-theme-set]');
       if (th) { setThemePref(th.dataset.themeSet as ThemePref); sync(); return; }
       const pl = t.closest<HTMLElement>('[data-pal-set]');
