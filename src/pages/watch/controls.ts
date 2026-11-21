@@ -110,7 +110,7 @@ export class PlayerUI {
         <p class="pl-subs" aria-hidden="true"></p>
         <div class="pl-rip l" aria-hidden="true"><span>${ic('rw')}<em></em></span></div>
         <div class="pl-rip r" aria-hidden="true"><span>${ic('ff')}<em></em></span></div>
-        <div class="pl-flash" aria-hidden="true">${ic('play')}<span class="t"></span></div>
+        <div class="pl-flash" aria-hidden="true">${ic('play')}<span class="vb"><i></i></span><span class="t"></span></div>
         <div class="pl-spin" aria-hidden="true"></div>
         <div class="pl-center pl-ui">
           <button class="pl-ibtn rw" type="button" data-act="rw" aria-label="Back 10 seconds">${ic('rw')}</button>
@@ -280,10 +280,14 @@ export class PlayerUI {
   }
 
   /** The centre glyph that confirms a keyboard or tap action, then fades. */
-  flash(icon: PlIcon, text = ''): void {
+  flash(icon: PlIcon, text = '', level?: number): void {
     const f = this.flashEl;
     (f.querySelector('use') as SVGUseElement).setAttribute('href', `#pl-${icon}`);
     (f.querySelector('.t') as HTMLElement).textContent = text;
+    // volume changes show a bar that fills to the new level
+    const bar = f.querySelector<HTMLElement>('.vb');
+    f.classList.toggle('withbar', level != null);
+    if (bar) (bar.firstElementChild as HTMLElement).style.width = `${Math.round(Math.max(0, Math.min(1, level ?? 0)) * 100)}%`;
     f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
   }
 
@@ -483,7 +487,8 @@ export class PlayerUI {
   /* pause card */
   showPause(info: { title: string; meta: string; synopsis?: string }): void {
     const pc = this.$('.pl-pause');
-    setHtml(pc, html`<p class="pl-k">Paused</p><h2>${info.title}</h2><p class="meta">${info.meta}</p>${info.synopsis ? html`<p class="syn">${info.synopsis}</p>` : ''}<p class="ends"></p>`);
+    // The title is already in the top bar, and nobody reads the synopsis mid-film: just say it is paused and when it would end.
+    setHtml(pc, html`<p class="pl-k">Paused</p><p class="ends"></p>`);
     pc.classList.add('on'); this.pausedCard = true;
   }
   setEnds(text: ReturnType<typeof html>): void { if (this.pausedCard) setHtml(this.$('.pl-pause .ends'), text); }

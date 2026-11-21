@@ -45,6 +45,10 @@ html.pl-lock, html.pl-lock body { overflow: hidden; }
 .pl-flash .t { color: #f3ecdc; }
 .pl-flash .t:empty { display: none; }
 .pl-flash:has(.t:empty) { padding: 0 12px; }
+.pl-flash .vb { display: none; width: 140px; height: 6px; border-radius: 3px; background: rgba(246, 240, 228, .25); overflow: hidden; }
+.pl-flash .vb i { display: block; height: 100%; border-radius: 3px; background: var(--pl-accent); transition: width 120ms var(--ease-out); }
+.pl-flash.withbar .vb { display: block; }
+.pl-flash.withbar .t { min-width: 3ch; text-align: right; font-variant-numeric: tabular-nums; }
 .pl-flash.go { animation: pl-flash 900ms var(--ease-out) both; }
 @keyframes pl-flash { 0% { opacity: 0; transform: translate(-50%, -6px); } 18% { opacity: 1; transform: translate(-50%, 0); } 75% { opacity: 1; } 100% { opacity: 0; } }
 .pl-rip { position: absolute; top: 0; bottom: 0; width: 42%; display: grid; place-items: center; pointer-events: none; opacity: 0; color: #fbf6ea; font-size: 14px; }

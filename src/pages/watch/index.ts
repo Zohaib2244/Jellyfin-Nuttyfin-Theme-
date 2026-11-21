@@ -475,7 +475,7 @@ class Player {
   private setVolume(v: number, show = false): void {
     const nv = clamp(Math.round(v * 10) / 10, 0, 1);
     this.video.volume = nv; this.video.muted = nv === 0;
-    if (show) this.ui.flash(nv === 0 ? 'mute' : nv < 0.5 ? 'vollow' : 'vol', nv === 0 ? 'Muted' : `${Math.round(nv * 100)}%`);
+    if (show) this.ui.flash(nv === 0 ? 'mute' : nv < 0.5 ? 'vollow' : 'vol', nv === 0 ? 'Muted' : `${Math.round(nv * 100)}%`, nv);
   }
 
   private toggleMute(): void {
