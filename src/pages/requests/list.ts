@@ -35,7 +35,9 @@ export function mountList(el: HTMLElement, env: ListEnv): ListPanel {
   const q0 = ctx.query;
   const st = {
     filter: (GROUPS.some(g => g.id === q0.get('show')) ? q0.get('show') : 'all') as Filter,
-    person: admin ? (q0.get('person') ?? '') : '',
+    // admins start on their own requests (when they have any); "all" is the explicit everyone
+    person: admin ? (q0.get('person') === 'all' ? '' : (q0.get('person') ?? '')) : '',
+    personSet: admin && q0.has('person'),
     items: [] as DeskRequest[],
     facts: new Map<string, TitleFacts | null>(),
     expanded: new Set<StageGroup>(),
@@ -52,7 +54,7 @@ export function mountList(el: HTMLElement, env: ListEnv): ListPanel {
       </div>
       <div class="rq-toolside">
         ${admin ? html`<label class="rq-person"><span class="lbl">Asked by</span><select id="rqperson"><option value="">Everyone</option></select></label>` : ''}
-        ${caps.perms.createIssues ? html`<button class="btn sm ghost" type="button" id="rqreport">${ic('flag')}Report a problem</button>` : ''}
+        ${caps.perms.createIssues ? html`<button class="btn sm ghost" type="button" id="rqreport">${ic('flag')}Report a problem with a film or show</button>` : ''}
       </div>
     </div>
     <div id="rqgroups" aria-live="polite">${skeletonRows(4)}</div>
@@ -73,6 +75,7 @@ export function mountList(el: HTMLElement, env: ListEnv): ListPanel {
       const badge = b.querySelector<HTMLElement>('.n') as HTMLElement;
       badge.textContent = String(n[f]);
       badge.classList.toggle('hot', f === 'pending' && admin && n[f] > 0);
+      b.classList.toggle('zero', n[f] === 0 && st.filter !== f);
       (b.querySelector('.nsr') as HTMLElement).textContent = `, ${n[f]}`;
     });
   }
@@ -164,7 +167,12 @@ export function mountList(el: HTMLElement, env: ListEnv): ListPanel {
     st.items = admin ? res.items : res.items.filter(r => r.requestedById == null || r.requestedById === caps.userId);
     for (const r of st.items) {
       const k = key(r);
+      if (st.facts.get(k) === null) st.facts.delete(k); // a lookup that failed earlier gets another try on a refresh
       if (!st.facts.has(k)) { const c = seerr.cachedFacts(r.mediaType, r.tmdbId); if (c) st.facts.set(k, c); }
+    }
+    if (admin && !st.personSet) {
+      st.personSet = true;
+      if (st.items.some(r => r.requestedById === caps.userId)) st.person = String(caps.userId);
     }
     st.loaded = true;
     paintPeople();
@@ -202,7 +210,7 @@ export function mountList(el: HTMLElement, env: ListEnv): ListPanel {
     const act = t.closest<HTMLButtonElement>('[data-act]');
     if (act) void decide(act);
   });
-  personSel?.addEventListener('change', () => { st.person = personSel.value; env.setQuery({ person: st.person || null }); paint(); });
+  personSel?.addEventListener('change', () => { st.person = personSel.value; st.personSet = true; env.setQuery({ person: st.person || 'all' }); paint(); });
 
   async function decide(btn: HTMLButtonElement): Promise<void> {
     const id = Number(btn.dataset.id);

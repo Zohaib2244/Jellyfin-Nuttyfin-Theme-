@@ -110,7 +110,8 @@ export interface RowCtx {
 
 /** One request: poster, title, who and when, the stepper with its plain line, and what this person may do with it. */
 export function requestRow(r: DeskRequest, s: Stage, c: RowCtx): SafeHtml {
-  const title = r.title || (c.loading ? 'Loading…' : `${kindWord(r.mediaType)} #${r.tmdbId}`);
+  // never a bare "Loading…" or a number: the kind of title stands in until the real name arrives (or when it never does)
+  const title = r.title || (c.loading ? kindWord(r.mediaType) : `${kindWord(r.mediaType)}, name not available`);
   const named = r.title || `this ${kindWord(r.mediaType).toLowerCase()}`;
   const mine = !!c.caps && r.requestedById === c.caps.userId;
   const who = c.showWho ? (mine ? 'You' : (r.requestedBy || 'Someone')) : '';
@@ -121,7 +122,7 @@ export function requestRow(r: DeskRequest, s: Stage, c: RowCtx): SafeHtml {
   const again = s.id === 'removed' && !!c.caps && (r.mediaType === 'movie' ? c.caps.perms.requestMovie : c.caps.perms.requestTv);
   return html`<li class="rq-row g-${s.group}" data-req-id="${r.id}">
     <button type="button" class="rq-rowopen" data-open="${r.tmdbId}" data-type="${r.mediaType}" data-title="${r.title}" aria-label="${title}: details">
-      <span class="rq-poster">${posterOf({ ...r, title }, 185)}</span>
+      <span class="rq-poster">${posterOf({ ...r, title, jellyfinId: c.loading ? undefined : r.jellyfinId }, 185)}</span>
     </button>
     <div class="rq-body">
       <h3><button type="button" class="rq-tlink ${r.title ? '' : 'loading'}" data-open="${r.tmdbId}" data-type="${r.mediaType}" data-title="${r.title}">${title}</button></h3>
