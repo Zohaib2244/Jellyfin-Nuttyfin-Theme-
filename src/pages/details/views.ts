@@ -76,7 +76,7 @@ export function versionSeg(versions: readonly MediaVersion[], current: string | 
   })}`;
 }
 
-/* ── hero ── */
+/* ── hero: a full-bleed banner that only holds the title, one meta line, Play and four icon buttons ── */
 export interface HeroModel {
   title: Title;
   /** series pages play an episode */
@@ -98,56 +98,103 @@ export interface HeroModel {
   endsAtText: string;
 }
 
+/** Icon-only toggle content; the visible tooltip comes from data-tip, the name from aria-label. */
+export const favTip = (on: boolean): string => (on ? 'In your favourites' : 'Add to favourites');
+export const watchedTip = (on: boolean): string => (on ? 'Watched' : 'Mark watched');
+
+/** Play/Resume plus the small time line under it. Re-rendered whenever the target or a choice changes. */
+export function playRow(m: HeroModel): SafeHtml {
+  const series = m.title.kind === 'series';
+  const ep = series && m.target ? epLabel(m.target) : '';
+  const verb = m.resume ? 'Resume' : 'Play';
+  const label = [verb, ep].filter(Boolean).join(' ');
+  const time = m.resume
+    ? html`<b>${runtime(m.resume.remainingMin)} left</b>`
+    : m.runtimeMin ? html`<b>${hm(m.runtimeMin)}</b>` : '';
+  const bits = [ep ? html`<span>${ep}</span>` : '', time ? html`<span>${time}</span>` : '', time ? html`<span class="ends">${m.endsAtText}</span>` : ''].filter(x => x !== '');
+  return html`<a class="btn primary big" id="playLink" href="${m.playHref}" aria-label="${label}${m.target?.name ? `, ${m.target.name}` : ''}">${ic('play')}${verb}</a>
+    ${bits.length ? html`<div class="playmeta">${m.resume ? html`<span class="bar" aria-hidden="true"><i style="width:${Math.round(m.resume.percent)}%"></i></span>` : ''}${bits.map((b, i) => html`${i ? html`<i class="dot${i === bits.length - 1 && time ? ' pre-ends' : ''}" aria-hidden="true">·</i>` : ''}${b}`)}</div>` : ''}`;
+}
+
+/** Start over (and, for shows, which episode Play opens): lives below the banner. */
+export function playExtra(m: HeroModel): SafeHtml {
+  const series = m.title.kind === 'series';
+  const t = m.target;
+  return html`${series && t ? html`<p class="upnext"><span class="k">${m.resume ? 'Resume' : 'Up next'}</span><span><b>${epLabel(t)}</b>${t.name ? ` · ${t.name}` : ''}</span></p>` : ''}
+    ${m.startOverHref ? html`<a class="btn sm" id="startOver" href="${m.startOverHref}">${ic('restart')}Start ${series ? 'this episode ' : ''}over</a>` : ''}`;
+}
+
 export function hero(m: HeroModel, c: Ctx): SafeHtml {
+  void c;
   const t = m.title;
   const series = t.kind === 'series';
-  const backdrop = t.imageTags.backdrop ? imageUrl(t.id, 'Backdrop', { maxWidth: 1600, tag: t.imageTags.backdrop, index: 0 }) : null;
-  const logo = t.imageTags.logo ? imageUrl(t.id, 'Logo', { maxWidth: 600, tag: t.imageTags.logo }) : null;
-  const kick = series
-    ? html`Show${m.seasonCount ? html` <span class="chip ok">${ic('check')}${m.seasonCount} ${m.seasonCount === 1 ? 'season' : 'seasons'} here</span>` : ''}${t.status === 'Continuing' ? html` <span class="chip num">${ic('clock')}Still coming out</span>` : ''}`
-    : html`Movie <span class="chip ok">${ic('check')}In your library</span>${m.versionsCount > 1 ? html` <span class="chip plain">${ic('layers')}${m.versionsCount} versions</span>` : ''}`;
-  const years = series ? `${t.year ?? ''}${t.endYear && t.endYear !== t.year ? ` to ${t.endYear}` : t.status === 'Continuing' ? ' to now' : ''}` : `${t.year ?? ''}`;
-  const sizeText = series ? [m.seasonCount ? `${m.seasonCount} ${m.seasonCount === 1 ? 'season' : 'seasons'}` : '', m.episodeCount ? `${m.episodeCount} episodes` : ''].filter(Boolean).join(' · ') : (t.runtimeMin ? hm(t.runtimeMin) : '');
-  const verb = m.resume ? 'Resume' : series && m.target && !m.target.played && !m.target.progress && m.target.season === 1 && m.target.episode === 1 ? 'Play' : 'Play';
-  const sub = series && m.target ? html`<span class="sub">${epLabel(m.target)}${m.target.name ? ` · ${m.target.name}` : ''}</span>` : '';
-  const primary = m.resume
-    ? html`<div class="resume"><a class="btn primary big" id="playLink" href="${m.playHref}">${ic('play')}${verb}${sub}</a><div class="bar" aria-hidden="true"><i style="width:${Math.round(m.resume.percent)}%"></i></div></div>
-        <span class="endsat"><b>${runtime(m.resume.remainingMin)} left</b> · ${m.endsAtText}</span>
-        ${m.startOverHref ? html`<a class="btn sm ghost" id="startOver" href="${m.startOverHref}">${ic('restart')}Start ${series ? 'this episode ' : ''}over</a>` : ''}`
-    : html`<a class="btn primary big" id="playLink" href="${m.playHref}">${ic('play')}${verb}${sub}</a>
-        ${m.runtimeMin ? html`<span class="endsat"><b>${hm(m.runtimeMin)}</b> · ${m.endsAtText}</span>` : ''}`;
-  return html`<section class="dh" aria-labelledby="ttl">
+  const backdrop = t.imageTags.backdrop ? imageUrl(t.id, 'Backdrop', { maxWidth: 1920, tag: t.imageTags.backdrop, index: 0 }) : null;
+  const logo = t.imageTags.logo ? imageUrl(t.id, 'Logo', { maxWidth: 800, tag: t.imageTags.logo }) : null;
+  const years = series ? `${t.year ?? ''}${t.endYear && t.endYear !== t.year ? `–${t.endYear}` : t.status === 'Continuing' ? '–now' : ''}` : `${t.year ?? ''}`;
+  const sizeText = series ? (m.seasonCount ? `${m.seasonCount} ${m.seasonCount === 1 ? 'season' : 'seasons'}` : '') : (t.runtimeMin ? hm(t.runtimeMin) : '');
+  const facts = [
+    t.rating != null ? html`<span class="rate">${ic('star')}<span class="num">${t.rating.toFixed(1)}</span><span class="sr"> out of 10</span></span>` : '',
+    years ? html`<span>${years}</span>` : '',
+    sizeText ? html`<span>${sizeText}</span>` : '',
+    t.certification ? html`<span class="rt"><span class="sr">Rated </span>${t.certification}</span>` : '',
+  ].filter(x => x !== '');
+  return html`<section class="dh${backdrop ? '' : ' nobd'}" aria-labelledby="ttl">
     <div class="bd ph" ${raw(phAttrs(`${t.id}bd`))}>${backdrop ? html`<img src="${backdrop}" alt="" fetchpriority="high">` : ''}</div>
     <div class="in">
       <div class="backrow"><button class="btn sm" type="button" data-back>${ic('back')}Back</button></div>
-      <div class="dposter ph" ${raw(phAttrs(t.id, t.name))}><img src="${imageUrl(t.id, 'Primary', { maxWidth: 400, tag: t.imageTags.primary })}" alt=""></div>
       <div class="dmain">
-        <div class="kicker">${kick}</div>
+        <div class="kicker">${series ? 'Show' : 'Movie'}</div>
         <h1 class="ttl${logo ? ' haslogo' : ''}" id="ttl" tabindex="-1" data-autofocus>${logo ? html`<img class="logo" src="${logo}" alt="" aria-hidden="true">` : ''}<span class="txt">${t.name}</span></h1>
-        <div class="facts">
-          ${t.rating != null ? html`<span class="rate">${ic('star')}<span class="num">${t.rating.toFixed(1)}</span><span class="sr"> out of 10</span></span>` : ''}
-          ${years ? html`<span>${years}</span>` : ''}${sizeText ? html`<span>${sizeText}</span>` : ''}
-          ${t.certification ? html`<span class="rt">${t.certification}</span>` : ''}${t.genres.length ? html`<span>${t.genres.join(', ')}</span>` : ''}
-        </div>
-        ${t.tagline && !t.overview ? html`<p class="tagline">${t.tagline}</p>` : ''}
-        ${t.overview ? html`<p class="tagline${m.clamp ? ' clamp' : ''}" id="tagline">${t.overview}</p><button class="morebtn" type="button" id="clampBtn" data-clamp aria-expanded="${String(!m.clamp)}" aria-controls="tagline" ${raw(m.clamp ? '' : '')}>${m.clamp ? 'Read more' : 'Show less'}</button>` : ''}
-        <div class="playrow" id="playrow">${primary}</div>
-        <div class="howline" id="howline"></div>
-        <div class="howpop" id="howPop" hidden></div>
-        <div class="acts2">
-          ${m.trailer ? html`<button class="btn sm" type="button" data-trailer>${ic('trailer')}Trailer</button>` : ''}
-          <button class="btn sm" type="button" data-fav aria-pressed="${String(m.fav)}">${ic(m.fav ? 'heartf' : 'heart')}<span>Favourite</span></button>
-          <button class="btn sm" type="button" data-watched aria-pressed="${String(m.watched)}">${ic('checkc')}<span>${m.watched ? 'Watched' : 'Mark watched'}</span></button>
-          <div class="morewrap">
-            <button class="btn sm" type="button" id="moreBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="moreMenu">${ic('dots')}More</button>
-            <div class="menu" id="moreMenu" role="menu" aria-label="More" hidden>
-              <button type="button" role="menuitem" data-report>${ic('flag')}Report a problem</button>
-              ${m.owner ? html`<hr><div class="who">Only you see this</div><button type="button" role="menuitem" class="danger" data-remove>${ic('trash')}Remove...</button>` : ''}
+        ${facts.length ? html`<div class="facts">${facts.map((f, i) => html`${i ? html`<i class="dot" aria-hidden="true">·</i>` : ''}${f}`)}</div>` : ''}
+        <div class="actrow">
+          <div class="playrow" id="playrow">${playRow(m)}</div>
+          <div class="acts2" role="group" aria-label="More actions">
+            ${m.trailer ? html`<button class="ibtn" type="button" data-trailer aria-label="Watch the trailer" data-tip="Trailer">${ic('trailer')}</button>` : ''}
+            <button class="ibtn" type="button" data-fav aria-pressed="${String(m.fav)}" aria-label="Favourite" data-tip="${favTip(m.fav)}">${ic(m.fav ? 'heartf' : 'heart')}</button>
+            <button class="ibtn" type="button" data-watched aria-pressed="${String(m.watched)}" aria-label="Watched" data-tip="${watchedTip(m.watched)}">${ic('checkc')}</button>
+            <div class="morewrap">
+              <button class="ibtn" type="button" id="moreBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="moreMenu" aria-label="More" data-tip="More">${ic('dots')}</button>
+              <div class="menu" id="moreMenu" role="menu" aria-label="More" hidden>
+                <button type="button" role="menuitem" data-report>${ic('flag')}Report a problem</button>
+                ${m.owner ? html`<hr><div class="who">Only you see this</div><button type="button" role="menuitem" class="danger" data-remove>${ic('trash')}Remove...</button>` : ''}
+              </div>
             </div>
           </div>
         </div>
         <div id="banner" role="status"></div>
       </div>
+    </div>
+  </section>
+  ${intro(m)}`;
+}
+
+/** Directly under the banner: overview and credits on the left, how it plays on the right. */
+function intro(m: HeroModel): SafeHtml {
+  const t = m.title;
+  const series = t.kind === 'series';
+  const people = t.people ?? [];
+  const by = (type: string): string[] => [...new Set(people.filter(p => p.type === type).map(p => p.name))];
+  const kv: Array<[string, string]> = [
+    [series ? 'Created by' : 'Director', (series ? by('Creator') : by('Director')).slice(0, 3).join(', ')],
+    ['Writers', by('Writer').slice(0, 4).join(', ')],
+    ['Studios', t.studios.slice(0, 3).join(', ')],
+  ];
+  const rows = kv.filter(([, v]) => v);
+  const links = externalLinks(t.providerIds, t.kind);
+  const chips = [...t.genres, ...(t.tags ?? []).slice(0, 6)];
+  return html`<section class="intro" aria-labelledby="h-intro">
+    <h2 class="sr" id="h-intro">About ${series ? 'this show' : 'this film'}</h2>
+    <div class="il">
+      ${t.overview ? html`<p class="tagline${m.clamp ? ' clamp' : ''}" id="tagline">${t.overview}</p><button class="morebtn" type="button" id="clampBtn" data-clamp aria-expanded="${String(!m.clamp)}" aria-controls="tagline">${m.clamp ? 'Read more' : 'Show less'}</button>`
+        : t.tagline ? html`<p class="tagline">${t.tagline}</p>` : html`<p class="tagline note">No description yet.</p>`}
+      ${chips.length ? html`<ul class="tags" aria-label="Genres and tags">${chips.map(x => html`<li>${x}</li>`)}</ul>` : ''}
+      ${rows.length || links.length ? html`<div class="credits">${rows.length ? html`<dl class="kv">${rows.map(([k, v]) => html`<div><dt>${k}</dt><dd>${v}</dd></div>`)}</dl>` : ''}
+        ${links.length ? html`<div class="extlinks">${links.map(l => html`<a class="btn sm" href="${l.url}" target="_blank" rel="noopener noreferrer">${l.name}${ic('ext')}<span class="sr"> (opens in a new tab)</span></a>`)}</div>` : ''}</div>` : ''}
+    </div>
+    <div class="ir">
+      <h3 class="ilbl">${ic('tv')}How it plays</h3>
+      <div class="howwrap"><div class="howline" id="howline"></div><div class="howpop" id="howPop" hidden></div></div>
+      <div class="playextra" id="playextra">${playExtra(m)}</div>
     </div>
   </section>`;
 }
@@ -248,25 +295,18 @@ export function aboutSection(m: AboutModel): SafeHtml {
   const t = m.title;
   const by = (type: string): string[] => m.people.filter(p => p.type === type).map(p => p.name);
   const kv: Array<[string, string]> = [
-    ['Director', by('Director').join(', ')], ['Writers', [...new Set(by('Writer'))].slice(0, 6).join(', ')],
-    ['Studios', t.studios.join(', ')], ['Genres', t.genres.join(', ')],
     [t.kind === 'series' ? 'First aired' : 'Released', t.premiered ? new Date(t.premiered).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ''],
     ['Rated', t.certification ?? ''],
+    ['Producers', [...new Set(by('Producer'))].slice(0, 4).join(', ')],
+    ['Music', [...new Set(by('Composer'))].slice(0, 3).join(', ')],
   ];
   const rows = kv.filter(([, v]) => v);
-  const links = externalLinks(t.providerIds, t.kind);
   const files = m.versions.map(v => ({ name: v.name || 'File', sz: gb(v.sizeBytes), meta: [v.container?.toUpperCase(), codecName(v.videoCodec), v.width && v.height ? `${v.width}x${v.height}` : ''].filter(Boolean).join(' · ') }));
   return html`<section class="section" aria-labelledby="h-about">
     <div class="sechead"><h2 id="h-about">About ${t.name}</h2></div>
     <div class="about">
-      <div>
-        ${t.tags?.length ? html`<div class="panel"><h3>Tags</h3><ul class="tags">${t.tags.map(x => html`<li>${x}</li>`)}</ul></div>` : ''}
-        <div class="panel"><h3>Something wrong with it?</h3><div class="reportline"><span>${m.owner ? "Won't play, wrong subtitles, bad sound? Log it so you remember to fix it." : `Won't play, wrong subtitles, bad sound? Tell ${m.ownerName} in two taps.`}</span><button class="btn sm" type="button" data-report>${ic('flag')}Report a problem</button></div></div>
-      </div>
-      <div>
-        <div class="panel"><h3>Details</h3>${rows.length ? html`<dl class="kv">${rows.map(([k, v]) => html`<dt>${k}</dt><dd>${v}</dd>`)}</dl>` : html`<p class="note">Nothing more is known about this one yet.</p>`}
-          ${links.length ? html`<div class="extlinks">${links.map(l => html`<a class="btn sm" href="${l.url}" target="_blank" rel="noopener noreferrer">${l.name}${ic('ext')}<span class="sr"> (opens in a new tab)</span></a>`)}</div>` : ''}</div>
-      </div>
+      <div class="panel"><h3>Something wrong with it?</h3><div class="reportline"><span>${m.owner ? "Won't play, wrong subtitles, bad sound? Log it so you remember to fix it." : `Won't play, wrong subtitles, bad sound? Tell ${m.ownerName} in two taps.`}</span><button class="btn sm" type="button" data-report>${ic('flag')}Report a problem</button></div></div>
+      ${rows.length ? html`<div class="panel"><h3>Details</h3><dl class="kv">${rows.map(([k, v]) => html`<dt>${k}</dt><dd>${v}</dd>`)}</dl></div>` : ''}
     </div>
     ${m.owner ? html`<div class="panel ownercard" aria-labelledby="h-own"><h3 id="h-own">${ic('server')}On the server <span class="chip">${ic('lock')}Only you see this</span></h3>
       <div class="oc"><ul class="files">${files.length ? files.map(f => html`<li><b>${f.name}</b><span class="sz">${f.sz}</span><code>${f.meta}</code></li>`) : html`<li><b>${t.kind === 'series' ? 'Episodes on the server' : 'No file details'}</b></li>`}</ul>

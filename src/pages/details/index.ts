@@ -26,7 +26,7 @@ import { groupSeasons, pickTarget, validPrefs, type PlayPrefs } from './target';
 import { pickTrailer } from './trailer';
 import {
   aboutSection, castSection, chaptersSection, endsAtText, episodesSection, footnote, guestSection, hero, howLine, howPanel,
-  moreSection, seasonTabs, versionSeg, subLabel, audioShort, type HeroModel, type PlayState,
+  moreSection, playExtra, playRow, versionSeg, subLabel, audioShort, favTip, watchedTip, type HeroModel, type PlayState,
 } from './views';
 
 const OWNER_NAME = 'the owner';
@@ -150,6 +150,12 @@ async function render(ctx: PageContext): Promise<HTMLElement> {
   /* ── DOM ── */
   const root = document.createElement('div');
   root.className = 'page dt';
+  // the banner spans the whole page width (rail to window edge); 100vw would include the scrollbar
+  const setVw = (): void => root.style.setProperty('--vw', `${document.documentElement.clientWidth}px`);
+  setVw();
+  const vwObs = new ResizeObserver(setVw);
+  vwObs.observe(document.documentElement);
+  ctx.onDispose(() => vwObs.disconnect());
   const poster = imageUrl(main.id, 'Backdrop', { maxWidth: 1280, tag: main.imageTags.backdrop, index: 0 });
   ctx.shell.setTitle(main.name);
   ctx.shell.setAmbient(main.imageTags.backdrop ? poster : null);
@@ -189,9 +195,9 @@ async function render(ctx: PageContext): Promise<HTMLElement> {
   function paintPlay(): void {
     const m = heroModel();
     const tmp = document.createElement('div');
-    tmp.innerHTML = hero(m, cx).value;
-    const fresh = tmp.querySelector('#playrow');
-    if (fresh) q('#playrow').innerHTML = fresh.innerHTML;
+    tmp.innerHTML = playRow(m).value;
+    q('#playrow').innerHTML = tmp.innerHTML;
+    q('#playextra').innerHTML = playExtra(m).value;
     paintHow();
   }
 
@@ -324,10 +330,11 @@ async function render(ctx: PageContext): Promise<HTMLElement> {
   function syncActs(): void {
     const fav = q('[data-fav]');
     fav.setAttribute('aria-pressed', String(S.fav));
-    fav.innerHTML = `${ic(S.fav ? 'heartf' : 'heart').value}<span>Favourite</span>`;
+    fav.dataset.tip = favTip(S.fav);
+    fav.innerHTML = ic(S.fav ? 'heartf' : 'heart').value;
     const w = q('[data-watched]');
     w.setAttribute('aria-pressed', String(S.watched));
-    w.innerHTML = `${ic('checkc').value}<span>${S.watched ? 'Watched' : 'Mark watched'}</span>`;
+    w.dataset.tip = watchedTip(S.watched);
   }
 
   /* menu */
