@@ -83,7 +83,7 @@ export function cardHTML(t: Title, view: ViewId, cx: CardCtx): SafeHtml {
         <a class="btn sm" href="${cx.href(watchPath(t.id, { seconds: t.progress ? ticksToSeconds(t.progress.positionTicks) : undefined }))}">${ic('play')}${t.progress ? 'Resume' : 'Play'}</a>`;
   const strip = isShow ? seasonStrip(t, cx, view === 'list') : html``;
   return html`<a class="hit" href="${cx.href(`/title/${t.id}`)}" aria-label="${t.name}${t.year ? `, ${t.year}` : ''}${seenTxt}">
-    <span class="art ph" ${raw(phAttrs(t.id, t.name))}><img src="${pic(t, wall ? 'Backdrop' : 'Primary', wall ? 640 : 400)}" alt="" loading="lazy">
+    <span class="art ph" ${raw(phAttrs(t.id, t.name))}><img src="${pic(t, wall ? 'Backdrop' : 'Primary', wall ? 640 : 400)}" alt="" loading="lazy" decoding="async">
       ${fresh || (isShow && lane === 'new') ? html`<span class="bdg l">${fresh ? html`<i>New</i>` : ''}${isShow && lane === 'new' ? html`<i>New episodes</i>` : ''}</span>` : ''}
       ${t.is4k || (!isShow && t.played) ? html`<span class="bdg r">${t.is4k ? html`<i class="k">4K</i>` : ''}${!isShow && t.played ? html`<i class="s" title="Seen">${ic('check')}</i>` : ''}</span>` : ''}
       ${!isShow && t.progress ? html`<span class="pbar"><i style="width:${t.progress.percent}%"></i></span>` : ''}
@@ -124,7 +124,7 @@ export function showCardHTML(t: Title, cx: CardCtx): SafeHtml {
   const still = next?.imageTags.primary ? imageUrl(next.id, 'Primary', { maxWidth: 480, tag: next.imageTags.primary }) : pic(t, 'Backdrop', 480);
   const logo = t.imageTags.logo ? imageUrl(t.id, 'Logo', { maxWidth: 360, tag: t.imageTags.logo }) : null;
   return html`<a class="th ph${logo ? ' haslogo' : ''}" href="${cx.href(`/title/${t.id}`)}" aria-label="${t.name} details" ${raw(phAttrs(t.id))}>
-      <img src="${still}" alt="" loading="lazy">${logo ? html`<img class="slg" src="${logo}" alt="" loading="lazy">` : ''}<span class="ph-t">${t.name}</span></a>
+      <img src="${still}" alt="" loading="lazy" decoding="async">${logo ? html`<img class="slg" src="${logo}" alt="" loading="lazy" decoding="async">` : ''}<span class="ph-t">${t.name}</span></a>
     <div class="bd">
       <div class="tt"><h3><a href="${cx.href(`/title/${t.id}`)}">${t.name}</a></h3>${chip}</div>
       <p class="snx">${line}</p>
@@ -144,7 +144,7 @@ export function shelfHTML(set: Collection, cx: CardCtx, inMix: (t: Title) => boo
     <div class="row">${set.items.map((m, i) => {
       const dim = !inMix(m);
       return html`<div class="lc${m.played ? ' seen' : ''}"${dim ? raw(' style="opacity:.4"') : ''}><a class="hit" href="${cx.href(`/title/${m.id}`)}" aria-label="${i + 1}. ${m.name}${m.year ? `, ${m.year}` : ''}${m.played ? ', seen' : ''}${dim ? ', outside your mix' : ''}">
-        <span class="art ph" ${raw(phAttrs(m.id, m.name))}><img src="${pic(m, 'Primary', 300)}" alt="" loading="lazy"><span class="num">${i + 1}</span>
+        <span class="art ph" ${raw(phAttrs(m.id, m.name))}><img src="${pic(m, 'Primary', 300)}" alt="" loading="lazy" decoding="async"><span class="num">${i + 1}</span>
         ${m.played ? html`<span class="bdg r"><i class="s">${ic('check')}</i></span>` : ''}${m.progress ? html`<span class="pbar"><i style="width:${m.progress.percent}%"></i></span>` : ''}</span>
         <span class="cap"><b>${m.name}</b><small>${m.year ?? ''}${m.runtimeMin ? ` · ${runtime(m.runtimeMin)}` : ''}</small></span></a></div>`;
     })}</div>`;

@@ -79,3 +79,6 @@ dialog.nbc::backdrop { background: rgba(8, 6, 4, .6); backdrop-filter: blur(3px)
   .nbc-foot { padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
 }
 
+
+/* the suggestion chips scroll sideways: the right edge fades so a cut-off chip is not the only hint */
+.nbc-foot .moods { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); }

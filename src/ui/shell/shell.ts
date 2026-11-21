@@ -118,7 +118,9 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
     t.className = 'toast';
     t.innerHTML = `${icon(ic).value}<span>${esc(message)}</span>`;
     toasts.append(t);
-    setTimeout(() => { t.classList.add('leaving'); setTimeout(() => t.remove(), 200); }, 3500);
+    const gone = (): void => { if (t.classList.contains('leaving')) return; t.classList.add('leaving'); setTimeout(() => t.remove(), 200); };
+    t.addEventListener('click', gone); // a tap puts it away
+    setTimeout(gone, 3500);
   };
 
   /* search + account */
@@ -126,7 +128,13 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
   const account: AccountMenu = mountAccountMenu(avatarBtn, () => { void backend.signOut(); });
 
   /* rail */
-  q('#skip').addEventListener('click', () => { view.setAttribute('tabindex', '-1'); view.focus(); });
+  // "Skip to content": the page's own heading (or the first thing it asks focus for), scrolled into view
+  q('#skip').addEventListener('click', () => {
+    const target = view.querySelector<HTMLElement>('[data-autofocus], [autofocus]') ?? view.querySelector<HTMLElement>('h1') ?? view;
+    if (!target.hasAttribute('tabindex') && !/^(INPUT|BUTTON|A|SELECT|TEXTAREA)$/.test(target.tagName)) target.setAttribute('tabindex', '-1');
+    target.focus();
+    target.scrollIntoView({ block: 'start' });
+  });
 
   /* tabs slot */
   let tabs: TabsController | null = null;

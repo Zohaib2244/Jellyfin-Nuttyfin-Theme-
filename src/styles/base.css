@@ -104,6 +104,7 @@ svg.px { shape-rendering: crispEdges; flex: none; }
 .toast.leaving { animation: toastout 180ms var(--ease-in) both; }
 @keyframes toastout { to { opacity: 0; transform: translateY(8px); } }
 .toast svg { color: var(--ok); }
+.toast { cursor: pointer; }
 @media (max-width: 760px) { .toasts { bottom: 88px; } }
 
 @media (prefers-reduced-motion: reduce) {

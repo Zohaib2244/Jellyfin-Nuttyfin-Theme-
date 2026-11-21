@@ -34,7 +34,7 @@ export function createChat(ctx: HomeCtx, brain: NutBrain, onChange: () => void =
     <div class="nbc-grab" aria-hidden="true"></div>
     <header class="nbc-head">
       <span class="nbc-face"></span>
-      <div class="nbc-ttl"><h2 id="nbcH">NutBot</h2><small>Picks from your library, and what you can ask for</small></div>
+      <div class="nbc-ttl"><h2 id="nbcH">NutBot</h2><small>Picks something to watch</small></div>
       <button class="btn sm ghost" type="button" data-new aria-label="Start a new chat">${icon('undo').value}<span class="lbl">New chat</span></button>
       <button class="iconbtn" type="button" data-close aria-label="Close chat">${icon('x').value}</button>
     </header>

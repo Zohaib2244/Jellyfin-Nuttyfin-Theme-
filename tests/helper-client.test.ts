@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HelperClient } from '../src/api/helper';
+import { tabStore } from '../src/lib/storage';
 
 const reply = (body: string, status = 200, type = 'application/json'): Response => new Response(body, { status, headers: { 'Content-Type': type } });
 
-afterEach(() => { vi.unstubAllGlobals(); });
+afterEach(() => { vi.unstubAllGlobals(); tabStore.remove('helperDownAt'); });
 
 describe('HelperClient', () => {
   it('feature-detects through /nutfin-api/health and sends the person\'s Jellyfin token', async () => {
@@ -64,5 +65,18 @@ describe('HelperClient', () => {
     await c.deleteExecute({ jellyfinId: 'x', mode: 'jellyfin-only', confirm: 'X' });
     const last = f.mock.calls.at(-1) as unknown as [string, RequestInit];
     expect(JSON.parse(String(last[1].body))).toEqual({ jellyfinId: 'x', mode: 'jellyfin-only', confirm: 'X' }); // no dryRun key: the helper's default (a dry run) applies
+  });
+
+  it('after a failed probe, a fresh page load does not ask again for a while (no 502 line on every visit)', async () => {
+    const f = vi.fn(async () => reply('{"error":"bad gateway"}', 502));
+    vi.stubGlobal('fetch', f);
+    expect(await new HelperClient(() => 't').available()).toBe(false);
+    expect(f).toHaveBeenCalledTimes(1);
+    expect(await new HelperClient(() => 't').available()).toBe(false); // a new page load
+    expect(f).toHaveBeenCalledTimes(1);
+    const again = new HelperClient(() => 't');
+    again.reset(); // sign-in forgets it
+    expect(await again.available()).toBe(false);
+    expect(f).toHaveBeenCalledTimes(2);
   });
 });

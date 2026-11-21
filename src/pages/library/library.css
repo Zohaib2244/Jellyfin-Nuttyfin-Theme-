@@ -263,12 +263,12 @@
   .lib .filterbtn .badge { margin-left: -2px; }
   .lib .resw { grid-template-columns: minmax(0, 1fr) 30px; gap: 8px; }
   .lib .azrail { border-radius: 15px; height: calc(100dvh - var(--top-h) - var(--sumh) - 130px); }
-  .lib .azrail span { font-size: 11px; }
+  .lib .azrail span { font-size: 12px; }
   .lib .bubble { width: 70px; height: 70px; font-size: 40px; }
   .lib .res.v-posters, .lib .resw.norail .res.v-posters { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 10px; }
   .lib .cap b { font-size: 13.5px; } .lib .cap small { font-size: 12px; }
   .lib .bdg { top: 5px; } .lib .bdg.l { left: 5px; } .lib .bdg.r { right: 5px; }
-  .lib .bdg i { font-size: 10.5px; line-height: 17px; padding: 0 5px; }
+  .lib .bdg i { font-size: 12px; line-height: 17px; padding: 0 5px; }
   .lib .res.v-wall { grid-template-columns: minmax(0, 1fr); gap: 10px; }
   .lib .v-list .lc { grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 8px; }
   .lib .v-list .lc .hit { grid-template-columns: 52px minmax(0, 1fr); gap: 12px; }

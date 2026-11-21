@@ -77,6 +77,7 @@ export class Router implements RouterApi {
   private readonly scrollByKey = new Map<string, number>();
   private readonly modules = new Map<RouteDef['load'], Page>();
   private hasContent = false;
+  private focused = false;
 
   constructor(private readonly deps: RouterDeps) {}
 
@@ -198,7 +199,10 @@ export class Router implements RouterApi {
     await this.swap(el, restoreY);
     view.removeAttribute('aria-busy');
     routeDone();
-    if (tabFocus) this.focusSelectedTab(el); else this.focusPage(el);
+    // the very first page of a visit keeps focus at the top of the document, so the first Tab reaches "Skip to content"
+    const firstOfVisit = !this.focused;
+    this.focused = true;
+    if (tabFocus) this.focusSelectedTab(el); else if (!firstOfVisit) this.focusPage(el);
   }
 
   private async swap(el: HTMLElement, restoreY: number | null): Promise<void> {
