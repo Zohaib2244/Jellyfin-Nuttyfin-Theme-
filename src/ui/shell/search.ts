@@ -38,7 +38,13 @@ export function mountSearch(top: HTMLElement, backend: Backend, navigate: (path:
   const listbox = () => panel.querySelector<HTMLElement>('[role="listbox"]');
   const options = () => Array.from(panel.querySelectorAll<HTMLElement>('[role="option"]'));
 
+  // the visible height (a phone keyboard shrinks it) bounds the results panel, which scrolls inside it
+  const fit = () => document.documentElement.style.setProperty('--vvh', `${Math.round(window.visualViewport?.height ?? window.innerHeight)}px`);
+  window.visualViewport?.addEventListener('resize', fit);
+  fit();
+
   function setOpen(open: boolean) {
+    if (open) fit();
     panel.hidden = !open;
     input.setAttribute('aria-expanded', String(open));
     if (!open) { input.removeAttribute('aria-activedescendant'); active = -1; }
