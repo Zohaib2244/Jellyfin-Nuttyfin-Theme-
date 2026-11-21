@@ -31,7 +31,7 @@ svg.px { shape-rendering: crispEdges; flex: none; }
 .ph[data-t]::before { content: attr(data-t); position: absolute; left: 8px; right: 8px; bottom: 8px; font-family: var(--font-px); font-size: 12px; line-height: 1.15; color: rgba(255, 255, 255, .88); text-shadow: 0 1px 0 rgba(0, 0, 0, .45); }
 
 /* ── Buttons, chips, switches ── */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 0 22px; border-radius: var(--r-ctl); border: var(--bw) solid var(--line); background: var(--panel); box-shadow: var(--lift-btn); font-family: var(--font-px); font-size: 16px; letter-spacing: .05em; cursor: pointer; text-decoration: none; transition: transform var(--d-micro) var(--ease), border-color var(--d-micro), box-shadow var(--d-micro); white-space: nowrap; color: var(--text); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 0 22px; border-radius: var(--r-ctl); border: var(--bw) solid var(--line); background: var(--panel); box-shadow: var(--lift-btn); font-family: var(--font-read); font-weight: 700; font-size: 15.5px; letter-spacing: 0; cursor: pointer; text-decoration: none; transition: transform var(--d-micro) var(--ease), border-color var(--d-micro), box-shadow var(--d-micro); white-space: nowrap; color: var(--text); }
 .btn:hover { border-color: var(--accent); }
 .btn:active { transform: translate(2px, 2px); box-shadow: none; }
 .btn:disabled, .btn[aria-disabled="true"] { opacity: .6; cursor: not-allowed; }
