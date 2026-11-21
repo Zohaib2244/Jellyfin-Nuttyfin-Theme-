@@ -1,13 +1,13 @@
 /** Newly Added tab: what's new summary, new films rail, new shows, "On the way" (Seerr requests that are coming). */
-import type { Episode, SeerrRequest, Title } from '../../../api/types';
+import type { DeskRequest, TitleFacts } from '../../../api/desk-types';
+import type { Episode, Title } from '../../../api/types';
 import { parseDate, relativeTime } from '../../../lib/format';
 import { html, type SafeHtml } from '../../../lib/html';
 import { store } from '../../../lib/storage';
 import { icon } from '../../../ui/icons';
 import { nutbot } from '../../../ui/nutbot';
 import { detailsPath, img, ph, posterUrl, seerrPoster, thumbUrl } from '../art';
-import { buildWeek, epLabel, requestLabel } from '../model';
-import { flowDots, statusChip } from '../requestsPanel';
+import { buildWeek, comingRows, epLabel, freshSince, nextLastSeen, seenGate, showNewBanner, type ComingRow, type Fresh } from '../model';
 import { loadInto, quiet, skPosters, skRows, skStrip, tileHead, type TileDef } from '../tile';
 import { clock, runtime } from '../../../lib/format';
 
@@ -21,45 +21,66 @@ const badge = (t: Title, now: Date): SafeHtml => {
   return html`<span class="pday${days > 7 ? ' old' : ''}">${days < 1.5 ? 'New' : ago(t, now)}</span>`;
 };
 
-/* ── summary hero ── */
+/* ── "new since your last visit" banner: only exists when something IS new ── */
+interface HeroData extends Fresh { recent: Title[]; asked: number; fetchedAt: number }
+
 export const newHeroTile: TileDef = {
   id: 'newhero', tab: 'new', title: "What's new", icon: 'spark', place: [1, 1, 12, 3], minH: 0,
   mount(host, ctx) {
-    interface D { fresh: Title[]; recent: Title[]; asked: number; coming: number; since: number; first: boolean }
-    // Leaving Home counts as having seen what is new.
-    ctx.onDispose(() => store.set(LAST_SEEN, Date.now()));
-    loadInto<D>(host, ctx, {
+    // absent until we know something is new, so "all caught up" never flashes a banner and leaves no gap
+    ctx.setPresent('newhero', false);
+    const markSeen = (fetchedAt: number): void => store.set(LAST_SEEN, nextLastSeen(store.get<number>(LAST_SEEN, 0), fetchedAt));
+    loadInto<HeroData>(host, ctx, {
       head: tileHead('newhero', 'spark', "What's new"),
       skeleton: skRows(3),
       padCls: 'nh',
       async fetch() {
-        const stored = store.get<number>(LAST_SEEN, 0);
-        const since = stored || ctx.now().getTime() - 7 * 864e5;
-        const [recent, reqs] = await Promise.all([ctx.data.recent(60), ctx.data.myRequests()]);
-        const fresh = recent.filter(t => { const d = parseDate(t.added); return !!d && d.getTime() > since; });
-        return { fresh, recent, asked: reqs.filter(r => r.state === 'available').length, coming: reqs.filter(r => r.state === 'downloading' || r.state === 'approved').length, since, first: !stored };
+        const fetchedAt = ctx.now().getTime();
+        const [recent, reqs] = await Promise.all([ctx.data.latest(), ctx.data.myDeskRequests()]);
+        const f = freshSince(recent, store.get<number>(LAST_SEEN, 0), fetchedAt);
+        const freshIds = new Set(f.fresh.map(t => t.id));
+        return { ...f, recent, fetchedAt, asked: reqs.filter(r => r.jellyfinId && freshIds.has(r.jellyfinId)).length };
       },
       render(d) {
-        if (!d.recent.length) return null;
-        const name = ctx.user?.name ?? '';
-        return paint(d, name);
+        if (!showNewBanner(d)) {
+          // nothing new: nothing unseen is skipped by moving the last visit up to this look
+          markSeen(d.fetchedAt);
+          return null;
+        }
+        ctx.setPresent('newhero', true);
+        return paint(d, ctx.user?.name ?? '');
       },
-      empty: html`${quiet('Nothing has been added lately. When films and shows land, this page tells you.')}`,
-
+      after(el, d) {
+        // The last visit moves up only once the banner has really been on screen for a moment, so a refresh (or a
+        // quick tab switch) before that keeps the news for next time.
+        const gate = seenGate(() => markSeen(d.fetchedAt));
+        const io = typeof IntersectionObserver === 'undefined' ? null
+          : new IntersectionObserver(es => gate.visible(es.some(e => e.isIntersecting && e.intersectionRatio >= 0.5)), { threshold: [0, 0.5] });
+        io?.observe(el);
+        if (!io) gate.visible(true);
+        const ac = new AbortController();
+        el.addEventListener('click', e => {
+          if (!(e.target as Element).closest('[data-hero-dismiss]')) return;
+          markSeen(d.fetchedAt);
+          ctx.setPresent('newhero', false);
+          document.getElementById('home-panel')?.focus({ preventScroll: true });
+        }, { signal: ac.signal });
+        return () => { ac.abort(); io?.disconnect(); gate.dispose(); };
+      },
     });
 
-    function paint(d: { fresh: Title[]; recent: Title[]; asked: number; coming: number; since: number; first: boolean }, name: string): SafeHtml {
+    function paint(d: HeroData, name: string): SafeHtml {
       const now = ctx.now();
       const n = d.fresh.length;
       const films = d.fresh.filter(t => t.kind === 'movie').length;
-      const newestFilm = (d.fresh.length ? d.fresh : d.recent).find(t => t.kind === 'movie' && t.runtimeMin);
+      const newestFilm = d.fresh.find(t => t.kind === 'movie' && t.runtimeMin);
       const since = d.first ? 'Added in the last week' : `Added since your last visit, ${relativeTime(new Date(d.since), now).toLowerCase()}`;
-      const heading = n ? `${WORDS[n] ?? n} new ${n === 1 ? 'thing' : 'things'} since you were last here${name ? `, ${name}` : ''}` : `You are all caught up${name ? `, ${name}` : ''}`;
-      const fan = (d.fresh.length ? d.fresh : d.recent).filter(t => posterUrl(t)).slice(0, 5);
-      return html`<button class="iconbtn nh-dismiss" type="button" data-dismiss-tile="newhero" aria-label="Dismiss new arrivals banner" title="Dismiss banner">${icon('x')}</button><div class="nhl">
-          <p class="nhwho">${icon('spark')}${n ? since : 'Nothing added since your last visit. Here is the last week.'}</p>
+      const heading = d.first ? `${WORDS[n] ?? n} new ${n === 1 ? 'arrival' : 'arrivals'} this week${name ? `, ${name}` : ''}` : `${WORDS[n] ?? n} new ${n === 1 ? 'thing' : 'things'} since you were last here${name ? `, ${name}` : ''}`;
+      const fan = d.fresh.filter(t => posterUrl(t)).slice(0, 5);
+      return html`<button class="iconbtn nh-dismiss" type="button" data-hero-dismiss aria-label="Dismiss: I have seen what is new" title="Dismiss">${icon('x')}</button><div class="nhl">
+          <p class="nhwho">${icon('spark')}${since}</p>
           <h2 class="nhh" id="h-newhero">${heading}</h2>
-          <p class="nhchips"><span class="nhc">${icon('film')}${films} ${films === 1 ? 'film' : 'films'}</span><span class="nhc">${icon('tv')}${n - films} ${n - films === 1 ? 'show' : 'shows'}</span><span class="nhc">${icon('ask')}${d.asked} you asked for</span><span class="nhc">${icon('dl')}${d.coming} almost here</span></p>
+          <p class="nhchips"><span class="nhc">${icon('film')}${films} ${films === 1 ? 'film' : 'films'}</span><span class="nhc">${icon('tv')}${n - films} ${n - films === 1 ? 'show' : 'shows'}</span>${d.asked ? html`<span class="nhc">${icon('ask')}${d.asked} you asked for</span>` : ''}</p>
           ${newestFilm ? html`<p class="nhbot">${nutbot(40, 'happy')}<span class="bubble">${newestFilm.name} is ${runtime(newestFilm.runtimeMin)}. Start now and you are done by ${clock(new Date(now.getTime() + newestFilm.runtimeMin * 60_000))}.</span></p>` : ''}
         </div>
         <div class="nhfan" aria-hidden="true">${fan.map(t => html`<span class="ph" ${ph(t.id, t.name)}>${img(posterUrl(t, 300))}</span>`)}</div>`;
@@ -134,34 +155,74 @@ export const newShowsTile: TileDef = {
   },
 };
 
-/* ── on the way ── */
+/* ── on the way: this person's own open requests, with the Requests page's honest stages ── */
+const SHOW = 4;
+const factKey = (r: Pick<DeskRequest, 'mediaType' | 'tmdbId'>): string => `${r.mediaType}:${r.tmdbId}`;
+const PILL_ICON = { downloading: 'dl', approved: 'clock', requested: 'hourglass', available: 'layers' } as const;
+
 export const comingTile: TileDef = {
   id: 'coming', tab: 'new', title: 'On the way', icon: 'dl', place: [9, 8, 4, 4], minH: 0,
   mount(host, ctx) {
-    interface D { reqs: SeerrRequest[]; eps: Episode[]; on: boolean }
+    interface D { rows: ComingRow[]; total: number; eps: Episode[]; on: boolean }
     loadInto<D>(host, ctx, {
       head: tileHead('coming', 'dl', 'On the way'),
       skeleton: skRows(4),
       padCls: 'cm',
       async fetch() {
-        const [reqs, upcoming, on] = await Promise.all([ctx.data.myRequests(), ctx.data.upcoming().catch(() => [] as Episode[]), ctx.data.seerrOn()]);
-        const week = buildWeek(upcoming, [], ctx.now().getTime());
-        const eps = week.mode === 'upcoming' ? week.days.flatMap(d => d.episodes).filter(e => new Date(e.premiered ?? 0).getTime() > ctx.now().getTime()).slice(0, 2) : [];
-        const order = ['downloading', 'approved', 'requested'];
-        const coming = reqs.filter(r => order.includes(r.state)).sort((a, b) => order.indexOf(a.state) - order.indexOf(b.state)).slice(0, 3);
-        return { reqs: coming, eps, on };
+        const now = ctx.now();
+        const [on, list, upcoming] = await Promise.all([ctx.data.seerrOn(), ctx.data.myDeskRequests(), ctx.data.upcoming().catch(() => [] as Episode[])]);
+        const seerr = ctx.backend.seerr;
+        const facts = new Map<string, TitleFacts | null>();
+        for (const r of list) facts.set(factKey(r), seerr.cachedFacts(r.mediaType, r.tmdbId));
+        const factsOf = (r: DeskRequest): TitleFacts | null => facts.get(factKey(r)) ?? null;
+        let rows = comingRows(list, factsOf, now);
+        // Release dates and titles for the rows on show only: at most one (cached) Seerr lookup per shown row.
+        const asked = new Set<string>();
+        for (let round = 0; round < 2; round++) {
+          const need = rows.slice(0, SHOW).map(x => x.r).filter(r => !factsOf(r) && !asked.has(factKey(r)));
+          if (!need.length) break;
+          await Promise.all(need.map(async r => {
+            asked.add(factKey(r));
+            facts.set(factKey(r), await seerr.titleFacts(r.mediaType, r.tmdbId, ctx.signal).catch(() => null));
+          }));
+          rows = comingRows(list, factsOf, now);
+        }
+        const shown = rows.slice(0, SHOW).map(x => {
+          const f = factsOf(x.r);
+          return f ? { ...x, r: { ...x.r, title: x.r.title || f.title, posterPath: x.r.posterPath ?? f.posterPath, year: x.r.year ?? f.year } } : x;
+        });
+        const week = buildWeek(upcoming, [], now.getTime());
+        const eps = week.mode === 'upcoming' ? week.days.flatMap(d => d.episodes).filter(e => new Date(e.premiered ?? 0).getTime() > now.getTime()).slice(0, 3) : [];
+        return { rows: shown, total: rows.length, eps, on };
       },
       render(d) {
-        return html`${tileHead('coming', 'dl', 'On the way')}
-          <p class="sub">Films and shows arriving</p>
-          ${d.reqs.length ? d.reqs.map(r => html`<div class="row2"><span class="ph" ${ph(`tmdb${r.tmdbId}`, r.title)}>${img(seerrPoster(r, 'w185'))}</span>
-            <span class="w"><b>${r.title || 'Requested title'}</b><small>${r.state === 'downloading' ? (r.progress != null ? `Processing · ${r.progress}%` : 'Processing') : r.state === 'approved' ? 'Approved · starts soon' : requestLabel(r.state).label}</small>
-              ${r.state === 'downloading' && r.progress != null ? html`<span class="prog" role="progressbar" aria-label="${r.title} downloaded" aria-valuenow="${r.progress}" aria-valuemin="0" aria-valuemax="100"><i style="width:${r.progress}%"></i></span>` : flowDots(r.state)}</span>
-            <span class="cs">${statusChip(r.state)}</span></div>`)
-    : quiet(d.on ? 'Nothing downloading right now. Ask for something in Requests.' : 'Requests are not available right now.')}
-          ${d.eps.length ? html`<p class="sub">New episodes later this week</p>${d.eps.map(e => html`<a class="row2" href="#${detailsPath(e)}"><span class="ph" ${ph(e.seriesId, e.seriesName)}>${img(posterUrl(e, 200))}</span>
-            <span class="w"><b>${e.seriesName}</b><small>${epLabel(e)} · ${new Date(e.premiered ?? 0).toLocaleDateString('en-GB', { weekday: 'long' })}</small></span>${icon('cal')}</a>`)}` : ''}`;
+        const more = d.total > d.rows.length ? `${d.total} open` : '';
+        const head = html`<h2 class="tl" id="h-coming">${icon('dl')}On the way${more ? html`<span class="cnt">${more}</span>` : ''}<span class="more"><a class="linkbtn" href="#/requests">See all requests${icon('next')}</a></span></h2>`;
+        if (!d.on) return html`${head}${quiet('Requests are not available right now. Films and shows you ask for will show up here.')}`;
+        const room = SHOW - d.rows.length;
+        const eps = room >= 2 && d.eps.length ? html`<h3 class="cmh">New episodes later this week</h3>
+          <ul class="cml">${d.eps.slice(0, room - 1).map(e => html`<li><a class="cmr ep" href="#${detailsPath(e)}" aria-label="${e.seriesName}, ${epLabel(e)}, ${dayName(e)}">
+            <span class="ph" ${ph(e.seriesId, e.seriesName)}>${img(posterUrl(e, 200))}</span>
+            <span class="w"><b>${e.seriesName}</b><small>${epLabel(e)} · ${dayName(e)}</small></span>${icon('cal')}</a></li>`)}</ul>` : '';
+        if (!d.rows.length) {
+          return html`${head}<div class="cmempty">${nutbot(44, 'look')}<p><b>Nothing on the way</b><span>Ask for a film or show and you can follow it here until it lands.</span></p>
+            <a class="btn sm" href="#/requests/discover">${icon('search')}Find something on Discover</a></div>${eps}`;
+        }
+        return html`${head}<ul class="cml">${d.rows.map(x => row(x))}</ul>${eps}`;
       },
     });
+
+    function row(x: ComingRow): SafeHtml {
+      const r = x.r;
+      const name = r.title || (r.mediaType === 'tv' ? 'A show you asked for' : 'A film you asked for');
+      const pct = x.stage.id === 'downloading' ? x.stage.percent : undefined;
+      return html`<li><a class="cmr ${x.pill.cls}" href="#/requests?show=${x.stage.group === 'pending' ? 'pending' : 'onway'}" aria-label="${name}: ${x.line}">
+        <span class="ph" ${ph(`tmdb${r.tmdbId}`, name)}>${img(seerrPoster(r, 'w185'))}</span>
+        <span class="w"><b>${name}</b><small>${x.line}</small>
+          ${pct != null ? html`<span class="prog" role="progressbar" aria-label="${name} downloaded" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></span>` : ''}</span>
+        <span class="chip ${x.pill.cls}" aria-hidden="true">${icon(PILL_ICON[x.pill.cls])}${x.pill.text}</span></a></li>`;
+    }
   },
 };
+
+const dayName = (e: Episode): string => new Date(e.premiered ?? 0).toLocaleDateString('en-GB', { weekday: 'long' });

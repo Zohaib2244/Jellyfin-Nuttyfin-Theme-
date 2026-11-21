@@ -32,3 +32,8 @@
 - (21 Nov, later) Brand mark = the "Sticker" play tile (design/icon-variations/round-3/sticker.svg); inline copies follow the colour theme, favicon stays orange.
 - Colour themes: AVN Hub's eight packs (Ember default, Slate, Moss, Plum, Reef, Berry, Circuit, Graphite), each with light and dark, picked in the account menu next to Light/Dark/Auto.
 - Background: a choice of two — Dot grid (default) or Scrolling posters (the tilted wall, drifting slowly; stops under reduced motion). This replaces the "still wall only" line above.
+
+## Owner update — 21 November 2026 (round 4)
+- Home: "New this week" is now "Recently added": always the newest additions whatever their date (never empty unless the library is), a list of up to 9 (small poster, name, "Film/Show · 6 days ago") beside the still tilted collage, no big count; "See all" opens Newly Added.
+- Newly Added banner shows ONLY when something was added since the last visit (first visit: the last 7 days); when nothing is new it is not rendered and the tiles below move up. The last visit is stored only after the banner has been on screen for a moment (a refresh before that keeps the news); the X marks it as seen until something new arrives.
+- Newly Added "On the way": the person's own open requests with the Requests page's stages (one plain status line, a pill in the Requests chip colours, a progress bar only for a real download), "See all requests" to #/requests, an empty state that links to Discover.

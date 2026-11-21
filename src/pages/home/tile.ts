@@ -23,6 +23,8 @@ export interface HomeCtx {
   data: HomeData;
   /** Switch to another Home tab ("See all"). */
   goTab(tab: HomeTab): void;
+  /** Show or leave out a tile of this page (an absent tile takes no space; desktop tiles below it move up). */
+  setPresent(id: string, present: boolean): void;
   onDispose(fn: () => void): void;
   now(): Date;
 }

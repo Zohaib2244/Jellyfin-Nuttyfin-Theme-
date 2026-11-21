@@ -3,6 +3,7 @@
  * so each call is made once and shared. A failed call is forgotten, so a tile's "Try again" really asks again.
  */
 import type { Backend } from '../../api';
+import type { DeskRequest } from '../../api/desk-types';
 import type { CollectionProgress, Episode, MediaItem, SeerrRequest, Title } from '../../api/types';
 import { calendarToEpisodes } from './calendar'; // phase5-7
 import { limitConcurrency } from '../../lib/concurrency';
@@ -33,6 +34,8 @@ export class HomeData {
   recent(days: number, kind?: 'movie' | 'series'): Promise<Title[]> {
     return this.get(`recent:${days}:${kind ?? ''}`, () => this.backend.recentlyAdded({ days, kind, limit: 60 }));
   }
+  /** The newest additions whatever their date (Recently added, and the new-since-last-visit banner). */
+  latest(): Promise<Title[]> { return this.recent(36500); }
   recentEpisodes(): Promise<Episode[]> { return this.get('recentEpisodes', () => this.backend.recentEpisodes({ days: 7, limit: 50 })); }
   /** The helper's Sonarr calendar when the helper is there (it knows shows that are not in the library yet), else Jellyfin's own list. */
   upcoming(): Promise<Episode[]> {
@@ -78,6 +81,10 @@ export class HomeData {
   }
   myRequests(): Promise<SeerrRequest[]> {
     return this.get('myRequests', async () => ((await this.seerrOn()) ? this.backend.seerr.requests({ mine: true, take: 30 }).catch(() => []) : []));
+  }
+  /** This person's own requests with Seerr's raw stage numbers (On the way), no per-row title lookups. */
+  myDeskRequests(): Promise<DeskRequest[]> {
+    return this.get('myDesk', async () => ((await this.seerrOn()) ? (await this.backend.seerr.allRequests({ scope: 'mine', max: 100 }).catch(() => ({ items: [] as DeskRequest[] }))).items : []));
   }
   allRequests(): Promise<SeerrRequest[]> {
     return this.get('allRequests', async () => ((await this.seerrOn()) ? this.backend.seerr.requests({ take: 30 }).catch(() => []) : []));

@@ -42,3 +42,20 @@ export function assertUniqueTiles(all: readonly TileDef[] = TILES): void {
     seen.set(t.id, t.tab);
   }
 }
+
+/**
+ * Desktop grid rows once the `absent` tiles are left out: grid rows that no remaining tile covers close up, so the
+ * tiles below move up and no blank band is left (e.g. Newly Added without its "new since your last visit" banner).
+ */
+export function compactRows(defs: readonly TileDef[], absent: ReadonlySet<string>): Map<string, number> {
+  const present = defs.filter(d => !absent.has(d.id));
+  const used = new Set<number>();
+  for (const d of present) for (let y = d.place[1]; y < d.place[1] + d.place[3]; y++) used.add(y);
+  const out = new Map<string, number>();
+  for (const d of present) {
+    let gaps = 0;
+    for (let y = 1; y < d.place[1]; y++) if (!used.has(y)) gaps++;
+    out.set(d.id, d.place[1] - gaps);
+  }
+  return out;
+}

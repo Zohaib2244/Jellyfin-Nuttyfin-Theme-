@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { TileDef } from '../src/pages/home/tile';
-import { TABS, TILES, assertUniqueTiles, tilesOf } from '../src/pages/home/tiles';
+import { TABS, TILES, assertUniqueTiles, compactRows, tilesOf } from '../src/pages/home/tiles';
 
 describe('tile registry', () => {
   it('every tile belongs to exactly one tab and ids are unique', () => {
@@ -40,5 +40,37 @@ describe('Home layout', () => {
     const top = tilesOf('home').filter(t => t.place[1] === 1);
     expect(top.map(t => t.id)).toEqual(['keep']);
     expect(top[0]?.place[2]).toBe(12);
+  });
+});
+
+describe('Newly Added layout without the banner', () => {
+  it('the tiles below move up when the new-arrivals banner is absent (no blank band)', () => {
+    const defs = tilesOf('new');
+    const all = compactRows(defs, new Set());
+    expect(all.get('newhero')).toBe(1);
+    const without = compactRows(defs, new Set(['newhero']));
+    expect(without.has('newhero')).toBe(false);
+    expect(Math.min(...without.values())).toBe(1);
+    expect(without.get('newfilms')).toBe(1);
+    // the side-by-side pair stays side by side, right under New films
+    const films = defs.find(t => t.id === 'newfilms');
+    expect(without.get('newshows')).toBe(1 + (films?.place[3] ?? 0));
+    expect(without.get('coming')).toBe(without.get('newshows'));
+  });
+  it('compacting never makes tiles overlap', () => {
+    for (const tab of TABS) {
+      const defs = tilesOf(tab.id);
+      for (const gone of defs) {
+        const rows = compactRows(defs, new Set([gone.id]));
+        const cells = new Set<string>();
+        for (const t of defs.filter(d => d.id !== gone.id)) {
+          const r = rows.get(t.id) as number;
+          for (let x = t.place[0]; x < t.place[0] + t.place[2]; x++) for (let y = r; y < r + t.place[3]; y++) {
+            expect(cells.has(`${x},${y}`)).toBe(false);
+            cells.add(`${x},${y}`);
+          }
+        }
+      }
+    }
   });
 });

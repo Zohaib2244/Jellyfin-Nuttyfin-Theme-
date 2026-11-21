@@ -7,15 +7,12 @@
 import './home.css';
 import { html } from '../../lib/html';
 import type { Page } from '../types';
-import { store } from '../../lib/storage';
 import { HomeData } from './data';
 import { TAB_LABEL, type HomeCtx, type HomeTab, type TileDef } from './tile';
-import { TABS, assertUniqueTiles, isTab, tilesOf } from './tiles';
+import { TABS, assertUniqueTiles, compactRows, isTab, tilesOf } from './tiles';
 
 const urlOf = (tab: HomeTab): string => (tab === 'home' ? '#/' : `#/home/${tab}`);
 const reduced = (): boolean => matchMedia('(prefers-reduced-motion: reduce)').matches;
-/** Tiles the person dismissed (e.g. the new-arrivals banner), per user. */
-const HIDDEN = (uid: string): string => `nuttyfin.home.hidden.${uid}`;
 
 const page: Page = {
   title: 'Home',
@@ -40,10 +37,16 @@ const page: Page = {
       backend: pc.backend, router: pc.router, shell: pc.shell, user: pc.user, signal: pc.signal, data,
       onDispose: pc.onDispose, now: () => new Date(),
       goTab: t => select(t, { focus: true }),
+      setPresent: (id, present) => {
+        const sec = sections.get(id);
+        if (!sec || present === !absent.has(id)) return;
+        if (present) { absent.delete(id); delete sec.dataset.absent; } else { absent.add(id); sec.dataset.absent = ''; }
+        layout(sec.dataset.tab as HomeTab);
+      },
     };
 
-    const uid = pc.user?.id ?? 'anon';
-    const hidden = new Set(store.get<string[]>(HIDDEN(uid), []));
+    /** Tiles that have nothing to show right now (e.g. the new-arrivals banner when nothing is new). */
+    const absent = new Set<string>();
 
     /* ── tiles: built per tab on first visit ── */
     const sections = new Map<string, HTMLElement>();
@@ -60,11 +63,9 @@ const page: Page = {
         sec.dataset.tab = def.tab;
         sec.setAttribute('aria-label', def.title);
         sec.style.setProperty('--gc', `${def.place[0]} / span ${def.place[2]}`);
-        sec.style.setProperty('--gr', `${def.place[1]} / span ${def.place[3]}`);
         sec.style.setProperty('--c', String(def.place[2]));
         sec.style.setProperty('--r', String(def.place[3]));
         if (def.minH) sec.style.setProperty('--minh', `${def.minH}px`);
-        if (hidden.has(def.id)) sec.dataset.off = '';
         sec.hidden = def.tab !== tab;
         const tin = document.createElement('div');
         tin.className = 'tin';
@@ -72,6 +73,17 @@ const page: Page = {
         board.append(sec);
         sections.set(def.id, sec);
         safeMount(def, tin);
+      }
+      layout(t);
+    }
+
+    /** Desktop rows: when a tile is absent the rows it leaves empty close up, so the tiles below move up (no gap). */
+    function layout(t: HomeTab): void {
+      const defs = tilesOf(t);
+      const rows = compactRows(defs, absent);
+      for (const def of defs) {
+        const row = rows.get(def.id);
+        if (row !== undefined) sections.get(def.id)?.style.setProperty('--gr', `${row} / span ${def.place[3]}`);
       }
     }
 
@@ -131,15 +143,6 @@ const page: Page = {
 
     // "See all" and similar links inside tiles
     root.addEventListener('click', e => {
-      const dismiss = (e.target as Element).closest<HTMLElement>('[data-dismiss-tile]');
-      if (dismiss?.dataset.dismissTile) {
-        const id = dismiss.dataset.dismissTile;
-        hidden.add(id);
-        store.set(HIDDEN(uid), [...hidden]);
-        const sec = sections.get(id);
-        if (sec) sec.dataset.off = '';
-        return;
-      }
       const b = (e.target as Element).closest<HTMLElement>('[data-tab-link]');
       const id = b?.dataset.tabLink;
       if (b && isTab(id)) { e.preventDefault(); select(id, { focus: true }); }

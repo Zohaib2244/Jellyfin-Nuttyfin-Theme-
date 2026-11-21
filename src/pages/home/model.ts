@@ -1,6 +1,8 @@
 /** Pure view-models for Home tiles (no DOM, no fetching): easy to test. */
 import type { CollectionProgress, Episode, MediaItem, SeerrRequest, Title } from '../../api/types';
-import { runtime } from '../../lib/format';
+import type { DeskRequest, TitleFacts } from '../../api/desk-types';
+import { relativeTime, runtime } from '../../lib/format';
+import { etaText, releaseWait, requestStage, type Stage } from '../requests/stage';
 
 /** "S2 E5" (double episodes: "S1 E1-2"). */
 export function epLabel(e: Episode): string {
@@ -170,4 +172,99 @@ export function requestLabel(state: SeerrRequest['state']): { label: string; sho
     case 'declined': return { label: 'Not this time', short: 'Declined' };
     default: return { label: 'Waiting for a yes', short: 'Requested' };
   }
+}
+
+/* ── Newly Added: the "new since your last visit" banner ── */
+const NEW_DAY = 864e5;
+/** On the very first visit (no stored last visit) the last week counts as new. */
+export const FIRST_VISIT_DAYS = 7;
+
+export interface Fresh {
+  /** ms: things added after this are new */
+  since: number;
+  /** no last visit was stored */
+  first: boolean;
+  /** titles added after `since`, newest first (as given) */
+  fresh: Title[];
+}
+
+/** What is new since the last visit (or, the first time, in the last FIRST_VISIT_DAYS days). */
+export function freshSince(list: readonly Title[], lastSeen: number | null | undefined, now: number): Fresh {
+  const first = !(typeof lastSeen === 'number' && lastSeen > 0);
+  const since = first ? now - FIRST_VISIT_DAYS * NEW_DAY : (lastSeen as number);
+  const fresh = list.filter(t => {
+    const ms = t.added ? new Date(t.added.replace(/(\.\d{3})\d+/, '$1')).getTime() : NaN;
+    return Number.isFinite(ms) && ms > since;
+  });
+  return { since, first, fresh };
+}
+
+/** The banner only exists when something is new: "all caught up" means no banner at all. */
+export const showNewBanner = (f: Fresh): boolean => f.fresh.length > 0;
+
+/**
+ * The last-visit time to store once the banner has really been seen: the time the list was FETCHED (not "now"), so
+ * anything added while the page was open still counts as new next time. Never moves backwards.
+ */
+export const nextLastSeen = (prev: number | null | undefined, fetchedAt: number): number => Math.max(prev ?? 0, fetchedAt);
+
+/**
+ * Calls `onSeen` once the banner has been on screen for `minMs` in one go. `visible(false)` (scrolled away, tab
+ * switched, dismissed before it was read) cancels the wait. A refresh before that leaves the last visit alone.
+ */
+export function seenGate(onSeen: () => void, minMs = 1500): { visible(on: boolean): void; dispose(): void; readonly done: boolean } {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let done = false;
+  const stop = (): void => { if (timer !== undefined) clearTimeout(timer); timer = undefined; };
+  return {
+    visible(on) {
+      if (done) return;
+      if (!on) { stop(); return; }
+      if (timer !== undefined) return;
+      timer = setTimeout(() => { timer = undefined; done = true; onSeen(); }, minMs);
+    },
+    dispose: stop,
+    get done() { return done; },
+  };
+}
+
+/* ── Newly Added: "On the way" (the person's own open requests, with the Requests page's honest stages) ── */
+export interface ComingRow {
+  r: DeskRequest;
+  stage: Stage;
+  /** one plain status line: "Comes out 4 March", "Searching for a copy", "Downloading · 64% · about 20 min left" */
+  line: string;
+  /** small coloured pill, same colours as the Requests page chips */
+  pill: { cls: 'downloading' | 'approved' | 'requested' | 'available'; text: string };
+  /** sort key: downloading, dated releases (soonest first), in cinemas, searching, partly ready, needs a look, asked */
+  rank: number;
+}
+
+const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
+
+/** One request as an "On the way" row; null when it is not on the way (in the library, removed or declined). */
+export function comingRow(r: DeskRequest, facts: TitleFacts | null | undefined, now: Date): ComingRow | null {
+  const stage = requestStage(r, facts, now);
+  switch (stage.id) {
+    case 'downloading': {
+      const parts = ['Downloading', stage.percent != null ? `${stage.percent}%` : '', etaText(stage.eta, now)].filter(Boolean);
+      return { r, stage, line: parts.join(' · '), pill: { cls: 'downloading', text: 'Downloading' }, rank: 0 };
+    }
+    case 'partial': return { r, stage, line: stage.line, pill: { cls: 'available', text: 'Partly ready' }, rank: 4 };
+    case 'waiting': {
+      const wait = releaseWait(r.mediaType, facts, r.seasons, now);
+      if (wait?.date) return { r, stage, line: cap(wait.text), pill: { cls: 'approved', text: stage.short }, rank: 1 };
+      if (wait) return { r, stage, line: cap(wait.text), pill: { cls: 'approved', text: 'In cinemas' }, rank: 2 };
+      return { r, stage, line: facts ? 'Searching for a copy' : 'Approved · waiting to download', pill: { cls: 'approved', text: 'Searching' }, rank: 3 };
+    }
+    case 'failed': return { r, stage, line: 'Could not be sent to the downloader · the owner will look', pill: { cls: 'requested', text: 'Needs a look' }, rank: 5 };
+    case 'requested': return { r, stage, line: `Waiting for a yes · asked ${relativeTime(r.createdAt, now).toLowerCase()}`, pill: { cls: 'requested', text: 'Requested' }, rank: 6 };
+    default: return null;
+  }
+}
+
+/** Every open request as rows, best first (ties: the soonest release, then the newest request). */
+export function comingRows(list: readonly DeskRequest[], factsOf: (r: DeskRequest) => TitleFacts | null | undefined, now: Date): ComingRow[] {
+  return list.map(r => comingRow(r, factsOf(r), now)).filter((x): x is ComingRow => !!x)
+    .sort((a, b) => a.rank - b.rank || (a.stage.waitsFor ?? '').localeCompare(b.stage.waitsFor ?? '') || b.r.createdAt.localeCompare(a.r.createdAt));
 }
