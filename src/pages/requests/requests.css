@@ -413,3 +413,6 @@
   .rq .rq-seg button { padding: 0 13px; }
   .rq .rq-bfilt { padding: 0 12px; }
 }
+
+/* the floating "Ask NutBot" button sits bottom-right: keep the last rows and rails clear of it */
+.rq { padding-bottom: 84px; }
