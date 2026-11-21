@@ -136,10 +136,10 @@ body[data-shell="none"] main { max-width: none; padding: 0; }
 /* ── Phone ── */
 @media (max-width: 760px) {
   body { padding-left: 0; }
-  .top { grid-template-columns: auto minmax(0, 1fr) auto auto auto auto; grid-template-areas: "brand . qopen bot theme acct" "tabs tabs tabs tabs tabs tabs"; grid-template-rows: var(--top-h) auto; padding: 0 12px; column-gap: 8px; }
+  .top { grid-template-columns: auto minmax(0, 1fr) auto auto auto auto; grid-template-areas: "brand . qopen bot theme acct"; grid-template-rows: var(--top-h); padding: 0 12px; column-gap: 8px; }
   .brand { display: flex; }
   .toptabs:empty { display: none; }
-  .toptabs { margin: 0 -12px; padding: 0 4px 0 12px; border-top: 1px solid var(--line); }
+  .toptabs { margin: 0; padding: 0 4px 0 16px; background: var(--bg); border-bottom: 1px solid var(--line); } /* sits in the page flow under the bar (see placeTabs in shell.ts) */
   .toptabs .section-nav { gap: 0; scroll-padding-inline: 24px; }
   .toptabs .section-nav [role="tab"] { min-height: 48px; font-size: 14.5px; }
   .toptabs .section-nav [role="tab"]:first-child { margin-left: 0; }

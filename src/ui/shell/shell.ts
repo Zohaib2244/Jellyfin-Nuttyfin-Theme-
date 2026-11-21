@@ -72,6 +72,15 @@ export function mountShell({ backend, navigate }: ShellOptions): Shell {
   const view = q('#view');
   const top = q('#top');
   const tabsSlot = q('#toptabs');
+  /* On phones the section-tab strip sits UNDER the sticky top bar and scrolls away with the page (108px of fixed chrome was a
+     fifth of a small screen); everywhere else it shares the bar's row with the search. One element, moved when the width changes. */
+  const phone = matchMedia('(max-width: 760px)');
+  const placeTabs = (): void => {
+    if (phone.matches) { if (tabsSlot.parentElement === top) top.after(tabsSlot); }
+    else if (tabsSlot.parentElement !== top) top.insertBefore(tabsSlot, top.children[1] ?? null);
+  };
+  placeTabs();
+  phone.addEventListener('change', placeTabs);
   const avatarBtn = q<HTMLButtonElement>('#avatarBtn');
   const themeSw = q<HTMLButtonElement>('#themeSw');
   const toasts = q('#toasts');
