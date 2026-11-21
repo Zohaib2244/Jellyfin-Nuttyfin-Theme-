@@ -113,7 +113,6 @@ export function mountAccountMenu(trigger: HTMLButtonElement, onSignOut: () => vo
         <div class="pm-sub"><button type="button" class="iconbtn" data-go="main" aria-label="Back">${icon('back')}</button><h2>Settings</h2></div>
         <nav class="pm-links" aria-label="Settings">${SETTINGS.filter(l => !l.admin || u.isAdmin).map(l =>
           html`<a href="${l.href(u)}" target="_blank" rel="noopener">${icon(l.ic)}<span>${l.label}<small>${l.hint}</small></span>${icon('ext')}</a>`)}</nav>
-        <p class="pm-note">These open Jellyfin's own settings pages in a new tab.</p>
       </section>`);
     document.body.append(menu);
     trigger.setAttribute('aria-expanded', 'true');

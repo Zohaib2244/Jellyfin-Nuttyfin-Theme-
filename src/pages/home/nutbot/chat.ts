@@ -46,7 +46,6 @@ export function createChat(ctx: HomeCtx, brain: NutBrain, onChange: () => void =
         <input id="nbcIn" type="text" maxlength="160" enterkeyhint="send" placeholder="Tell NutBot, like: funny but under 2 hours">
         <button class="send" type="submit" aria-label="Send to NutBot">${icon('send').value}</button>
       </form>
-      <p class="nbc-fine">NutBot only looks at this library and what you can request.</p>
     </div>`;
   document.body.append(dlg);
 

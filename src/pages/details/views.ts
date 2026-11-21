@@ -55,7 +55,7 @@ export function howPanel(p: PlayState, a: Assessment, o: { owner: boolean; headi
       <label><span class="lbl">Sound</span><span class="select"><select data-pick="audio" id="pickAudio" aria-label="Sound">${(v?.audio ?? []).map(t => html`<option value="${t.index}" ${t.index === p.audio?.index ? raw('selected') : ''}>${audioShort(t)}</option>`)}${v?.audio.length ? '' : html`<option value="-1">No sound info</option>`}</select>${ic('down')}</span></label>
       <label><span class="lbl">Subtitles</span><span class="select"><select data-pick="sub" id="pickSub" aria-label="Subtitles"><option value="-1" ${p.sub < 0 ? raw('selected') : ''}>Off</option>${(v?.subtitles ?? []).map(s => html`<option value="${s.index}" ${s.index === p.sub ? raw('selected') : ''}>${s.label}</option>`)}</select>${ic('down')}</span></label>
     </div>
-    ${o.owner ? html`<details class="why"><summary>${ic('info')}Details for the owner</summary><div>${a.tech || 'No technical details'}</div></details>` : ''}
+    ${o.owner ? html`<details class="why"><summary>${ic('info')}Technical details</summary><div>${a.tech || 'No technical details'}</div></details>` : ''}
     ${o.hasChapters ? html`<button class="linkbtn" type="button" data-howchap>${ic('list')}Start from a chapter</button>` : ''}
     <p class="saved">${ic('check')}<span>${p.remembered ? 'Remembered for this title on this device.' : 'Change anything and Nuttyfin remembers it for this title on this device.'}</span>${p.remembered ? html`<button class="linkbtn" type="button" data-howreset>Back to the usual</button>` : ''}</p>
   </div>`;
@@ -148,7 +148,7 @@ export function hero(m: HeroModel, c: Ctx): SafeHtml {
               <button class="ibtn" type="button" id="moreBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="moreMenu" aria-label="More" data-tip="More">${ic('dots')}</button>
               <div class="menu" id="moreMenu" role="menu" aria-label="More" hidden>
                 <button type="button" role="menuitem" data-report>${ic('flag')}Report a problem</button>
-                ${m.owner ? html`<hr><div class="who">Only you see this</div><button type="button" role="menuitem" class="danger" data-remove>${ic('trash')}Remove...</button>` : ''}
+                ${m.owner ? html`<hr><button type="button" role="menuitem" class="danger" data-remove>${ic('trash')}Remove...</button>` : ''}
               </div>
             </div>
           </div>
@@ -299,17 +299,9 @@ export function aboutSection(m: AboutModel): SafeHtml {
       <div class="panel"><h3>Something wrong with it?</h3><div class="reportline"><span>${m.owner ? "Won't play, wrong subtitles, bad sound? Log it so you remember to fix it." : `Won't play, wrong subtitles, bad sound? Tell ${m.ownerName} in two taps.`}</span><button class="btn sm" type="button" data-report>${ic('flag')}Report a problem</button></div></div>
       ${rows.length ? html`<div class="panel"><h3>Details</h3><dl class="kv">${rows.map(([k, v]) => html`<dt>${k}</dt><dd>${v}</dd>`)}</dl></div>` : ''}
     </div>
-    ${m.owner ? html`<div class="panel ownercard" aria-labelledby="h-own"><h3 id="h-own">${ic('server')}On the server <span class="chip">${ic('lock')}Only you see this</span></h3>
+    ${m.owner ? html`<div class="panel ownercard" aria-labelledby="h-own"><h3 id="h-own">${ic('server')}On the server</h3>
       <div class="oc"><ul class="files">${files.length ? files.map(f => html`<li><b>${f.name}</b><span class="sz">${f.sz}</span><code>${f.meta}</code></li>`) : html`<li><b>${t.kind === 'series' ? 'Episodes on the server' : 'No file details'}</b></li>`}</ul>
-      <div><div class="ownfacts"><span>${ic('drive')}Removing here deletes the file from the media drive. Radarr, Sonarr and qBittorrent are not touched yet.</span></div>
-      <div><button class="btn sm danger out" type="button" data-remove>${ic('trash')}Remove...</button></div></div></div></div>` : ''}</section>`;
-}
-
-export function footnote(): SafeHtml {
-  return html`<aside class="foot" aria-labelledby="h-how"><div>${ic('server')}</div><div>
-    <h3 id="h-how">How Remove works (only you see this)</h3>
-    <p>For now, Remove asks Jellyfin to delete the title and its file. Removing it from Radarr or Sonarr, and deleting the release in qBittorrent, needs a small Nuttyfin helper service on the server that holds those keys. Until that exists those choices are shown but switched off.</p>
-  </div></aside>`;
+      <div><div><button class="btn sm danger out" type="button" data-remove>${ic('trash')}Remove...</button></div></div></div></div>` : ''}</section>`;
 }
 
 /* ── more like this ── */

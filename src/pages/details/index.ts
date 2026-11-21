@@ -25,7 +25,7 @@ import { assess, bestVersion, browserCanPlay, defaultAudio, defaultSubtitle, typ
 import { groupSeasons, pickTarget, validPrefs, type PlayPrefs } from './target';
 import { pickTrailer } from './trailer';
 import {
-  aboutSection, castSection, chaptersSection, endsAtText, episodesSection, footnote, guestSection, hero, howPanel,
+  aboutSection, castSection, chaptersSection, endsAtText, episodesSection, guestSection, hero, howPanel,
   moreSection, playExtra, playRow, versionSeg, subLabel, audioShort, favTip, watchedTip, type HeroModel, type PlayState,
 } from './views';
 
@@ -231,7 +231,6 @@ async function render(ctx: PageContext): Promise<HTMLElement> {
     if (isSeries) parts.push(guestSection(groups().find(g => g.number === season)?.eps ?? [], season));
     parts.push(aboutSection({ title: main, people: main.people ?? [], versions: isSeries ? [] : versions(), owner, ownerName: OWNER_NAME }));
     parts.push(moreSection(similar, isSeries, cx, main));
-    if (owner) parts.push(footnote());
     q('#below').innerHTML = parts.map(p => p.value).join('');
   }
 
