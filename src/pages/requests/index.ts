@@ -50,8 +50,9 @@ function mount(root: HTMLElement, ctx: PageContext, caps: SeerrCapabilities): vo
   let quota: SeerrQuota | null = null;
 
   root.innerHTML = html`
-    <header class="rq-head">
-      <div><h1 class="page-h" data-autofocus tabindex="-1" id="rqh1">Requests</h1><p class="page-sub" id="rqsub"></p></div>
+    <header class="page-head">
+      <h1 class="sr" data-autofocus tabindex="-1" id="rqh1">Requests</h1>
+      <p class="page-sub" id="rqsub"></p>
       <p class="rq-quotas" id="rqquota" aria-label="Your request allowance"></p>
     </header>
     <div id="rq-panel" role="tabpanel"></div>`.value;
@@ -103,6 +104,7 @@ function mount(root: HTMLElement, ctx: PageContext, caps: SeerrCapabilities): vo
 
   function show(): void {
     (root.querySelector('#rqsub') as HTMLElement).textContent = SUB[tab];
+    (root.querySelector('#rqh1') as HTMLElement).textContent = tab === 'discover' ? 'Discover' : 'Requests'; // the tab names the page; the heading is for screen readers
     panel.setAttribute('aria-labelledby', `tab-${tab}`);
     panel.dataset.tab = tab;
     panel.innerHTML = '';

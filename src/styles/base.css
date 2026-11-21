@@ -80,6 +80,11 @@ svg.px { shape-rendering: crispEdges; flex: none; }
 .page-h { margin: 0 0 6px; font-family: var(--font-read); font-weight: 700; font-size: clamp(26px, 3.4vw, 36px); letter-spacing: -.02em; line-height: 1.15; }
 .page-h:focus { outline: none; }
 .page-sub { margin: 0 0 20px; font-family: var(--font-read); color: var(--muted); font-size: 16px; }
+/* The ONE page header: the section tabs in the top bar name the page, so this is just the lede line (plus an optional
+   aside such as chips on the right). The h1 stays in the DOM, screen-reader only. Used by Library and Requests. */
+.page-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 20px; min-height: 36px; margin: 0 0 16px; }
+.page-head .page-sub { margin: 0; max-width: 62ch; font-size: 17px; line-height: 1.35; }
+.page-head .page-sub b { color: var(--text); }
 .empty { padding: 32px 20px; text-align: center; font-family: var(--font-read); color: var(--muted); border: var(--bw) dashed var(--line); border-radius: var(--r-card); }
 .empty b { display: block; color: var(--text); font-size: 18px; margin-bottom: 4px; }
 

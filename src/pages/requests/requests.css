@@ -7,10 +7,8 @@
 @keyframes rq-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .rq *, .dialog.rq-dlg * { animation: none !important; } }
 
-/* ── header ── */
-.rq .rq-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 6px 20px; }
-.rq .rq-head .page-sub { margin-bottom: 14px; max-width: 62ch; }
-.rq .rq-quotas { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+/* ── header (the shared .page-head in base.css; only the quota chips are Requests' own) ── */
+.rq .rq-quotas { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; }
 .rq .rq-quotas:empty { display: none; }
 .rq .chip.info { color: var(--info); background: var(--info-soft); }
 .rq .chip.declined, .dialog.rq-dlg .chip.declined { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, var(--panel)); }
