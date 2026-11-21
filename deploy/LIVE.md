@@ -55,3 +55,4 @@ To roll back: point `current` at the previous release folder (`sudo ln -sfn rele
 
 Follow-up release 20261121-175252-613cc57: Details "Audio & subtitles" card (no popover), player seek/volume pill at the top, spinner/Paused state reconciled with the video.
 Release 20261121-180049-0f18720: player applies the saved sound/subtitle choice wherever playback starts and remembers in-player changes; panel height transitions.
+Release 20261121-185905-5e8ddf5: pause card trimmed, volume level bar.
