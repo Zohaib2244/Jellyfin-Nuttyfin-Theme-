@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { ApiError, type Http } from '../src/api/http';
 import { browseParams, SeerrDesk } from '../src/api/seerr-desk';
 import {
-  activeFilters, browseTitle, clearFilters, emptyBrowse, logoUrl, NETWORKS, parseBrowse, serialiseBrowse, STUDIOS, switchType, type BrowseState,
+  activeFilters, browseTitle, clearFilters, countText, emptyBrowse, logoUrl, NETWORKS, parseBrowse, serialiseBrowse, STUDIOS, switchType, yearProblem, type BrowseState,
 } from '../src/pages/requests/browse-model';
 
 const q = (s: string): URLSearchParams => new URLSearchParams(s);
@@ -132,5 +132,27 @@ describe('Seerr browse query (verified params only)', () => {
     expect(calls[0]).toMatchObject({ path: '/discover/tv', query: { network: 213, sortBy: 'popularity.desc', page: 1 } });
     expect(await desk.genreList('tv')).toEqual([{ id: 35, name: 'Comedy' }]);
     await expect(desk.browse(emptyBrowse('movie'))).rejects.toBeInstanceOf(ApiError);
+  });
+});
+
+describe('year range check', () => {
+  it('explains an end year before the start year instead of guessing', () => {
+    expect(yearProblem(2025, 2020)).toMatch(/end year is before the start year/);
+    expect(yearProblem(2020, 2025)).toBeNull();
+    expect(yearProblem(2020, 2020)).toBeNull();
+    expect(yearProblem(2025, undefined)).toBeNull();
+    expect(yearProblem(undefined, 2020)).toBeNull();
+  });
+});
+
+describe('result count wording', () => {
+  const films = { one: 'film', many: 'films' };
+  it('heading and button forms', () => {
+    expect(countText(undefined, films)).toBe('');
+    expect(countText(0, films)).toBe('No films');
+    expect(countText(1, films)).toBe('1 film');
+    expect(countText(1234, films)).toBe('1,234 films');
+    expect(countText(20_000, films)).toBe('Over 10,000 films');
+    expect(countText(20_000, films, true)).toBe('10,000+ films');
   });
 });

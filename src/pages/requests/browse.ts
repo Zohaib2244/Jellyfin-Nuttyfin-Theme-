@@ -12,7 +12,7 @@ import { nutbot } from '../../ui/nutbot';
 import { openDialog, type DialogHandle } from '../common/dialog';
 import { ic } from '../common/icons';
 import type { PageContext } from '../types';
-import { activeFilters, browseTitle, clearFilters, SORTS, serialiseBrowse, switchType, type BrowseState } from './browse-model';
+import { activeFilters, browseTitle, clearFilters, countText, SORTS, serialiseBrowse, switchType, yearProblem, type BrowseState } from './browse-model';
 import { posterTile, skeletonGrid } from './ui';
 
 export interface BrowseEnv {
@@ -21,6 +21,8 @@ export interface BrowseEnv {
   open(t: { tmdbId: number; mediaType: 'movie' | 'tv'; title?: string }): void;
   /** leave the Browse view (back to Discover's front page) */
   back(): void;
+  /** the line under the tab names: what this view is for (null = the tab's usual line) */
+  lede?(text: string | null): void;
 }
 export interface BrowsePanel { refresh(): void; dispose(): void }
 
@@ -40,11 +42,11 @@ export function mountBrowse(el: HTMLElement, env: BrowseEnv): BrowsePanel {
   let alive = true;
   let token = 0;
   let sheet: DialogHandle | null = null;
+  let yearErr: string | null = null;
   const thisYear = new Date().getFullYear();
 
   el.innerHTML = html`<div class="rq-browse">
     <div class="rq-bhead">
-      <button type="button" class="btn sm" id="rqbback">${icon('back')}Discover</button>
       <div class="rq-bt"><h2 class="rq-btitle" id="rqbh" tabindex="-1"></h2><p class="rq-bcount" id="rqbcount" aria-live="polite"></p></div>
     </div>
     <div class="rq-bbar" id="rqbbar" role="region" aria-label="Filters"></div>
@@ -74,6 +76,7 @@ export function mountBrowse(el: HTMLElement, env: BrowseEnv): BrowsePanel {
     <label class="sr" for="${p}from">From year</label><input id="${p}from" type="number" inputmode="numeric" data-f="from" min="1900" max="${thisYear + 5}" placeholder="From" value="${st.fromYear ?? ''}">
     <span aria-hidden="true">to</span>
     <label class="sr" for="${p}to">To year</label><input id="${p}to" type="number" inputmode="numeric" data-f="to" min="1900" max="${thisYear + 5}" placeholder="To" value="${st.toYear ?? ''}">
+    <p class="rq-yerr" role="alert" ${yearErr ? '' : raw('hidden')}>${yearErr ?? ''}</p>
   </fieldset>`;
 
   const hideBox = (id: string): SafeHtml => html`<label class="rq-bhide" for="${id}"><input id="${id}" type="checkbox" data-f="hide" ${st.hide ? raw('checked') : ''}><span>Hide what is in the library</span></label>`;
@@ -107,13 +110,14 @@ export function mountBrowse(el: HTMLElement, env: BrowseEnv): BrowsePanel {
       <div class="rq-fblk"><span class="lbl">Genres</span>${genreChips()}</div>
       ${years('rqf')}
       ${hideBox('rqfhide')}
-      <div class="acts">${filterCount() ? html`<button type="button" class="btn" data-f="clear">Clear all</button>` : ''}<button type="button" class="btn primary" data-close>Show ${countWords() || 'results'}</button></div>
+      <div class="acts">${filterCount() ? html`<button type="button" class="btn" data-f="clear">Clear all</button>` : ''}<button type="button" class="btn primary" data-close>Show ${countWords(true) || 'results'}</button></div>
     </div>`.value;
     if (refocus) sheet.body.querySelector<HTMLElement>(refocus)?.focus({ preventScroll: true });
   }
 
   function paintHead(): void {
     const title = browseTitle(st, names);
+    env.lede?.(`Browse ${st.mediaType === 'tv' ? 'shows' : 'films'} and request what is not in the library yet.`);
     (el.querySelector('#rqbh') as HTMLElement).textContent = title;
     ctx.shell.setTitle(`${title} · Discover`);
     (el.querySelector('#rqbcount') as HTMLElement).textContent = res.loading && !res.items.length ? '' : countWords();
@@ -124,12 +128,10 @@ export function mountBrowse(el: HTMLElement, env: BrowseEnv): BrowsePanel {
   }
 
   const shown = (): DiscoverItem[] => (st.hide ? res.items.filter(i => !(i.state === 'available' && !i.partial)) : res.items);
-  function countWords(): string {
-    const noun = st.mediaType === 'tv' ? 'shows' : 'films';
-    if (res.total == null) return '';
-    if (res.total === 0) return `No ${noun}`;
-    const n = res.total >= 10_000 ? 'Over 10,000' : res.total.toLocaleString('en-GB');
-    return `${n} ${res.total === 1 ? noun.slice(0, -1) : noun}${st.hide ? ', minus what is in the library' : ''}`;
+  function countWords(short = false): string {
+    const noun = st.mediaType === 'tv' ? { one: 'show', many: 'shows' } : { one: 'film', many: 'films' };
+    const text = countText(res.total, noun, short);
+    return text && res.total ? `${text}${st.hide && !short ? ', minus what is in the library' : ''}` : text;
   }
 
   /* ── results ── */
@@ -207,6 +209,13 @@ export function mountBrowse(el: HTMLElement, env: BrowseEnv): BrowsePanel {
     void load(false);
   }
 
+  function showYearError(): void {
+    for (const r of [bar, sheet?.body].filter((x): x is HTMLElement => !!x)) {
+      r.querySelectorAll<HTMLElement>('.rq-yerr').forEach(m => { m.hidden = !yearErr; m.textContent = yearErr ?? ''; });
+      r.querySelectorAll<HTMLInputElement>('input[data-f="from"], input[data-f="to"]').forEach(x => { if (yearErr) x.setAttribute('aria-invalid', 'true'); else x.removeAttribute('aria-invalid'); });
+    }
+  }
+
   function syncFields(): void {
     const roots = [bar, sheet?.body].filter((x): x is HTMLElement => !!x);
     for (const r of roots) {
@@ -281,7 +290,6 @@ export function mountBrowse(el: HTMLElement, env: BrowseEnv): BrowsePanel {
     if (t.closest('#rqbfilt')) { openSheet(); return; }
     if (t.closest('#rqbmore')) { void load(true, true); return; }
     if (t.closest('#rqbretry')) { void load(false); return; }
-    if (t.closest('#rqbback')) env.back();
   }
 
   function onChange(e: Event): void {
@@ -295,8 +303,11 @@ export function mountBrowse(el: HTMLElement, env: BrowseEnv): BrowsePanel {
       const n = raw === '' ? undefined : Number(raw);
       if (n != null && (!Number.isInteger(n) || n < 1900 || n > thisYear + 5)) { t.setCustomValidity(`Enter a year between 1900 and ${thisYear + 5}`); t.reportValidity(); return; }
       t.setCustomValidity('');
-      let next: BrowseState = { ...st, [f === 'from' ? 'fromYear' : 'toYear']: n };
-      if (next.fromYear && next.toYear && next.fromYear > next.toYear) next = { ...next, fromYear: next.toYear, toYear: next.fromYear };
+      const next: BrowseState = { ...st, [f === 'from' ? 'fromYear' : 'toYear']: n };
+      // an impossible range is explained, not guessed at: the list stays as it was until the years make sense
+      yearErr = yearProblem(next.fromYear, next.toYear);
+      showYearError();
+      if (yearErr) return;
       apply(next, true);
     }
   }
@@ -323,6 +334,6 @@ export function mountBrowse(el: HTMLElement, env: BrowseEnv): BrowsePanel {
   return {
     // after a request: page 1 is reloaded so its status marks are right; deeper in the list, keep the reader's place
     refresh(): void { if (res.page <= 1) void load(false); },
-    dispose(): void { alive = false; io.disconnect(); window.removeEventListener('resize', stick); sheet?.close(); },
+    dispose(): void { alive = false; io.disconnect(); window.removeEventListener('resize', stick); sheet?.close(); env.lede?.(null); },
   };
 }

@@ -38,6 +38,8 @@ export interface DiscoverEnv {
   ctx: PageContext;
   open(t: { tmdbId: number; mediaType: 'movie' | 'tv'; title?: string }): void;
   setQuery(q: Record<string, string | null>): void;
+  /** the line under the tab names (null = the tab's usual line) */
+  lede?(text: string | null): void;
 }
 export interface DiscoverPanel { refresh(): void; dispose(): void }
 
@@ -47,7 +49,7 @@ export function mountDiscover(el: HTMLElement, env: DiscoverEnv): DiscoverPanel 
   const browsing = parseBrowse(env.ctx.query);
   if (browsing) {
     const panel: BrowsePanel = mountBrowse(el, {
-      ctx: env.ctx, state: browsing, open: env.open,
+      ctx: env.ctx, state: browsing, open: env.open, ...(env.lede ? { lede: env.lede } : {}),
       back: () => { if (cameFromHome) { cameFromHome = false; history.back(); } else env.ctx.router.navigate('/requests/discover', { replace: true }); },
     });
     return panel;
@@ -76,8 +78,8 @@ function mountHome(el: HTMLElement, env: DiscoverEnv): DiscoverPanel {
 
   el.innerHTML = html`
     <form class="rq-form" role="search" autocomplete="off">
-      <label class="sr" for="rqq">Search films and shows to request</label>${icon('search')}
-      <input id="rqq" type="search" maxlength="80" placeholder="Search films and shows" value="${st.query}">
+      <label class="sr" for="rqq">Find something to request</label>${icon('search')}
+      <input id="rqq" type="search" maxlength="80" placeholder="Find something to request" value="${st.query}">
       <button class="btn primary sm" type="submit">${icon('search')}<span class="lbl">Search</span></button>
     </form>
     <div class="rq-browseall"><button type="button" class="btn sm" data-browse="movie">${ic('sliders')}Browse all films</button><button type="button" class="btn sm" data-browse="tv">${ic('sliders')}Browse all shows</button></div>

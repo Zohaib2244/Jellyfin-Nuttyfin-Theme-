@@ -160,5 +160,18 @@ export function activeFilters(s: BrowseState, names: ReadonlyMap<number, string>
   return out;
 }
 
+/** A year range that cannot match anything: said in plain words, never silently swapped. null when the range is fine. */
+export function yearProblem(from: number | undefined, to: number | undefined): string | null {
+  return from && to && from > to ? 'The end year is before the start year. Change one of them to see results.' : null;
+}
+
+/** "Over 10,000" is for a heading; on a button it reads better as "10,000+". */
+export function countText(total: number | undefined, noun: { one: string; many: string }, short = false): string {
+  if (total == null) return '';
+  if (total === 0) return `No ${noun.many}`;
+  const n = total >= 10_000 ? (short ? '10,000+' : 'Over 10,000') : total.toLocaleString('en-GB');
+  return `${n} ${total === 1 ? noun.one : noun.many}`;
+}
+
 /** Everything off except the type (and sort, which is a choice rather than a filter). */
 export const clearFilters = (s: BrowseState): BrowseState => ({ ...emptyBrowse(s.mediaType), sort: s.sort });

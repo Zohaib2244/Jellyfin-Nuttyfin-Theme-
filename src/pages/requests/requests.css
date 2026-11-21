@@ -212,7 +212,7 @@
 
 /* Films · Shows */
 .rq .rq-seg, .dialog.rq-dlg .rq-seg { display: inline-flex; padding: 3px; gap: 3px; border-radius: 999px; border: var(--bw) solid var(--line); background: var(--nested); }
-.rq .rq-seg button { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: none; cursor: pointer; font: 700 14.5px var(--font-read); color: var(--muted); }
+.rq .rq-seg button { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 16px; border: 0; border-radius: 999px; background: none; cursor: pointer; font: 700 14.5px var(--font-read); color: var(--muted); }
 .rq .rq-seg button[aria-checked="true"] { background: var(--accent); color: var(--accent-ink); }
 .rq .rq-seg button:not([aria-checked="true"]):hover { color: var(--text); }
 .rq .rq-seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -225,7 +225,10 @@
   min-height: 44px; padding: 0 12px; border-radius: var(--r-ctl); border: var(--bw) solid var(--line); background: var(--nested); color: var(--text); font: 700 14.5px var(--font-read); }
 .rq .rq-years input, .dialog.rq-dlg .rq-years input { width: 92px; font-weight: 400; }
 .rq .rq-bfield select:focus-visible, .dialog.rq-dlg .rq-bfield select:focus-visible, .rq .rq-years input:focus-visible, .dialog.rq-dlg .rq-years input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.rq .rq-years, .dialog.rq-dlg .rq-years { display: inline-flex; align-items: center; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.rq .rq-years, .dialog.rq-dlg .rq-years { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.rq .rq-yerr, .dialog.rq-dlg .rq-yerr { flex: 1 1 100%; margin: 0; font: 700 13.5px var(--font-read); color: var(--bad); }
+.rq .rq-yerr[hidden], .dialog.rq-dlg .rq-yerr[hidden] { display: none; }
+.rq .rq-years input[aria-invalid="true"], .dialog.rq-dlg .rq-years input[aria-invalid="true"] { border-color: var(--bad); }
 .rq .rq-years legend, .dialog.rq-dlg .rq-years legend { float: left; margin-right: 0; padding: 0; }
 .rq .rq-years > span, .dialog.rq-dlg .rq-years > span { color: var(--muted); font-size: 14px; }
 .rq .rq-bhide, .dialog.rq-dlg .rq-bhide { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; font-size: 14.5px; color: var(--text); }

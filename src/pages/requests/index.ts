@@ -112,7 +112,7 @@ function mount(root: HTMLElement, ctx: PageContext, caps: SeerrCapabilities): vo
     panel.append(box);
     const pctx: PageContext = { ...ctx, query };
     current = tab === 'discover'
-      ? mountDiscover(box, { ctx: pctx, open, setQuery })
+      ? mountDiscover(box, { ctx: pctx, open, setQuery, lede: text => { const el = root.querySelector('#rqsub'); if (el) el.textContent = text ?? SUB[tab]; } })
       : mountList(box, { ctx: pctx, caps, open, setQuery });
     if (!(tab === 'discover' && /[?&]type=/.test(location.hash))) ctx.shell.setTitle(tab === 'discover' ? 'Discover · Requests' : 'Requests'); // Browse names itself
   }
