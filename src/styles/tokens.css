@@ -83,7 +83,7 @@
   :root { --d-micro: 0ms; --d-small: 0ms; --d-med: 0ms; --d-large: 0ms; --d-hero: 0ms; --d-sky: 0ms; }
 }
 @media (min-width: 1360px) { :root { --row: 92px; } }
-@media (max-width: 760px) { :root { --top-h: 58px; } }
+@media (max-width: 760px), (max-height: 500px) { :root { --top-h: 58px; } }
 
 /* Time-of-day colours, registered so they cross-fade (Time of day background). Set by src/ui/shell/pagebg.ts */
 @property --sky-a { syntax: '<color>'; inherits: true; initial-value: #ff6b2b; }

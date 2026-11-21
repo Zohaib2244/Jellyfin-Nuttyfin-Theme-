@@ -31,6 +31,10 @@ body { padding-left: var(--rail-w); }
 /* section tabs (filled by pages through shell.setTabs) */
 .section-nav { position: relative; display: flex; align-items: stretch; gap: 4px; flex: 1 1 auto; min-width: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain; scroll-padding-inline: 16px; }
 .section-nav::-webkit-scrollbar { display: none; }
+/* edge fade where more tabs are hidden (set by tabs.ts); the strip also scrolls with the arrow keys and when a tab takes focus */
+.section-nav[data-more] { --fl: 0px; --fr: 0px; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--fl), #000 calc(100% - var(--fr)), transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 var(--fl), #000 calc(100% - var(--fr)), transparent 100%); }
+.section-nav[data-more*="l"] { --fl: 28px; }
+.section-nav[data-more*="r"] { --fr: 36px; }
 .section-nav [role="tab"] { flex: none; position: relative; font: 700 15px var(--font-read); color: var(--muted); padding: 0 12px; min-height: 48px; background: none; border: 0; border-radius: 0; cursor: pointer; white-space: nowrap; transition: color var(--d-small) var(--ease); }
 .section-nav [role="tab"]:hover, .section-nav [role="tab"][aria-selected="true"] { color: var(--text); }
 .section-nav [role="tab"]:focus-visible { outline-offset: -3px; }
@@ -138,13 +142,6 @@ body[data-shell="none"] main { max-width: none; padding: 0; }
   .toptabs .section-nav { gap: 0; scroll-padding-inline: 24px; }
   .toptabs .section-nav [role="tab"] { min-height: 48px; font-size: 14.5px; }
   .toptabs .section-nav [role="tab"]:first-child { margin-left: 0; }
-  .tsearch { display: none; }
-  .tsbtn { display: inline-grid; }
-  .top.searching .tsearch { display: flex; position: absolute; left: 12px; right: 12px; top: 7px; width: auto; z-index: 3; gap: 8px; }
-  .top.searching .tsearch .tclose { display: inline-grid; }
-  .top.searching .tsearch input { padding-right: 12px; }
-  .top.searching > :not(.tsearch) { visibility: hidden; }
-  .qres { min-width: 0; }
   .avatar { padding: 0; } .avatar .nm, .avatar > svg { display: none; }
   main { padding: 14px 16px 110px; }
 
@@ -159,7 +156,18 @@ body[data-shell="none"] main { max-width: none; padding: 0; }
   .nav .ni .badge { top: 4px; right: auto; left: calc(50% + 6px); }
   .pop { left: 12px; right: 12px; width: auto; max-width: none; top: calc(var(--top-h) + 8px); max-height: calc(100dvh - var(--top-h) - 100px); transform-origin: top right; }
 }
-@media (max-width: 380px) { .themesw, .iconbtn.tsbtn { width: 40px; } }
+/* Phones AND short screens (a phone turned sideways, 844x390): search collapses to an icon that opens an overlay, so the
+   tab strip keeps the width. The sideways phone keeps the slim left rail (a bottom bar would eat the little height there). */
+@media (max-width: 760px), (max-height: 500px) {
+  .tsearch { display: none; }
+  .tsbtn { display: inline-grid; }
+  .top.searching .tsearch { display: flex; position: absolute; left: 12px; right: 12px; top: 7px; width: auto; z-index: 3; gap: 8px; }
+  .top.searching .tsearch .tclose { display: inline-grid; }
+  .top.searching .tsearch input { padding-right: 12px; }
+  .top.searching > :not(.tsearch) { visibility: hidden; }
+  .qres { min-width: 0; }
+}
+@media (max-height: 500px) and (min-width: 761px) { .top { padding: 0 16px; } }
 
 .nav button.ni { background: none; font-family: var(--font-read); cursor: pointer; }
 
@@ -167,7 +175,7 @@ body[data-shell="none"] main { max-width: none; padding: 0; }
 .rclock { margin: auto 0 4px; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; font-family: var(--font-read); color: var(--muted); font-size: 11.5px; line-height: 1.2; }
 .rclock b { font-family: var(--font-px); font-weight: 400; font-size: 17px; letter-spacing: .02em; color: var(--text); }
 .rclock b small { font-size: 11px; margin-left: 2px; color: var(--muted); }
-@media (max-width: 760px) { .rclock { display: none; } }
+@media (max-width: 760px), (max-height: 500px) { .rclock { display: none; } }
 
 /* ── Account menu: settings links ── */
 .pm-links { display: flex; flex-direction: column; gap: 2px; }
