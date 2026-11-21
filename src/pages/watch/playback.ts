@@ -3,6 +3,7 @@
  * The server answers PlaybackInfo with direct play / direct stream / transcode based on the DeviceProfile from profile.ts.
  */
 import type { Backend } from '../../api/backend';
+import { ApiError } from '../../api/http';
 import type { MediaItem, PlaybackInfo, PlaybackReport } from '../../api/types';
 import { hlsKind } from './hls';
 import { browserCaps, buildDeviceProfile, BITRATE, type Quality } from './profile';
@@ -72,6 +73,12 @@ export function startSeconds(link: number | null, item: MediaItem): number {
 /** Jellyfin's own web page for this title: the "Open in Jellyfin" way out when playback fails. */
 export function jellyfinWebUrl(id: string, loc: Pick<Location, 'protocol' | 'hostname'> = location): string {
   return `${loc.protocol}//${loc.hostname}:8096/web/#/details?id=${encodeURIComponent(id)}`;
+}
+
+/** The title record could not be read: a link to something that is gone (Jellyfin answers 400 or 404) is "not found", only real trouble is a connection problem. */
+export function itemLoadFailure(e: unknown): { missing: boolean; why: string } {
+  if (e instanceof ApiError && (e.kind === 'not-found' || e.kind === 'client')) return { missing: true, why: 'It may have been removed, or the link is old.' };
+  return { missing: false, why: 'We could not reach the server.' };
 }
 
 /** A friendly sentence for a <video> error code. */

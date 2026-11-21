@@ -533,15 +533,15 @@ export class PlayerUI {
     window.setTimeout(() => (ec.querySelector('.primary') as HTMLElement | null)?.focus({ preventScroll: true }), 50);
   }
 
-  showError(info: { title: string; why: string; detail?: string; jellyfinUrl: string } | null): void {
+  showError(info: { title: string; why: string; detail?: string; jellyfinUrl: string; missing?: boolean } | null): void {
     const er = this.$('.pl-error');
     this.errorOpen = !!info;
     this.root.classList.toggle('pl-failed', !!info);
     if (!info) { er.classList.remove('on'); return; }
     setHtml(er, html`<div><span class="warn">${ic('warn')}</span><h2>${info.title}</h2><p class="why">${info.why}</p>
-      <div class="acts"><button class="pl-btn primary" type="button" data-act="retry">${ic('restart')}Try again</button>
-      <a class="pl-btn" href="${info.jellyfinUrl}" target="_blank" rel="noopener">${ic('ext')}Open in Jellyfin</a>
-      <button class="pl-btn" type="button" data-act="back">${ic('back')}Back</button></div>
+      <div class="acts">${info.missing ? '' : html`<button class="pl-btn primary" type="button" data-act="retry">${ic('restart')}Try again</button>
+      <a class="pl-btn" href="${info.jellyfinUrl}" target="_blank" rel="noopener">${ic('ext')}Open in Jellyfin</a>`}
+      <button class="pl-btn${info.missing ? ' primary' : ''}" type="button" data-act="back">${ic('back')}Back</button></div>
       ${info.detail ? html`<details><summary>Details</summary><p class="detail">${info.detail}</p></details>` : ''}</div>`);
     er.classList.add('on'); this.setBusy(false); this.setUI(true); this.hidePause();
     window.setTimeout(() => (er.querySelector('.primary') as HTMLElement | null)?.focus({ preventScroll: true }), 50);

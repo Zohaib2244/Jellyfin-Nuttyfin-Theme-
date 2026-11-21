@@ -245,3 +245,15 @@ describe('where to start', () => {
     expect(startSeconds(null, item({ positionTicks: 59e9, percent: 98 }))).toBe(0);
   });
 });
+
+describe('item that cannot be read before playing', () => {
+  it('a missing or malformed id is "not found", not a connection problem', async () => {
+    const { itemLoadFailure } = await import('../src/pages/watch/playback');
+    const { ApiError } = await import('../src/api/http');
+    expect(itemLoadFailure(new ApiError(404, 'not-found', 'x'))).toMatchObject({ missing: true });
+    expect(itemLoadFailure(new ApiError(400, 'client', 'x'))).toMatchObject({ missing: true });
+    expect(itemLoadFailure(new ApiError(502, 'server', 'x')).missing).toBe(false);
+    expect(itemLoadFailure(new ApiError(0, 'network', 'x')).why).toMatch(/reach the server/);
+    expect(itemLoadFailure(new Error('boom')).missing).toBe(false);
+  });
+});

@@ -17,7 +17,7 @@ import './watch.css';
 import { PlayerUI, type Menus, type PeekInfo } from './controls';
 import { startHls, type HlsHandle } from './hls';
 import { keyAction, percentOf, SPEEDS, stepSpeed } from './keys';
-import { conversionNote, jellyfinWebUrl, mediaErrorText, openSession, playMethodOf, startingTracks, startSeconds, type SessionChoice } from './playback';
+import { conversionNote, itemLoadFailure, jellyfinWebUrl, mediaErrorText, openSession, playMethodOf, startingTracks, startSeconds, type SessionChoice } from './playback';
 import type { Quality } from './profile';
 import { Reporter } from './report';
 import { creditsStart, segmentAt, segmentLeft, skipLabel, skipTarget } from './segments';
@@ -124,7 +124,8 @@ class Player {
       this.item = await this.backend.item(this.id);
     } catch (e) {
       if (my !== this.generation || this.disposed) return;
-      this.fail(e instanceof ApiError && e.kind === 'not-found' ? 'We could not find this title.' : 'We could not reach the server.', undefined, e);
+      const f = itemLoadFailure(e);
+      this.fail(f.why, undefined, e, f.missing);
       return;
     }
     if (my !== this.generation || this.disposed) return;
@@ -580,10 +581,10 @@ class Player {
     this.fail(mediaErrorText(code), info ?? undefined, new Error(`MediaError ${code ?? '?'} ${this.video.error?.message ?? ''}`));
   }
 
-  private fail(why: string, info?: PlaybackInfo, err?: unknown): void {
-    console.error('player:', why, err);
+  private fail(why: string, info?: PlaybackInfo, err?: unknown, missing = false): void {
+    if (!missing) console.error('player:', why, err); // a link to something that is gone is not an error worth a stack trace
     const detail = err instanceof Error ? err.message : undefined;
-    this.ui.showError({ title: 'This will not play', why, detail: detail && /MediaError|PlaybackInfo|failed/i.test(detail) ? detail : undefined, jellyfinUrl: jellyfinWebUrl(this.id) });
+    this.ui.showError({ title: missing ? 'We could not find that' : 'This will not play', missing, why, detail: !missing && detail && /MediaError|PlaybackInfo|failed/i.test(detail) ? detail : undefined, jellyfinUrl: jellyfinWebUrl(this.id) });
     void info;
   }
 
